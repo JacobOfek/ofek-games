@@ -1,22 +1,26 @@
-// Ofek Games – server side for Cloudflare Pages.
+// AI Games Center – server side for Cloudflare Pages.
 // Serves the game files, plus a small API backed by a D1 database bound as "DB".
 //
-// Players: each player has a name and a personal code (PIN). Logging in returns a token that the
-// page keeps; every write (scores, saved progress, table entries) is recorded under the token's
-// player, so nobody can play or save under someone else's name without that person's code.
-//   GET  /api/ping                    -> is the database connected, is a family code required
-//   GET  /api/players                 -> the list of player names (for the "who is playing" screen)
-//   POST /api/login {player,pin}       -> log in with name + 4-digit personal code; returns {player, token}
-//   POST /api/login {player,pin,email,create:true} -> sign up a new player (needs the family password when one is set)
-//   POST /api/reset {player,email,pin} -> forgot the personal code: the email given at sign-up sets a new one
-//   POST /api/pin {newPin}             -> change your own code (needs your token)
-//   GET  /api/scores?app=breakout&game=1, POST /api/scores {game,score,level,won}
-//   GET/PUT /api/save?app=breakout     -> the logged-in player's saved progress {kv}
-//   GET  /api/tables?app=blocks, POST /api/tables {table, entries} -> shared top-10 tables
-// Optional: a secret named FAMILY_CODE. When set, every API call must send it (header X-Family-Code).
-// To reset a forgotten personal code: in the D1 console run  DELETE FROM players WHERE name='...'
-// (the player keeps their scores and progress and simply sets a new code on the next login).
-// Tables are created automatically on first use.
+// Who may use the family data (tables, saves, player list) is set in the admin dashboard (/admin):
+//   mode "family": one family password (stored hashed in the database; the FAMILY_CODE secret also works)
+//   mode "email":  each person gets a personal sign-up code computed from their email with a server secret
+// Players have a name + 4-digit code; logging in returns a token the device keeps. Every write is
+// recorded under the token's player. Blocked players cannot log in or write.
+//
+//   GET  /api/ping                     -> {ok, db, locked, mode}
+//   GET  /api/config                   -> {homeGames}  which games the home page shows (null = all)
+//   GET  /api/players                  -> player names (needs family access)
+//   POST /api/unlock {email, invite}   -> email mode, new device: {player} for that email
+//   POST /api/login {player,pin}       -> {player, token}
+//   POST /api/login {player,pin,email,create:true[,invite]} -> sign up
+//   POST /api/reset {player,email,pin} -> forgot code: the sign-up email sets a new one
+//   POST /api/pin {newPin}             -> change own code
+//   GET/POST /api/scores, GET/PUT /api/save, GET/POST /api/tables   (games)
+//   /api/admin/*                       -> dashboard (only the site owner)
+// Tables are created / upgraded automatically on first use.
+
+const ADMIN_EMAIL_SHA256 = '7edb91764548c48ff5adc3a9505bf66c9c5a040f304c768679f75f1e72804c49';
+const APPS = ['breakout', 'blocks', 'snake', 'hub'];
 
 let ready = false;
 async function setup(db) {
@@ -36,10 +40,17 @@ async function setup(db) {
       PRIMARY KEY (app, name))`),
     db.prepare(`CREATE TABLE IF NOT EXISTS players (
       name TEXT PRIMARY KEY, email TEXT NOT NULL DEFAULT '', salt TEXT NOT NULL, hash TEXT NOT NULL,
-      fails INTEGER NOT NULL DEFAULT 0, locked_until INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL)`),
+      fails INTEGER NOT NULL DEFAULT 0, locked_until INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL,
+      blocked INTEGER NOT NULL DEFAULT 0, last_seen INTEGER NOT NULL DEFAULT 0)`),
     db.prepare(`CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)`),
     db.prepare(`INSERT OR IGNORE INTO meta (k, v) VALUES ('secret', ?)`).bind(randHex(32)),
   ]);
+  // older databases: add the newer player columns when missing
+  for (const sql of [`ALTER TABLE players ADD COLUMN email TEXT NOT NULL DEFAULT ''`,
+                     `ALTER TABLE players ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0`,
+                     `ALTER TABLE players ADD COLUMN last_seen INTEGER NOT NULL DEFAULT 0`]) {
+    try { await db.prepare(sql).run(); } catch (e) { /* already there */ }
+  }
   ready = true;
 }
 
@@ -56,7 +67,6 @@ function cleanName(p) {
 }
 const cleanPin = p => (typeof p === 'string' && /^\d{4}$/.test(p) ? p : null);
 const cleanEmail = e => (typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()) && e.trim().length <= 120 ? e.trim().toLowerCase() : null);
-const APPS = ['breakout', 'blocks', 'snake', 'hub'];
 const cleanApp = a => (APPS.includes(a) ? a : null);
 
 /* ---- small crypto helpers ---- */
@@ -70,14 +80,41 @@ async function hmac(key, text) {
 }
 const b64u = s => btoa(String.fromCharCode(...enc.encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)));
-function same(a, b) { if (a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; }
+function same(a, b) { a = String(a); b = String(b); if (a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; }
 
-let secretCache = null;
-async function secret(db) {
-  if (!secretCache) secretCache = (await db.prepare(`SELECT v FROM meta WHERE k='secret'`).first()).v;
-  return secretCache;
+async function meta(db, k, d = null) { const r = await db.prepare(`SELECT v FROM meta WHERE k=?`).bind(k).first(); return r ? r.v : d; }
+async function setMeta(db, k, v) {
+  if (v == null) await db.prepare(`DELETE FROM meta WHERE k=?`).bind(k).run();
+  else await db.prepare(`INSERT INTO meta (k, v) VALUES (?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v`).bind(k, v).run();
 }
-// token = base64url(name) + '.' + HMAC(secret, name|hash); changing the code makes old tokens invalid
+let secretCache = null;
+async function secret(db) { if (!secretCache) secretCache = await meta(db, 'secret'); return secretCache; }
+
+// personal sign-up code for an email (email mode): 6 characters, no look-alike letters
+const ALPH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+async function inviteCode(db, email) {
+  const h = await hmac(await secret(db), 'invite|' + email);
+  let s = ''; for (let i = 0; i < 6; i++) s += ALPH[parseInt(h.slice(i * 4, i * 4 + 4), 16) % ALPH.length];
+  return s;
+}
+const normInvite = c => (typeof c === 'string' ? c.toUpperCase().replace(/[^A-Z0-9]/g, '') : '');
+
+/* ---- access ---- */
+async function settings(db, env) {
+  const mode = (await meta(db, 'auth-mode')) === 'email' ? 'email' : 'family';
+  const famHash = await meta(db, 'family-hash');
+  return { mode, famHash, famSalt: await meta(db, 'family-salt'), envCode: env.FAMILY_CODE || null };
+}
+async function familyOK(req, s) {
+  const c = req.headers.get('x-family-code');
+  if (!c) return false;
+  if (s.envCode && same(c, s.envCode)) return true;
+  if (s.famHash && same(await sha256(s.famSalt + '|' + c), s.famHash)) return true;
+  return false;
+}
+const isLocked = s => s.mode === 'email' || !!(s.famHash || s.envCode);
+
+// token = base64url(name) + '.' + HMAC(secret, name|hash); a new code makes old tokens invalid
 async function makeToken(db, name, hash) { return b64u(name) + '.' + (await hmac(await secret(db), name + '|' + hash)); }
 async function auth(req, db) {
   const t = req.headers.get('x-player-token') || '';
@@ -85,59 +122,77 @@ async function auth(req, db) {
   if (dot < 1) return null;
   let name;
   try { name = unb64u(t.slice(0, dot)); } catch (e) { return null; }
-  const row = await db.prepare(`SELECT hash FROM players WHERE name=?`).bind(name).first();
-  if (!row) return null;
-  const want = await hmac(await secret(db), name + '|' + row.hash);
-  return same(want, t.slice(dot + 1)) ? name : null;
+  const row = await db.prepare(`SELECT hash, email, blocked, last_seen FROM players WHERE name=?`).bind(name).first();
+  if (!row || row.blocked) return null;
+  if (!same(await hmac(await secret(db), name + '|' + row.hash), t.slice(dot + 1))) return null;
+  if (Date.now() - row.last_seen > 10 * 60000) await db.prepare(`UPDATE players SET last_seen=? WHERE name=?`).bind(Date.now(), name).run();
+  return { name, email: row.email };
 }
+const isAdmin = async me => !!(me && me.email && (await sha256(me.email)) === ADMIN_EMAIL_SHA256);
 const needLogin = () => json({ error: 'auth' }, 403);
 
 async function api(req, env, url) {
-  const locked = !!env.FAMILY_CODE;
-  if (url.pathname === '/api/ping') return json({ ok: true, db: !!env.DB, locked });
-  if (locked && req.headers.get('x-family-code') !== env.FAMILY_CODE) return json({ error: 'code' }, 401);
-  if (!env.DB) return json({ error: 'no-db' }, 503);
+  if (!env.DB) {
+    if (url.pathname === '/api/ping') return json({ ok: true, db: false, locked: false });
+    return json({ error: 'no-db' }, 503);
+  }
   const db = env.DB;
   await setup(db);
-
-  /* ---- players ---- */
-  if (url.pathname === '/api/players' && req.method === 'GET') {
-    const rows = await db.prepare(`SELECT name FROM players ORDER BY created ASC`).all();
-    return json({ players: rows.results.map(r => r.name) });
+  const s = await settings(db, env);
+  const path = url.pathname;
+  if (path === '/api/ping') return json({ ok: true, db: true, locked: isLocked(s), mode: s.mode });
+  if (path === '/api/config' && req.method === 'GET') {
+    const h = await meta(db, 'home-games');
+    return json({ homeGames: h ? JSON.parse(h) : null });
   }
-  if (url.pathname === '/api/login' && req.method === 'POST') {
+
+  /* ---- sign-up / login (protected by the code itself, not by family access) ---- */
+  if (path === '/api/login' && req.method === 'POST') {
     const b = await req.json().catch(() => null);
     const name = cleanName(b && b.player), pin = cleanPin(b && b.pin);
     if (!name) return json({ error: 'name' }, 400);
     if (!pin) return json({ error: 'pin' }, 400);
     const now = Date.now();
-    let row = await db.prepare(`SELECT * FROM players WHERE name=?`).bind(name).first();
+    const row = await db.prepare(`SELECT * FROM players WHERE name=?`).bind(name).first();
     if (b.create) {
       const email = cleanEmail(b.email);
       if (!email) return json({ error: 'email' }, 400);
+      if (s.mode === 'email') { if (!same(normInvite(b.invite), await inviteCode(db, email))) return json({ error: 'invite' }, 403); }
+      else if (isLocked(s) && !(await familyOK(req, s))) return json({ error: 'code' }, 401);
       if (row) return json({ error: 'taken' }, 409);
       if (await db.prepare(`SELECT 1 FROM players WHERE email=?`).bind(email).first()) return json({ error: 'email-used' }, 409);
       const salt = randHex(16), hash = await sha256(salt + '|' + pin);
-      await db.prepare(`INSERT INTO players (name, email, salt, hash, created) VALUES (?,?,?,?,?)`).bind(name, email, salt, hash, now).run();
+      await db.prepare(`INSERT INTO players (name, email, salt, hash, created, last_seen) VALUES (?,?,?,?,?,?)`).bind(name, email, salt, hash, now, now).run();
       return json({ player: name, token: await makeToken(db, name, hash), created: true });
     }
     if (!row) return json({ error: 'unknown' }, 404);
+    if (row.blocked) return json({ error: 'blocked' }, 403);
     if (row.locked_until > now) return json({ error: 'locked', wait: Math.ceil((row.locked_until - now) / 60000) }, 429);
     if (!same(await sha256(row.salt + '|' + pin), row.hash)) {
       const fails = row.fails + 1, lock = fails >= 5 ? now + 10 * 60000 : 0;   // 5 wrong codes -> 10 minutes pause
       await db.prepare(`UPDATE players SET fails=?, locked_until=? WHERE name=?`).bind(lock ? 0 : fails, lock, name).run();
       return json({ error: lock ? 'locked' : 'wrong', wait: lock ? 10 : 0, left: lock ? 0 : 5 - fails }, lock ? 429 : 403);
     }
-    await db.prepare(`UPDATE players SET fails=0, locked_until=0 WHERE name=?`).bind(name).run();
+    await db.prepare(`UPDATE players SET fails=0, locked_until=0, last_seen=? WHERE name=?`).bind(now, name).run();
     return json({ player: name, token: await makeToken(db, name, row.hash) });
   }
-  if (url.pathname === '/api/reset' && req.method === 'POST') {
+  if (path === '/api/unlock' && req.method === 'POST') {   // email mode: a registered person on a new device
+    const b = await req.json().catch(() => null);
+    const email = cleanEmail(b && b.email);
+    if (!email || !same(normInvite(b.invite), await inviteCode(db, email))) return json({ error: 'invite' }, 403);
+    const row = await db.prepare(`SELECT name, blocked FROM players WHERE email=?`).bind(email).first();
+    if (!row) return json({ error: 'unknown' }, 404);
+    if (row.blocked) return json({ error: 'blocked' }, 403);
+    return json({ player: row.name });
+  }
+  if (path === '/api/reset' && req.method === 'POST') {
     const b = await req.json().catch(() => null);
     const name = cleanName(b && b.player), pin = cleanPin(b && b.pin), email = cleanEmail(b && b.email);
     if (!name || !pin || !email) return json({ error: 'bad' }, 400);
     const now = Date.now();
     const row = await db.prepare(`SELECT * FROM players WHERE name=?`).bind(name).first();
     if (!row) return json({ error: 'unknown' }, 404);
+    if (row.blocked) return json({ error: 'blocked' }, 403);
     if (row.locked_until > now) return json({ error: 'locked', wait: Math.ceil((row.locked_until - now) / 60000) }, 429);
     if (!row.email || row.email !== email) {
       const fails = row.fails + 1, lock = fails >= 5 ? now + 10 * 60000 : 0;
@@ -145,24 +200,98 @@ async function api(req, env, url) {
       return json({ error: lock ? 'locked' : 'email-wrong', wait: lock ? 10 : 0 }, lock ? 429 : 403);
     }
     const salt = randHex(16), hash = await sha256(salt + '|' + pin);
-    await db.prepare(`UPDATE players SET salt=?, hash=?, fails=0, locked_until=0 WHERE name=?`).bind(salt, hash, name).run();
+    await db.prepare(`UPDATE players SET salt=?, hash=?, fails=0, locked_until=0, last_seen=? WHERE name=?`).bind(salt, hash, now, name).run();
     return json({ player: name, token: await makeToken(db, name, hash) });
   }
-  if (url.pathname === '/api/pin' && req.method === 'POST') {
-    const me = await auth(req, db);
+
+  /* ---- everything below needs family access: the family password, or being a logged-in player ---- */
+  const me = await auth(req, db);
+  if (isLocked(s) && !me && !(await familyOK(req, s))) return json({ error: 'code', mode: s.mode }, 401);
+
+  if (path === '/api/players' && req.method === 'GET') {
+    const rows = await db.prepare(`SELECT name FROM players WHERE blocked=0 ORDER BY created ASC`).all();
+    return json({ players: rows.results.map(r => r.name) });
+  }
+  if (path === '/api/pin' && req.method === 'POST') {
     if (!me) return needLogin();
     const b = await req.json().catch(() => null);
     const pin = cleanPin(b && b.newPin);
     if (!pin) return json({ error: 'pin' }, 400);
     const salt = randHex(16), hash = await sha256(salt + '|' + pin);
-    await db.prepare(`UPDATE players SET salt=?, hash=?, fails=0, locked_until=0 WHERE name=?`).bind(salt, hash, me).run();
-    return json({ player: me, token: await makeToken(db, me, hash) });
+    await db.prepare(`UPDATE players SET salt=?, hash=?, fails=0, locked_until=0 WHERE name=?`).bind(salt, hash, me.name).run();
+    return json({ player: me.name, token: await makeToken(db, me.name, hash) });
   }
 
+  /* ---- admin dashboard ---- */
+  if (path.startsWith('/api/admin/')) {
+    if (!me) return needLogin();
+    if (!(await isAdmin(me))) return json({ error: 'not-admin' }, 403);
+    if (path === '/api/admin/overview' && req.method === 'GET') {
+      const players = (await db.prepare(`SELECT name, email, created, last_seen, blocked FROM players ORDER BY created ASC`).all()).results;
+      const counts = (await db.prepare(`SELECT player, COUNT(*) AS n, MAX(at) AS last FROM scores GROUP BY player`).all()).results;
+      const h = await meta(db, 'home-games');
+      return json({
+        mode: s.mode, familySet: !!(s.famHash || s.envCode), familyFromSecret: !!s.envCode,
+        homeGames: h ? JSON.parse(h) : null, deployRequest: JSON.parse((await meta(db, 'deploy-request')) || 'null'),
+        players: players.map(p => ({ ...p, games: (counts.find(c => c.player === p.name) || {}).n || 0 })),
+      });
+    }
+    if (path === '/api/admin/config' && req.method === 'POST') {
+      const b = await req.json().catch(() => ({}));
+      if (Array.isArray(b.homeGames)) await setMeta(db, 'home-games', JSON.stringify(b.homeGames.filter(x => typeof x === 'string').slice(0, 100)));
+      if (b.mode === 'email' || b.mode === 'family') await setMeta(db, 'auth-mode', b.mode);
+      if (typeof b.familyPassword === 'string') {
+        const p = b.familyPassword.trim();
+        if (p.length && p.length < 4) return json({ error: 'short' }, 400);
+        if (p) { const salt = randHex(16); await setMeta(db, 'family-salt', salt); await setMeta(db, 'family-hash', await sha256(salt + '|' + p)); }
+        else { await setMeta(db, 'family-hash', null); await setMeta(db, 'family-salt', null); }
+      }
+      if (b.deployRequest) await setMeta(db, 'deploy-request', JSON.stringify({ at: Date.now(), games: (b.deployRequest.games || []).slice(0, 100) }));
+      return json({ ok: true });
+    }
+    if (path === '/api/admin/invite' && req.method === 'POST') {
+      const b = await req.json().catch(() => null);
+      const email = cleanEmail(b && b.email);
+      if (!email) return json({ error: 'email' }, 400);
+      return json({ email, code: await inviteCode(db, email) });
+    }
+    if (path === '/api/admin/player' && req.method === 'POST') {
+      const b = await req.json().catch(() => null);
+      const name = cleanName(b && b.name);
+      const row = name && await db.prepare(`SELECT * FROM players WHERE name=?`).bind(name).first();
+      if (!row) return json({ error: 'unknown' }, 404);
+      if (name === me.name && b.action !== 'reset') return json({ error: 'self' }, 400);
+      if (b.action === 'block' || b.action === 'unblock') {
+        await db.prepare(`UPDATE players SET blocked=? WHERE name=?`).bind(b.action === 'block' ? 1 : 0, name).run();
+        return json({ ok: true });
+      }
+      if (b.action === 'reset') {   // a new temporary code to give the player
+        const pin = String(Math.floor(1000 + Math.random() * 9000)), salt = randHex(16), hash = await sha256(salt + '|' + pin);
+        await db.prepare(`UPDATE players SET salt=?, hash=?, fails=0, locked_until=0 WHERE name=?`).bind(salt, hash, name).run();
+        return json({ ok: true, pin });
+      }
+      if (b.action === 'remove') {
+        const q = [db.prepare(`DELETE FROM players WHERE name=?`).bind(name)];
+        if (b.removeData) {
+          q.push(db.prepare(`DELETE FROM scores WHERE player=?`).bind(name), db.prepare(`DELETE FROM saves WHERE player=?`).bind(name));
+          for (const t of (await db.prepare(`SELECT app, name, data FROM tables`).all()).results) {
+            const d = JSON.parse(t.data), keep = d.filter(x => x.name !== name);
+            if (keep.length !== d.length) q.push(db.prepare(`UPDATE tables SET data=? WHERE app=? AND name=?`).bind(JSON.stringify(keep), t.app, t.name));
+          }
+        }
+        await db.batch(q);
+        return json({ ok: true });
+      }
+      return json({ error: 'bad' }, 400);
+    }
+    return json({ error: 'not-found' }, 404);
+  }
+
+  /* ---- games ---- */
   const app = cleanApp(url.searchParams.get('app') || 'breakout');
   if (!app) return json({ error: 'app' }, 400);
 
-  if (url.pathname === '/api/scores') {
+  if (path === '/api/scores') {
     if (req.method === 'GET') {
       const game = url.searchParams.get('game') === '2' ? 2 : 1;
       const top = await db
@@ -175,7 +304,6 @@ async function api(req, env, url) {
       return json({ top: top.results, players: players.results });
     }
     if (req.method === 'POST') {
-      const me = await auth(req, db);
       if (!me) return needLogin();
       const b = await req.json().catch(() => null);
       const score = Math.floor(+(b && b.score));
@@ -184,7 +312,7 @@ async function api(req, env, url) {
       if (!(score > 0 && score < 1e8) || !(level >= 1 && level <= 999)) return json({ error: 'bad' }, 400);
       await db
         .prepare(`INSERT INTO scores (app, game, player, score, level, won, at) VALUES (?,?,?,?,?,?,?)`)
-        .bind(app, game, me, score, level, b.won ? 1 : 0, Date.now()).run();
+        .bind(app, game, me.name, score, level, b.won ? 1 : 0, Date.now()).run();
       const rank = await db
         .prepare(`SELECT COUNT(*) + 1 AS r FROM scores WHERE app=? AND game=? AND score > ?`)
         .bind(app, game, score).first();
@@ -192,11 +320,10 @@ async function api(req, env, url) {
     }
   }
 
-  if (url.pathname === '/api/save') {
-    const me = await auth(req, db);
+  if (path === '/api/save') {
     if (!me) return needLogin();
     if (req.method === 'GET') {
-      const row = await db.prepare(`SELECT kv, at FROM saves WHERE app=? AND player=?`).bind(app, me).first();
+      const row = await db.prepare(`SELECT kv, at FROM saves WHERE app=? AND player=?`).bind(app, me.name).first();
       return json(row ? { kv: JSON.parse(row.kv), at: row.at } : { kv: {}, at: 0 });
     }
     if (req.method === 'PUT') {
@@ -209,12 +336,12 @@ async function api(req, env, url) {
       await db
         .prepare(`INSERT INTO saves (app, player, kv, at) VALUES (?,?,?,?)
                   ON CONFLICT(app, player) DO UPDATE SET kv=excluded.kv, at=excluded.at`)
-        .bind(app, me, text, Date.now()).run();
+        .bind(app, me.name, text, Date.now()).run();
       return json({ ok: true });
     }
   }
 
-  if (url.pathname === '/api/tables') {
+  if (path === '/api/tables') {
     if (req.method === 'GET') {
       const rows = await db.prepare(`SELECT name, data FROM tables WHERE app=?`).bind(app).all();
       const tables = {};
@@ -222,7 +349,6 @@ async function api(req, env, url) {
       return json({ tables });
     }
     if (req.method === 'POST') {
-      const me = await auth(req, db);
       if (!me) return needLogin();
       const b = await req.json().catch(() => null);
       const name = b && typeof b.table === 'string' && /^[a-z0-9-]{1,40}$/.test(b.table) ? b.table : null;
@@ -231,7 +357,7 @@ async function api(req, env, url) {
       const old = row ? JSON.parse(row.data) : [];
       const have = new Set(old.map(x => String(x.id)));
       // only new results are added, and always under the logged-in player's name
-      const add = b.entries.map(cleanEntry).filter(x => x && !have.has(String(x.id))).map(x => ({ ...x, name: me }));
+      const add = b.entries.map(cleanEntry).filter(x => x && !have.has(String(x.id))).map(x => ({ ...x, name: me.name }));
       const merged = mergeEntries(old, add);
       if (add.length)
         await db

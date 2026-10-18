@@ -1,0 +1,18 @@
+{
+  "note": "All of Jacob's games. 'onSite' = already built for this site. The dashboard chooses which of them the home page shows.",
+  "games": [
+    {"id": "breakout", "name": "שובר אריחים", "sub": "שני משחקים · טבלת שיאים משפחתית", "icon": "/icons/breakout-192.png", "href": "/breakout/", "onSite": true},
+    {"id": "blocks", "name": "בלוקים", "sub": "טטריס · שלבים ומשימות", "icon": "/icons/blocks-192.png", "href": "/blocks/", "onSite": true},
+    {"id": "snake", "name": "My Snake", "sub": "קלאסי ומבוך · נחש יריב", "icon": "/icons/snake-192.png", "href": "/snake/", "onSite": true},
+    {"id": "pulse-lanes", "name": "Pulse Lanes", "sub": "משחק קצב · שירים מובנים ושירים שלך", "emoji": "🎵", "onSite": false},
+    {"id": "boom", "name": "Boom Boom Boom", "sub": "קלפים לשניים על מכשיר אחד", "emoji": "💣", "onSite": false},
+    {"id": "wonders-dice", "name": "Wonders Dice", "sub": "7 Wonders בקוביות", "emoji": "🎲", "onSite": false},
+    {"id": "architects", "name": "7 Wonders Architects", "sub": "משחק הקלפים", "emoji": "🏛️", "onSite": false},
+    {"id": "codenames", "name": "מבצע מילים", "sub": "משחק מילים בקבוצות", "emoji": "🕵️", "onSite": false},
+    {"id": "islands", "name": "ארץ האיים", "sub": "בנייה ומסחר מול המחשב", "emoji": "🏝️", "onSite": false},
+    {"id": "puzzle", "name": "פאזל מהתמונות שלך", "sub": "פאזל מתמונות", "emoji": "🧩", "onSite": false},
+    {"id": "wow", "name": "WOW Dungeons", "sub": "מבוכים ודרקונים לכמה שחקנים", "emoji": "🐉", "onSite": false},
+    {"id": "dungeon-dice", "name": "Dungeon & Dice", "sub": "אפליקציית DM וכרטיסי שחקן", "emoji": "⚔️", "onSite": false},
+    {"id": "dungeon-tale", "name": "סיפורי המבוך", "sub": "הרפתקה בסיפור חי", "emoji": "📜", "onSite": false, "note": "צריך את Claude בזמן המשחק, ולכן לא יכול לרוץ באתר עצמאי"}
+  ]
+}

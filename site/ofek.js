@@ -20,7 +20,7 @@
 
   const ready = fetch('/api/ping', { cache: 'no-store' })
     .then(r => (r.ok ? r.json() : null))
-    .then(j => { if (j && j.ok === true) { st.on = true; st.db = !!j.db; st.locked = !!j.locked; } return st.on && st.db; })
+    .then(j => { if (j && j.ok === true) { st.on = true; st.db = !!j.db; st.locked = !!j.locked; st.mode = j.mode || 'family'; } return st.on && st.db; })
     .catch(() => false);
 
   async function raw(path, opt) {
@@ -150,7 +150,7 @@
           const r = await raw('/api/login', { method: 'POST', body: { player: name, pin } }).catch(() => null);
           if (r && r.ok) { setLogin(r.data.player, r.data.token); finish(true); return; }
           q('#ofkGo').disabled = false; q('#ofkPin').value = '';
-          q('#ofkEr').textContent = fail(r, { wrong: `הקוד לא נכון${r && r.data && r.data.left ? ` (נשארו ${r.data.left} ניסיונות)` : ''}` });
+          q('#ofkEr').textContent = fail(r, { wrong: `הקוד לא נכון${r && r.data && r.data.left ? ` (נשארו ${r.data.left} ניסיונות)` : ''}`, blocked: 'השחקן הזה חסום. פנו למנהל האתר' });
         };
         q('#ofkGo').onclick = go; onEnter(q('#ofkPin'), go);
         q('#ofkForgot').onclick = () => forgot(name); q('#ofkBack').onclick = pick;
@@ -174,6 +174,7 @@
         q('#ofkGo').onclick = go; onEnter(q('#ofkPin2'), go); q('#ofkBack').onclick = () => enterPin(name);
       };
       const famOnly = () => {
+        if (st.mode === 'email') return emailOnly();
         const q = ui(`<h2>כניסה במכשיר חדש</h2><p>כבר נרשמת? כותבים את הסיסמה הכללית, ואז בוחרים את השם שלך.</p>
           <input id="ofkFam" type="password" autocomplete="off" placeholder="הסיסמה הכללית">
           <div class="er" id="ofkEr"></div><button class="go" id="ofkGo">המשך</button><button class="lnk" id="ofkBack">חזרה להרשמה</button>`);
@@ -185,11 +186,28 @@
         };
         q('#ofkGo').onclick = go; onEnter(q('#ofkFam'), go); q('#ofkBack').onclick = create;
       };
+      const emailOnly = () => {
+        const q = ui(`<h2>כניסה במכשיר חדש</h2><p>כבר נרשמת? כותבים את המייל ואת הקוד האישי שקיבלת, ואז את הקוד בן 4 הספרות שלך.</p>
+          <input id="ofkMail" type="email" inputmode="email" autocomplete="email" placeholder="כתובת מייל" dir="ltr">
+          <input id="ofkInv" autocomplete="off" autocapitalize="characters" placeholder="הקוד האישי שקיבלת" dir="ltr">
+          <div class="er" id="ofkEr"></div><button class="go" id="ofkGo">המשך</button><button class="lnk" id="ofkBack">חזרה להרשמה</button>`);
+        const go = async () => {
+          const email = q('#ofkMail').value.trim(), invite = q('#ofkInv').value.trim();
+          if (!email || !invite) return;
+          q('#ofkGo').disabled = true;
+          const r = await raw('/api/unlock', { method: 'POST', body: { email, invite } }).catch(() => null);
+          q('#ofkGo').disabled = false;
+          if (r && r.ok) { enterPin(r.data.player); return; }
+          q('#ofkEr').textContent = fail(r, { invite: 'המייל והקוד לא תואמים', unknown: 'המייל הזה עוד לא רשום. חוזרים להרשמה', blocked: 'השחקן הזה חסום. פנו למנהל האתר' });
+        };
+        q('#ofkGo').onclick = go; onEnter(q('#ofkInv'), go); q('#ofkBack').onclick = create;
+      };
       // sign-up, step 1: email + the general family password (when the site has one)
       const create = () => {
-        const needCode = st.locked;
-        const q = ui(`<h2>הרשמה</h2><p>כניסה ראשונה: כתובת המייל שלך${needCode ? ' והסיסמה הכללית של המשפחה' : ''}.</p>
+        const byEmail = st.mode === 'email', needCode = st.locked && !byEmail;
+        const q = ui(`<h2>הרשמה</h2><p>כניסה ראשונה: כתובת המייל שלך${byEmail ? ' והקוד האישי שקיבלת' : needCode ? ' והסיסמה הכללית של המשפחה' : ''}.</p>
           <input id="ofkMail" type="email" inputmode="email" autocomplete="email" placeholder="כתובת מייל" dir="ltr">
+          ${byEmail ? '<input id="ofkInv" autocomplete="off" autocapitalize="characters" placeholder="הקוד האישי שקיבלת" dir="ltr">' : ''}
           ${needCode ? `<input id="ofkFam" type="password" autocomplete="off" placeholder="הסיסמה הכללית" value="${esc(st.code || '')}">` : ''}
           <div class="er" id="ofkEr"></div><button class="go" id="ofkGo">המשך</button>
           ${fresh ? '<button class="lnk" id="ofkOld">כבר נרשמתי, אני במכשיר חדש</button>' : ''}
@@ -198,6 +216,15 @@
         const go = async () => {
           const email = q('#ofkMail').value.trim();
           if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { q('#ofkEr').textContent = 'כתובת המייל לא תקינה'; return; }
+          if (byEmail) {
+            const invite = q('#ofkInv').value.trim(); if (!invite) { q('#ofkEr').textContent = 'צריך את הקוד האישי שקיבלת'; return; }
+            q('#ofkGo').disabled = true;
+            const r = await raw('/api/unlock', { method: 'POST', body: { email, invite } }).catch(() => null);
+            q('#ofkGo').disabled = false;
+            if (r && r.ok) { enterPin(r.data.player); return; }               // already registered: just the 4-digit code
+            if (!(r && r.status === 404)) { q('#ofkEr').textContent = fail(r, { invite: 'המייל והקוד לא תואמים', blocked: 'השחקן הזה חסום. פנו למנהל האתר' }); return; }
+            profile(email, invite); return;
+          }
           if (needCode) {
             const c = q('#ofkFam').value.trim();
             if (!c) { q('#ofkEr').textContent = 'צריך את הסיסמה הכללית'; return; }
@@ -215,7 +242,7 @@
         if (q('#ofkNo')) q('#ofkNo').onclick = () => finish(!!st.token);
       };
       // sign-up, step 2: user name + a short 4-digit code for switching players on a device
-      const profile = email => {
+      const profile = (email, invite) => {
         const q = ui(`<h2>שם וקוד אישי</h2><p>בוחרים שם וקוד של 4 ספרות. המכשיר יזכור אותך; את הקוד צריך רק כשמחליפים שחקן או נכנסים ממכשיר אחר.</p>
           <input id="ofkName" maxlength="20" placeholder="שם משתמש" autocomplete="nickname">
           ${pinInput('ofkPin', 'קוד (4 ספרות)')}${pinInput('ofkPin2', 'שוב הקוד')}
@@ -226,10 +253,10 @@
           if (!pinOk(pin)) { q('#ofkEr').textContent = 'הקוד הוא 4 ספרות'; return; }
           if (pin !== q('#ofkPin2').value.trim()) { q('#ofkEr').textContent = 'שני הקודים לא זהים'; return; }
           q('#ofkGo').disabled = true;
-          const r = await raw('/api/login', { method: 'POST', body: { player: name, pin, email, create: true } }).catch(() => null);
+          const r = await raw('/api/login', { method: 'POST', body: { player: name, pin, email, invite, create: true } }).catch(() => null);
           if (r && r.ok) { setLogin(r.data.player, r.data.token); finish(true); return; }
           q('#ofkGo').disabled = false;
-          q('#ofkEr').textContent = fail(r, { taken: 'השם הזה כבר תפוס. בוחרים שם אחר', 'email-used': 'המייל הזה כבר רשום לשחקן אחר', email: 'כתובת המייל לא תקינה' });
+          q('#ofkEr').textContent = fail(r, { taken: 'השם הזה כבר תפוס. בוחרים שם אחר', 'email-used': 'המייל הזה כבר רשום לשחקן אחר', email: 'כתובת המייל לא תקינה', invite: 'הקוד האישי לא תואם למייל' });
         };
         q('#ofkGo').onclick = go; onEnter(q('#ofkPin2'), go); q('#ofkBack').onclick = create;
       };

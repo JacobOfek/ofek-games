@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ניהול · AI Games Center</title>
+<meta name="theme-color" content="#101218">
+<meta name="robots" content="noindex">
+<link rel="apple-touch-icon" href="/icons/home-180.png">
+<script src="/ofek.js"></script>
+<style>
+:root{--bg:#101218;--panel:#191C25;--panel2:#20242F;--ink:#ECEEF3;--muted:#8D94A7;--line:rgba(236,238,243,.12);--accent:#F2C14E;--ok:#4ADE80;--bad:#FF7B72}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+main{max-width:860px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 22px) max(16px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 40px) max(16px,env(safe-area-inset-left))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px}
+h1{font-size:clamp(22px,6vw,30px);margin:0}
+h1 small{display:block;font-size:13px;color:var(--muted);font-weight:400;margin-top:2px}
+a.back{color:var(--muted);font-size:14px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:8px 14px;white-space:nowrap}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;margin:0 0 16px;position:sticky;top:calc(env(safe-area-inset-top) + 6px);z-index:5}
+.tabs button{font:inherit;font-size:15px;font-weight:600;border:0;border-radius:10px;padding:10px 4px;background:transparent;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+section[hidden]{display:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 0 14px}
+.card h2{font-size:17px;margin:0 0 6px}
+.hint{color:var(--muted);font-size:13px;line-height:1.55;margin:0 0 12px}
+.game{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.game:first-of-type{border-top:0}
+.game .ic{width:48px;height:48px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:26px;background:var(--panel2);overflow:hidden}
+.game .ic img{width:100%;height:100%}
+.game .tx{flex:1;min-width:0}
+.game b{display:block;font-size:16px}
+.game small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 8px;margin-top:4px}
+.badge.on{background:rgba(74,222,128,.14);color:var(--ok)}
+.badge.off{background:rgba(141,148,167,.16);color:var(--muted)}
+.sw{position:relative;width:52px;height:30px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;border-radius:999px;background:var(--panel2);border:1px solid var(--line);transition:background .15s}
+.sw span::after{content:"";position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+.sw input:checked+span{background:rgba(242,193,78,.25)}
+.sw input:checked+span::after{transform:translateX(-22px);background:var(--accent)}
+.sw input:disabled+span{opacity:.4}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{font:inherit;font-size:15px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:11px 18px;background:var(--panel2);color:var(--ink);cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#1d1600}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.5}
+.msg{font-size:14px;margin:10px 0 0;min-height:1em;color:var(--ok)}
+.msg.err{color:var(--bad)}
+.user{border-top:1px solid var(--line);padding:12px 0}
+.user:first-of-type{border-top:0}
+.user .hd{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.user b{font-size:17px}
+.user .mail{color:var(--muted);font-size:13px;direction:ltr;unicode-bidi:isolate}
+.user .meta{color:var(--muted);font-size:12.5px;margin-top:4px}
+.user .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.user .acts .btn{font-size:13px;padding:7px 12px}
+.user.blocked b{text-decoration:line-through;color:var(--muted)}
+.tag{font-size:11.5px;border-radius:999px;padding:2px 8px;background:rgba(255,123,114,.15);color:var(--bad)}
+.tag.me{background:rgba(242,193,78,.16);color:var(--accent)}
+.modes{display:grid;gap:8px}
+.mode{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
+.mode input{margin-top:3px;accent-color:var(--accent);width:18px;height:18px}
+.mode b{display:block}
+.mode small{display:block;color:var(--muted);font-size:13px;line-height:1.5;margin-top:2px}
+input.f{display:block;width:100%;font:inherit;font-size:17px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-top:8px}
+.codebox{margin-top:12px;background:var(--bg);border:1px dashed var(--accent);border-radius:14px;padding:14px;text-align:center}
+.codebox .c{font-size:30px;font-weight:800;letter-spacing:.2em;direction:ltr;font-variant-numeric:tabular-nums}
+.codebox p{margin:6px 0 0;color:var(--muted);font-size:13px}
+.empty{color:var(--muted);text-align:center;padding:16px 0}
+.gate{text-align:center;padding:60px 10px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>ניהול<small>AI Games Center</small></h1>
+    <a class="back" href="/">← לדף הבית</a>
+  </div>
+  <div id="gate" class="gate">טוען…</div>
+  <div id="app" hidden>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-t="games" aria-selected="true">משחקים</button>
+      <button role="tab" data-t="users" aria-selected="false">משתמשים</button>
+      <button role="tab" data-t="pass" aria-selected="false">סיסמאות</button>
+    </div>
+
+    <section id="t-games">
+      <div class="card">
+        <h2>המשחקים בדף הבית</h2>
+        <p class="hint">מדליקים את המשחקים שיופיעו בדף הבית. השינוי נכנס לתוקף מיד, בלי העלאה. משחקים שעוד לא באתר אפשר לסמן לבקשת הוספה.</p>
+        <div id="games"></div>
+        <div class="row"><button class="btn pri" id="saveGames">שמירה</button></div>
+        <p class="msg" id="gamesMsg"></p>
+      </div>
+      <div class="card">
+        <h2>הפצת גרסאות</h2>
+        <p class="hint">"בקשת הפצה" שומרת אילו משחקים לעדכן. אחר כך כותבים ל-Claude בשיחה <b>"הפץ"</b>, והוא בונה את המשחקים המסומנים מהגרסה האחרונה שלהם, מוסיף משחקים חדשים שסימנת ומעלה הכול לאתר.</p>
+        <div class="row"><button class="btn" id="deployBtn">📦 בקשת הפצה</button></div>
+        <p class="msg" id="deployMsg"></p>
+      </div>
+    </section>
+
+    <section id="t-users" hidden>
+      <div class="card">
+        <h2>משתמשים רשומים</h2>
+        <p class="hint">חסימה מונעת כניסה ושמירת שיאים, ואפשר לבטל אותה. הסרה מוחקת את המשתמש (ואם בוחרים, גם את השיאים וההתקדמות שלו). "קוד חדש" נותן קוד זמני בן 4 ספרות למי ששכח.</p>
+        <div id="users"></div>
+      </div>
+    </section>
+
+    <section id="t-pass" hidden>
+      <div class="card">
+        <h2>איך נרשמים</h2>
+        <div class="modes">
+          <label class="mode"><input type="radio" name="mode" value="family"><span><b>סיסמה משפחתית אחת</b><small>כל מי שמקבל את הסיסמה יכול להירשם. פשוט לשיתוף.</small></span></label>
+          <label class="mode"><input type="radio" name="mode" value="email"><span><b>קוד אישי לפי אימייל</b><small>לכל אדם קוד משלו שמחושב מהמייל שלו בנוסחה סודית. הקוד עובד רק עם המייל הזה, כך שאם הוא עובר הלאה, אי אפשר להירשם איתו.</small></span></label>
+        </div>
+        <p class="msg" id="modeMsg"></p>
+      </div>
+      <div class="card" id="famCard">
+        <h2>הסיסמה המשפחתית</h2>
+        <p class="hint" id="famState"></p>
+        <input class="f" id="famPass" type="text" autocomplete="off" placeholder="סיסמה חדשה (4 תווים לפחות)">
+        <div class="row"><button class="btn pri" id="famSave">שמירת סיסמה</button><button class="btn danger" id="famClear">ביטול הסיסמה</button></div>
+        <p class="msg" id="famMsg"></p>
+      </div>
+      <div class="card" id="invCard">
+        <h2>קוד אישי לפי אימייל</h2>
+        <p class="hint">כותבים את המייל של מי שרוצים להזמין, ומקבלים את הקוד שלו. אותו מייל תמיד מקבל אותו קוד.</p>
+        <input class="f" id="invMail" type="email" inputmode="email" dir="ltr" placeholder="name@example.com">
+        <div class="row"><button class="btn pri" id="invGo">יצירת קוד</button></div>
+        <div id="invOut"></div>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const when=t=>{if(!t)return '—';const d=new Date(t),m=Math.round((Date.now()-t)/60000);
+ if(m<2)return 'עכשיו';if(m<60)return `לפני ${m} דק׳`;if(m<1440)return `לפני ${Math.round(m/60)} שע׳`;
+ return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});};
+const say=(id,t,err)=>{$(id).textContent=t;$(id).classList.toggle('err',!!err);};
+let cat=[],ov=null,sel=new Set();
+
+/* tabs */
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;
+ document.querySelectorAll('.tabs [data-t]').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
+ ['games','users','pass'].forEach(t=>$('t-'+t).hidden=t!==b.dataset.t);});
+
+async function load(){
+ ov=await OFEK.api('/api/admin/overview');
+ const shown=ov.homeGames||cat.filter(g=>g.onSite).map(g=>g.id);
+ sel=new Set([...shown,...((ov.deployRequest&&ov.deployRequest.games)||[]).filter(id=>!cat.find(g=>g.id===id&&g.onSite))]);
+ renderGames();renderUsers();renderPass();}
+
+/* games */
+function renderGames(){
+ $('games').innerHTML=cat.map(g=>`<div class="game"><div class="ic">${g.icon?`<img src="${g.icon}" alt="">`:esc(g.emoji||'🎮')}</div>
+  <div class="tx"><b>${esc(g.name)}</b><small>${esc(g.note||g.sub||'')}</small>
+  <span class="badge ${g.onSite?'on':'off'}">${g.onSite?'באתר':'עוד לא באתר'}</span></div>
+  <label class="sw" title="${g.onSite?'מוצג בדף הבית':'לסמן להוספה'}"><input type="checkbox" data-id="${g.id}" ${sel.has(g.id)?'checked':''} ${g.note?'disabled':''}><span></span></label></div>`).join('');}
+$('games').addEventListener('change',e=>{const c=e.target.closest('[data-id]');if(!c)return;c.checked?sel.add(c.dataset.id):sel.delete(c.dataset.id);});
+$('saveGames').onclick=async()=>{
+ const home=cat.filter(g=>g.onSite&&sel.has(g.id)).map(g=>g.id);
+ try{await OFEK.api('/api/admin/config',{method:'POST',body:{homeGames:home}});
+  const pend=cat.filter(g=>!g.onSite&&sel.has(g.id)).length;
+  say('gamesMsg',`נשמר. בדף הבית יש עכשיו ${home.length} משחקים`+(pend?` · ${pend} מסומנים להוספה (צריך הפצה)`:''));}
+ catch(e){say('gamesMsg','השמירה לא הצליחה',true);}};
+$('deployBtn').onclick=async()=>{
+ const games=[...sel];
+ try{await OFEK.api('/api/admin/config',{method:'POST',body:{homeGames:cat.filter(g=>g.onSite&&sel.has(g.id)).map(g=>g.id),deployRequest:{games}}});
+  say('deployMsg',`נשמרה בקשה ל-${games.length} משחקים. עכשיו כותבים ל-Claude בשיחה: "הפץ"`);}
+ catch(e){say('deployMsg','השמירה לא הצליחה',true);}};
+
+/* users */
+function renderUsers(){
+ const me=OFEK.player,u=ov.players;
+ if(!u.length){$('users').innerHTML='<p class="empty">עוד אין משתמשים רשומים.</p>';return;}
+ $('users').innerHTML=u.map(p=>`<div class="user${p.blocked?' blocked':''}" data-n="${esc(p.name)}">
+  <div class="hd"><b>${esc(p.name)}</b>${p.name===me?'<span class="tag me">אתה</span>':''}${p.blocked?'<span class="tag">חסום</span>':''}<span class="mail">${esc(p.email)}</span></div>
+  <div class="meta">נרשם ${when(p.created)} · נכנס ${when(p.last_seen)} · ${p.games} משחקים בטבלאות</div>
+  <div class="acts">${p.name===me?'<button class="btn" data-a="reset">קוד חדש</button>':`
+   <button class="btn" data-a="${p.blocked?'unblock':'block'}">${p.blocked?'ביטול חסימה':'חסימה'}</button>
+   <button class="btn" data-a="reset">קוד חדש</button>
+   <button class="btn danger" data-a="remove">הסרה</button>`}</div><p class="msg"></p></div>`).join('');}
+$('users').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;const box=b.closest('.user'),name=box.dataset.n,a=b.dataset.a,msg=box.querySelector('.msg');
+ if(a==='remove'&&!b.dataset.sure){b.dataset.sure=1;b.textContent='בטוח? לחץ שוב';
+  const k=document.createElement('button');k.className='btn danger';k.dataset.a='remove-all';k.textContent='הסרה כולל השיאים';b.after(k);return;}
+ const action=a==='remove-all'?'remove':a;
+ try{const r=await OFEK.api('/api/admin/player',{method:'POST',body:{name,action,removeData:a==='remove-all'}});
+  if(action==='reset'){msg.textContent=`הקוד החדש של ${name}: ${r.pin}`;return;}
+  await load();}
+ catch(err){msg.textContent='הפעולה לא הצליחה';msg.classList.add('err');}});
+
+/* passwords */
+function renderPass(){
+ document.querySelectorAll('[name=mode]').forEach(r=>r.checked=r.value===ov.mode);
+ $('famCard').hidden=ov.mode!=='family';$('invCard').hidden=ov.mode!=='email';
+ $('famState').textContent=ov.familySet?'יש סיסמה משפחתית. אפשר להחליף אותה: מי שכבר מחובר נשאר מחובר, ומכשירים חדשים יצטרכו את הסיסמה החדשה.'
+  +(ov.familyFromSecret?' (יש גם סיסמה שהוגדרה בהגדרות Cloudflare, והיא ממשיכה לעבוד.)':''):'כרגע אין סיסמה: כל מי שיש לו את הכתובת יכול להירשם.';
+ $('famClear').hidden=!ov.familySet;}
+document.querySelectorAll('[name=mode]').forEach(r=>r.onchange=async()=>{
+ try{await OFEK.api('/api/admin/config',{method:'POST',body:{mode:r.value}});ov.mode=r.value;renderPass();
+  say('modeMsg',r.value==='email'?'מעכשיו נרשמים עם מייל וקוד אישי. מי שכבר רשום לא מושפע.':'מעכשיו נרשמים עם הסיסמה המשפחתית.');}
+ catch(e){say('modeMsg','השמירה לא הצליחה',true);}});
+$('famSave').onclick=async()=>{const p=$('famPass').value.trim();if(p.length<4){say('famMsg','צריך 4 תווים לפחות',true);return;}
+ try{await OFEK.api('/api/admin/config',{method:'POST',body:{familyPassword:p}});$('famPass').value='';ov.familySet=true;renderPass();say('famMsg','הסיסמה נשמרה');}
+ catch(e){say('famMsg','השמירה לא הצליחה',true);}};
+$('famClear').onclick=async()=>{try{await OFEK.api('/api/admin/config',{method:'POST',body:{familyPassword:''}});ov.familySet=ov.familyFromSecret;renderPass();say('famMsg','הסיסמה בוטלה');}
+ catch(e){say('famMsg','הפעולה לא הצליחה',true);}};
+$('invGo').onclick=async()=>{const email=$('invMail').value.trim();
+ try{const r=await OFEK.api('/api/admin/invite',{method:'POST',body:{email}});
+  const text=`הזמנה ל-AI Games Center 🎮\n${location.origin}\nהמייל שלך: ${r.email}\nהקוד האישי שלך: ${r.code}`;
+  $('invOut').innerHTML=`<div class="codebox"><div class="c">${esc(r.code)}</div><p>${esc(r.email)}</p>
+   <div class="row" style="justify-content:center"><button class="btn" id="invCopy">העתקת הודעה</button>${navigator.share?'<button class="btn" id="invShare">שיתוף</button>':''}</div></div>`;
+  $('invCopy').onclick=async()=>{try{await navigator.clipboard.writeText(text);$('invCopy').textContent='הועתק ✓';}catch(e){prompt('העתיקו:',text);}};
+  if($('invShare'))$('invShare').onclick=()=>navigator.share({text}).catch(()=>{});}
+ catch(e){$('invOut').innerHTML='<p class="msg err">כתובת המייל לא תקינה</p>';}};
+
+/* start: only the site owner gets in */
+(async()=>{
+ try{cat=(await (await fetch('/catalog.json',{cache:'no-store'})).json()).games||[];}catch(e){}
+ if(!(await OFEK.ready)){$('gate').textContent='אין חיבור לשרת.';return;}
+ if(!OFEK.player&&!(await OFEK.ensure())){$('gate').textContent='צריך להיכנס כדי לנהל.';return;}
+ try{await load();$('gate').hidden=true;$('app').hidden=false;}
+ catch(e){$('gate').innerHTML=e.code===403?'הדף הזה מיועד למנהל האתר בלבד.':'משהו השתבש. נסו לרענן.';}
+ OFEK.onPlayer(()=>location.reload());
+})();
+})();
+</script>
+</body>
+</html>

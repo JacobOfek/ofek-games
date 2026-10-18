@@ -49,11 +49,7 @@ h1 span{color:var(--accent)}
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const GAMES=[
- {id:'breakout',href:'/breakout/',icon:'/icons/breakout-192.png',name:'שובר אריחים',sub:'שני משחקים · טבלת שיאים משפחתית'},
- {id:'blocks',href:'/blocks/',icon:'/icons/blocks-192.png',name:'בלוקים',sub:'טטריס · שלבים ומשימות'},
- {id:'snake',href:'/snake/',icon:'/icons/snake-192.png',name:'My Snake',sub:'קלאסי ומבוך · נחש יריב'},
-];
+let GAMES=[];   // filled from /catalog.json and the dashboard's choice (/api/config)
 if(navigator.standalone===true||matchMedia('(display-mode: standalone),(display-mode: fullscreen)').matches)document.documentElement.classList.add('standalone');
 const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n).toLocaleString('en-US');
@@ -63,7 +59,7 @@ const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k
 const favKey=()=>'hub-favs:'+(OFEK.player||'');
 let favs=[];
 const readFavs=()=>{try{const a=JSON.parse(LS.get(favKey())||'[]');favs=Array.isArray(a)?a.filter(x=>GAMES.some(g=>g.id===x)):[];}catch(e){favs=[];}};
-async function syncFavs(){if(!OFEK.player)return;
+async function syncFavs(){await gamesReady;if(!OFEK.player)return;
  try{const d=await OFEK.api('/api/save?app=hub');const s=d.kv&&d.kv['hub-favs'];
   if(s){const a=JSON.parse(s);if(Array.isArray(a)){favs=a.filter(x=>GAMES.some(g=>g.id===x));LS.set(favKey(),JSON.stringify(favs));render();}}}catch(e){}}
 function saveFavs(){LS.set(favKey(),JSON.stringify(favs));
@@ -91,7 +87,12 @@ async function leaders(){
  OFEK.api('/api/tables?app=snake').then(d=>{const all=Object.values(d.tables||{}).flat().sort((x,y)=>y.score-x.score);
   lead('snake',all[0]);}).catch(()=>{});
 }
-readFavs();render();
+async function loadGames(){
+ let cat=[];try{cat=(await (await fetch('/catalog.json',{cache:'no-store'})).json()).games||[];}catch(e){}
+ let show=null;try{const c=await (await fetch('/api/config',{cache:'no-store'})).json();show=c.homeGames;}catch(e){}
+ GAMES=cat.filter(g=>g.onSite&&(!show||show.includes(g.id)));
+ if(show)GAMES.sort((a,b)=>show.indexOf(a.id)-show.indexOf(b.id));}
+const gamesReady=loadGames().then(()=>{readFavs();render();});
 OFEK.onPlayer(()=>{showWho();readFavs();render();syncFavs();});
 leaders();
 OFEK.ready.then(ok=>{if(!ok)return;if(!OFEK.player)OFEK.ensure();else syncFavs();});
