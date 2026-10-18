@@ -60,7 +60,7 @@ const favKey=()=>'hub-favs:'+(OFEK.player||'');
 let favs=[];
 const readFavs=()=>{try{const a=JSON.parse(LS.get(favKey())||'[]');favs=Array.isArray(a)?a.filter(x=>GAMES.some(g=>g.id===x)):[];}catch(e){favs=[];}};
 async function syncFavs(){await gamesReady;if(!OFEK.player)return;
- try{const d=await OFEK.api('/api/save?app=hub');const s=d.kv&&d.kv['hub-favs'];
+ try{const d=await OFEK.api('/api/save?app=hub',{quiet:true});const s=d.kv&&d.kv['hub-favs'];
   if(s){const a=JSON.parse(s);if(Array.isArray(a)){favs=a.filter(x=>GAMES.some(g=>g.id===x));LS.set(favKey(),JSON.stringify(favs));render();}}}catch(e){}}
 function saveFavs(){LS.set(favKey(),JSON.stringify(favs));
  if(OFEK.player)OFEK.api('/api/save?app=hub',{method:'PUT',body:{kv:{'hub-favs':JSON.stringify(favs)}}}).catch(()=>{});}
@@ -80,11 +80,11 @@ const lead=(id,best)=>{leads[id]=best?'🏆 '+esc(best.name)+' · '+fmt(best.sco
 async function leaders(){
  if(!(await OFEK.ready))return;
  showWho();
- OFEK.api('/api/scores?app=breakout&game=1').then(a=>OFEK.api('/api/scores?app=breakout&game=2').then(b=>{
+ OFEK.api('/api/scores?app=breakout&game=1',{quiet:true}).then(a=>OFEK.api('/api/scores?app=breakout&game=2',{quiet:true}).then(b=>{
   const all=[...(a.top||[]),...(b.top||[])].sort((x,y)=>y.score-x.score);
   lead('breakout',all[0]&&{name:all[0].player,score:all[0].score});})).catch(()=>{});
- OFEK.api('/api/tables?app=blocks').then(d=>{const c=(d.tables||{}).classic||[];lead('blocks',c[0]);}).catch(()=>{});
- OFEK.api('/api/tables?app=snake').then(d=>{const all=Object.values(d.tables||{}).flat().sort((x,y)=>y.score-x.score);
+ OFEK.api('/api/tables?app=blocks',{quiet:true}).then(d=>{const c=(d.tables||{}).classic||[];lead('blocks',c[0]);}).catch(()=>{});
+ OFEK.api('/api/tables?app=snake',{quiet:true}).then(d=>{const all=Object.values(d.tables||{}).flat().sort((x,y)=>y.score-x.score);
   lead('snake',all[0]);}).catch(()=>{});
 }
 async function loadGames(){
@@ -95,7 +95,10 @@ async function loadGames(){
 const gamesReady=loadGames().then(()=>{readFavs();render();});
 OFEK.onPlayer(()=>{showWho();readFavs();render();syncFavs();});
 leaders();
-OFEK.ready.then(ok=>{if(!ok)return;if(!OFEK.player)OFEK.ensure();else syncFavs();});
+// on iPhone/iPad in the browser (before "Add to Home Screen") don't push sign-up: the installed app keeps its own storage
+const iosBrowser=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const standalone=document.documentElement.classList.contains('standalone');
+OFEK.ready.then(ok=>{if(!ok)return;if(!OFEK.player){if(standalone||!iosBrowser)OFEK.ensure();}else syncFavs();});
 addEventListener('pageshow',e=>{if(e.persisted)leaders();});
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
 })();

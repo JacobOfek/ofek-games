@@ -2,7 +2,7 @@
    window.OFEK:
      OFEK.ready       Promise<boolean>  true when the shared database is reachable
      OFEK.player      logged-in player name, or null
-     OFEK.api(path, {method, body})    JSON call with the family code + player token; asks for them when needed
+     OFEK.api(path, {method, body, quiet})  JSON call with the family code + player token; asks for them when needed (not when quiet)
      OFEK.ensure()    Promise<boolean>  logged in (shows the login screen if not)
      OFEK.login({switch:true})         let the person choose / change player
      OFEK.onPlayer(fn)                 called with the new name after every login / logout
@@ -37,8 +37,8 @@
   async function api(path, opt) {
     for (let i = 0; i < 3; i++) {
       const r = await raw(path, opt);
-      if (r.status === 401) { if (await askCode()) continue; throw err(401, r.data); }
-      if (r.status === 403 && r.data && r.data.error === 'auth') { setLogin(null, null); if (await login()) continue; throw err(403, r.data); }
+      if (r.status === 401) { if (!(opt && opt.quiet) && await askCode()) continue; throw err(401, r.data); }
+      if (r.status === 403 && r.data && r.data.error === 'auth') { setLogin(null, null); if (!(opt && opt.quiet) && await login()) continue; throw err(403, r.data); }
       if (!r.ok) throw err(r.status, r.data);
       return r.data;
     }
