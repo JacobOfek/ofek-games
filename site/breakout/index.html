@@ -119,6 +119,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;displa
 @media (prefers-reduced-motion:reduce){.toast{animation:none}}
 :root[data-game="2"] .toast{background:linear-gradient(90deg,#5AA8FF,#A98BFF);color:#070B1E;box-shadow:0 0 22px rgba(120,160,255,.6)}
 </style>
+<style id="siteSafe">/* room for the iPhone status bar and home indicator */body{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)!important;padding-bottom:env(safe-area-inset-bottom,0px)!important}</style>
 </head>
 <body>
 <header>

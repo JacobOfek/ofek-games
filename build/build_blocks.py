@@ -57,7 +57,7 @@ async function cfInit(){
  CF.on=true;
  const note=document.createElement('p');note.className='cfnote';note.textContent='🌐 טבלת שיאים משפחתית, משותפת לכל המכשירים';
  $('scoreList').before(note);
- let remote={};try{remote=(await OFEK.api('/api/tables?app=blocks')).tables||{};}catch(e){CF.on=false;return;}
+ let remote={};try{remote=(await OFEK.api('/api/tables?app=blocks',{quiet:true})).tables||{};}catch(e){if(e.code!==401&&e.code!==403){CF.on=false;return;}}
  const names=new Set([...Object.keys(remote),...localTables()]);
  for(const m of names){const mine=getScores(m),theirs=remote[m]||[];
   CF.quiet=true;setScores(m,mergeScores(theirs,mine));CF.quiet=false;

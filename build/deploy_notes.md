@@ -6,5 +6,6 @@
    Other games: `python3 build/port_game.py SOURCE ID "Name" THEME [corner]` (corner of the home button: tl/tr/bl/br).
    Current corners: pulse-lanes tl, boom tl, wonders-dice tr, architects tr, puzzle tl.
    Puzzle: replace the "saving photos not available" notice (see deploy of 2026-10-18).
-4. Update site/catalog.json (onSite, icon, href), bump the cache name in site/sw.js, commit and push.
-5. In the dashboard, the games the owner switched on appear on the home page.
+4. Run `python3 build/safe_area.py` (keeps every game clear of the iPhone status bar and home indicator).
+5. Update site/catalog.json (onSite, icon, href), bump the cache name in site/sw.js, commit and push.
+6. In the dashboard, the games the owner switched on appear on the home page.
