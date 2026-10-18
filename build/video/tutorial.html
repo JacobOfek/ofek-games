@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0d0f16;font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;color:#ECEEF3}
+#bg{position:absolute;inset:0;background:radial-gradient(900px 700px at 50% 30%,#1c2340 0%,#0d0f16 70%)}
+#head{position:absolute;top:110px;left:70px;right:70px;height:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px}
+#num{width:96px;height:96px;border-radius:50%;background:#F2C14E;color:#1d1600;font-size:54px;font-weight:800;display:grid;place-items:center}
+#cap{font-size:58px;font-weight:700;line-height:1.25}
+#sub{font-size:36px;color:#9aa3b8;line-height:1.35;margin-top:-6px}
+#phone{position:absolute;left:250px;top:470px;width:580px;height:1236px;border-radius:84px;background:#05060a;box-shadow:0 0 0 6px #2a2f3d,0 40px 120px rgba(0,0,0,.6)}
+#screen{position:absolute;left:10px;top:10px;width:560px;height:1216px;border-radius:74px;overflow:hidden;background:#000}
+#s{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:0 0;transform:scale(1.4359)}
+.layer{position:absolute;inset:0}
+#scrA,#scrB{position:absolute;inset:0;width:390px;height:844px}
+#island{position:absolute;left:50%;top:12px;width:110px;height:32px;margin-left:-55px;background:#000;border-radius:20px;z-index:50}
+/* safari chrome */
+#safari .bar{position:absolute;left:0;right:0;bottom:0;height:120px;background:rgba(242,242,247,.96);border-top:1px solid #d1d1d6}
+#safari .addr{position:absolute;left:14px;right:14px;top:10px;height:44px;border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;gap:6px;color:#1c1c1e;font-size:16px;direction:ltr}
+#safari .tools{position:absolute;left:0;right:0;top:64px;height:44px;display:flex;justify-content:space-around;align-items:center;direction:ltr}
+#safari svg{width:26px;height:26px;stroke:#0a7aff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* share sheet */
+#sheet{position:absolute;left:0;right:0;bottom:0;height:560px;background:#f2f2f7;border-radius:14px 14px 0 0;color:#1c1c1e;box-shadow:0 -10px 40px rgba(0,0,0,.3)}
+#sheet .hd{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid #e0e0e5}
+#sheet .hd img{width:44px;height:44px;border-radius:10px}
+#sheet .hd b{font-size:15px}#sheet .hd small{display:block;color:#8e8e93;font-size:12px;direction:ltr;text-align:right}
+#sheet .ppl{display:flex;gap:16px;padding:14px 16px}
+#sheet .ppl i{width:56px;height:56px;border-radius:50%;background:#d1d1d6;display:block}
+#sheet .grp{margin:8px 14px;background:#fff;border-radius:12px;overflow:hidden}
+#sheet .it{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;font-size:16px;border-top:1px solid #ececf0}
+#sheet .it:first-child{border-top:0}
+#sheet .it svg{width:22px;height:22px;stroke:#1c1c1e;fill:none;stroke-width:1.8}
+#sheet .it.hl{background:#e5f0ff}
+/* add dialog */
+#add{position:absolute;inset:0;background:#f2f2f7;color:#1c1c1e}
+#add .nav{display:flex;justify-content:space-between;align-items:center;padding:58px 16px 12px;font-size:16px}
+#add .nav .a{color:#0a7aff}#add .nav .t{font-weight:600}
+#add .nav .go{color:#0a7aff;font-weight:600;padding:4px 8px;border-radius:8px}
+#add .box{margin:16px;background:#fff;border-radius:12px;display:flex;gap:12px;padding:14px;align-items:center}
+#add .box img{width:64px;height:64px;border-radius:14px}
+#add .box .nm{font-size:17px;border-bottom:1px solid #e0e0e5;padding-bottom:6px}
+#add .box .u{color:#8e8e93;font-size:13px;margin-top:6px;direction:ltr;text-align:right}
+#add .tg{margin:0 16px;background:#fff;border-radius:12px;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;font-size:16px}
+#add .sw{width:51px;height:31px;border-radius:16px;background:#34c759;position:relative}
+#add .sw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+/* home screen */
+#home{position:absolute;inset:0;background:linear-gradient(160deg,#3b5bdb,#9c36b5 55%,#e8590c)}
+#home .grid{position:absolute;left:24px;right:24px;top:70px;display:grid;grid-template-columns:repeat(4,1fr);gap:26px 20px}
+#home .app{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;color:#fff}
+#home .app i{width:62px;height:62px;border-radius:15px;display:block;background:rgba(255,255,255,.28)}
+#home .app img{width:62px;height:62px;border-radius:15px;display:block}
+#home .dock{position:absolute;left:14px;right:14px;bottom:14px;height:92px;border-radius:30px;background:rgba(255,255,255,.25);display:flex;justify-content:space-around;align-items:center}
+#home .dock i{width:62px;height:62px;border-radius:15px;background:rgba(255,255,255,.35);display:block}
+/* pointers */
+#tap{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(242,193,78,.45);border:3px solid #F2C14E;z-index:60;pointer-events:none}
+#hl{position:absolute;border:3px solid #F2C14E;border-radius:14px;box-shadow:0 0 0 4px rgba(242,193,78,.25);z-index:55;pointer-events:none}
+/* title / end cards */
+#card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px;text-align:center;background:radial-gradient(900px 700px at 50% 40%,#1c2340 0%,#0d0f16 70%);z-index:100}
+#card img{width:300px;height:300px;border-radius:66px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+#card h1{font-size:76px;direction:ltr}#card h1 span{color:#F2C14E}
+#card p{font-size:46px;color:#c3c9d8;line-height:1.35;padding:0 80px}
+#dots{position:absolute;bottom:90px;left:0;right:0;display:flex;justify-content:center;gap:16px}
+#dots i{width:18px;height:18px;border-radius:50%;background:#2f3546;display:block}
+#dots i.on{background:#F2C14E}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="head"><div id="num">1</div><div id="cap"></div><div id="sub"></div></div>
+<div id="phone"><div id="screen"><div id="s">
+  <img id="scrA" src="s_safari_page.png"><img id="scrB" src="s_safari_page.png" style="opacity:0">
+  <div id="home" class="layer">
+    <div class="grid" id="hgrid"></div>
+    <div class="dock"><i></i><i></i><i></i><i></i></div>
+  </div>
+  <div id="safari" class="layer"><div class="bar">
+    <div class="addr"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#8e8e93"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>ai-games-center.pages.dev</div>
+    <div class="tools">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      <svg viewBox="0 0 24 24" style="opacity:.35"><path d="M9 5l7 7-7 7"/></svg>
+      <svg viewBox="0 0 24 24" id="shareIc"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="12" rx="2"/><rect x="8" y="8" width="12" height="12" rx="2"/></svg>
+    </div></div></div>
+  <div id="sheet"><div class="hd"><img src="icon.png"><div><b>AI Games Center</b><small>ai-games-center.pages.dev</small></div></div>
+    <div class="ppl"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="grp"><div class="it">העתקה<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg></div>
+      <div class="it">הוספה לרשימת הקריאה<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg></div>
+      <div class="it">הוספת סימנייה<svg viewBox="0 0 24 24"><path d="M5 5h14v15H5z"/></svg></div>
+      <div class="it" id="addRow">הוספה למסך הבית<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg></div></div>
+  </div>
+  <div id="add"><div class="nav"><span class="a">ביטול</span><span class="t">הוספה למסך הבית</span><span class="go" id="addGo">הוספה</span></div>
+    <div class="box"><img src="icon.png"><div style="flex:1"><div class="nm">AI Games</div><div class="u">https://ai-games-center.pages.dev/</div></div></div>
+    <div class="tg" id="tgRow">פתיחה כאפליקציית אינטרנט<div class="sw"></div></div>
+  </div>
+  <div id="island"></div>
+  <div id="hl"></div><div id="tap"></div>
+</div></div></div>
+<div id="dots"></div>
+<div id="card"><img src="icon.png"><h1>AI Games <span>Center</span></h1><p id="cardText"></p></div>
+<script>
+const B={"s_signup": {"#ofkMail": {"x": 41, "y": 333, "width": 308, "height": 50}, "#ofkFam": {"x": 41, "y": 393, "width": 308, "height": 50}, "#ofkGo": {"x": 41, "y": 477, "width": 308, "height": 46}, "#ofkOld": {"x": 98.734375, "y": 535, "width": 192.53125, "height": 29}}, "s_signup_filled": {"#ofkMail": {"x": 41, "y": 333, "width": 308, "height": 50}, "#ofkFam": {"x": 41, "y": 393, "width": 308, "height": 50}, "#ofkGo": {"x": 41, "y": 477, "width": 308, "height": 46}}, "s_profile": {"#ofkName": {"x": 41, "y": 334, "width": 308, "height": 50}, "#ofkPin": {"x": 41, "y": 394, "width": 308, "height": 50}, "#ofkPin2": {"x": 41, "y": 454, "width": 308, "height": 50}, "#ofkGo": {"x": 41, "y": 538, "width": 308, "height": 46}}, "s_profile_filled": {"#ofkName": {"x": 41, "y": 334, "width": 308, "height": 50}, "#ofkPin": {"x": 41, "y": 394, "width": 308, "height": 50}, "#ofkPin2": {"x": 41, "y": 454, "width": 308, "height": 50}, "#ofkGo": {"x": 41, "y": 538, "width": 308, "height": 46}}, "s_home": {".tile a": {"x": 69, "y": 86, "width": 304, "height": 108}, ".star": {"x": 17, "y": 86, "width": 52, "height": 108}, "#who": {"x": 16, "y": 28, "width": 73.5, "height": 35}}};
+const $=id=>document.getElementById(id);
+const S=1.4359;
+// home screen grid: placeholder apps + our icon in slot 10
+(()=>{let h='';for(let i=0;i<16;i++){h+=i===9?'<div class="app" id="ourApp"><img src="icon.png"><span>AI Games</span></div>':'<div class="app"><i></i><span>&nbsp;</span></div>';}$('hgrid').innerHTML=h;})();
+const STEPS=8;$('dots').innerHTML=Array.from({length:STEPS},()=>'<i></i>').join('');
+const ease=x=>x<0?0:x>1?1:x*x*(3-2*x);
+const win=(t,a,b,f=.25)=>ease((t-a)/f)*(1-ease((t-(b-f))/f));   // 0..1 inside [a,b] with soft edges
+function rectOf(id){const r=$(id).getBoundingClientRect(),s=$('s').getBoundingClientRect();return{x:(r.left-s.left)/S,y:(r.top-s.top)/S,width:r.width/S,height:r.height/S};}
+function hl(t,a,b,box,pad=6){if(t<a||t>b)return false;const e=$('hl');e.style.opacity=win(t,a,b,.2);
+ e.style.left=(box.x-pad)+'px';e.style.top=(box.y-pad)+'px';e.style.width=(box.width+2*pad)+'px';e.style.height=(box.height+2*pad)+'px';return true;}
+function tap(t,at,box){const d=t-at;if(d<0||d>.6)return false;const c=$('tap');const x=box.x+box.width/2,y=box.y+box.height/2;
+ c.style.left=x+'px';c.style.top=y+'px';c.style.opacity=1-d/.6;c.style.transform=`scale(${.6+d*1.4})`;return true;}
+const SC=[
+ {a:0,b:3.5,card:'סרטון קצר: התקנת האפליקציה באייפון'},
+ {a:3.5,b:8,n:1,cap:'פותחים את הקישור ב-Safari',sub:'ai-games-center.pages.dev'},
+ {a:8,b:12,n:2,cap:'לוחצים על כפתור השיתוף',sub:'הריבוע עם החץ, בתחתית המסך'},
+ {a:12,b:16.5,n:3,cap:'בוחרים "הוספה למסך הבית"',sub:'אם לא רואים, גוללים מטה ברשימה'},
+ {a:16.5,b:22,n:4,cap:'"פתיחה כאפליקציית אינטרנט" דלוק',sub:'ואז לוחצים "הוספה"'},
+ {a:22,b:26.5,n:5,cap:'האייקון מופיע במסך הבית',sub:'לוחצים עליו כדי לפתוח'},
+ {a:26.5,b:32.5,n:6,cap:'בפעם הראשונה: מייל וסיסמה כללית',sub:'או הקוד האישי שקיבלתם'},
+ {a:32.5,b:38,n:7,cap:'בוחרים שם וקוד של 4 ספרות',sub:'את הקוד צריך רק כשמחליפים שחקן'},
+ {a:38,b:42.5,n:8,cap:'זהו! המכשיר זוכר אתכם',sub:'בוחרים משחק · ⭐ מוסיף למועדפים'},
+ {a:42.5,b:46.5,card:'פותחים מהאייקון ומשחקים במסך מלא 🎮'},
+];
+const TOTAL=46.5;
+function show(id,o){$(id).style.opacity=o;$(id).style.display=o>0.001?'':'none';}
+function render(t){
+ const sc=SC.find(s=>t>=s.a&&t<s.b)||SC[SC.length-1];
+ // cards
+ if(sc.card){show('card',Math.min(1,win(t,sc.a,sc.b+ (sc===SC[SC.length-1]?1:0),.35)+ (sc===SC[0]&&t<.35?1:0)));$('cardText').textContent=sc.card;}else show('card',0);
+ if(sc.card)return;
+ $('num').textContent=sc.n;$('cap').textContent=sc.cap;$('sub').textContent=sc.sub||'';
+ const hf=win(t,sc.a,sc.b,.3);$('head').style.opacity=hf;$('head').style.transform=`translateY(${(1-hf)*20}px)`;
+ [...$('dots').children].forEach((d,i)=>d.className=i<sc.n?'on':'');
+ $('hl').style.opacity=0;$('tap').style.opacity=0;
+ // layers
+ const n=sc.n;
+ show('safari',n>=1&&n<=3?1:0);show('sheet',0);show('add',0);show('home',0);
+ const A=$('scrA'),Bi=$('scrB');Bi.style.opacity=0;
+ if(n<=3){A.src='s_safari_page.png';}
+ if(n===2){tap(t,9.4,rectOf('shareIc'));const k=ease((t-10.1)/.5);if(k>0){show('sheet',1);$('sheet').style.transform=`translateY(${(1-k)*560}px)`;}}
+ if(n===3){show('sheet',1);$('sheet').style.transform='none';const r=rectOf('addRow');$('addRow').classList.toggle('hl',t>12.6);hl(t,12.6,15.2,r,2);tap(t,15.0,r);}
+ if(n===4){const k=ease((t-16.5)/.4);show('add',1);$('add').style.transform=`translateY(${(1-k)*844}px)`;hl(t,17.2,19.8,rectOf('tgRow'),3);hl(t,20,21.6,rectOf('addGo'),3);tap(t,21.2,rectOf('addGo'));}
+ if(n===5){show('home',1);const k=ease((t-22.6)/.5),ic=$('ourApp');ic.style.transform=`scale(${.2+.8*k})`;ic.style.opacity=k;
+   const r=rectOf('ourApp');hl(t,23.4,25.4,r,6);tap(t,25.3,r);}
+ if(n===6){A.src='s_signup.png';Bi.src='s_signup_filled.png';Bi.style.opacity=ease((t-28.3)/.5);
+   const b=B.s_signup;hl(t,27.2,28.9,b['#ofkMail']);hl(t,29.1,30.8,b['#ofkFam']);tap(t,31.6,b['#ofkGo']);}
+ if(n===7){A.src='s_profile.png';Bi.src='s_profile_filled.png';Bi.style.opacity=ease((t-33.9)/.5);
+   const b=B.s_profile;hl(t,33,34.6,b['#ofkName']);
+   if(t>=34.8&&t<=36.6){const p=b['#ofkPin'],q=b['#ofkPin2'];hl(t,34.8,36.6,{x:p.x,y:p.y,width:p.width,height:q.y+q.height-p.y});}
+   tap(t,37.2,b['#ofkGo']);}
+ if(n===8){A.src='s_home.png';const b=B.s_home;hl(t,38.8,40.6,b['.tile a'],4);hl(t,40.8,42.2,b['.star'],2);}
+}
+window.render=render;window.TOTAL=TOTAL;render(0);
+</script>
+</body>
+</html>
