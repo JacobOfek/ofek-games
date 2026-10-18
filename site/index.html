@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI Games Center</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/home-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AI Games">
+<meta name="theme-color" content="#101218">
+<script src="/ofek.js"></script>
+<style>
+:root{--bg:#101218;--panel:#191C25;--panel2:#20242F;--ink:#ECEEF3;--muted:#8D94A7;--line:rgba(236,238,243,.12);--accent:#F2C14E}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+main{max-width:760px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 28px) max(16px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 32px) max(16px,env(safe-area-inset-left))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 22px}
+h1{font-size:clamp(28px,7.5vw,40px);margin:0;line-height:1.1;direction:ltr;letter-spacing:-.5px}
+h1 span{color:var(--accent)}
+.who{flex:none;font:inherit;font-size:14px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer}
+.sec{font-size:13px;color:var(--muted);margin:18px 4px 8px;letter-spacing:.02em}
+.sec:first-of-type{margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.tile{position:relative;display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:20px;transition:border-color .12s}
+.tile.fav{border-color:rgba(242,193,78,.45)}
+.tile a{flex:1;min-width:0;display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;padding:14px;border-radius:20px}
+.tile a:active{transform:scale(.985)}
+.tile img{width:72px;height:72px;border-radius:16px;flex:none}
+.tile b{display:block;font-size:19px}
+.tile small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.tile .lead{display:block;color:var(--accent);font-size:13px;margin-top:6px;min-height:1em}
+.star{flex:none;width:52px;border:0;background:transparent;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;border-radius:0 20px 20px 0;display:grid;place-items:center}
+[dir=rtl] .star{border-radius:20px 0 0 20px}
+.star[aria-pressed="true"]{color:var(--accent)}
+.star:focus-visible,.tile a:focus-visible,.who:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>AI Games <span>Center</span></h1>
+    <button class="who" id="who" hidden></button>
+  </div>
+  <div id="list"></div>
+</main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const GAMES=[
+ {id:'breakout',href:'/breakout/',icon:'/icons/breakout-192.png',name:'שובר אריחים',sub:'שני משחקים · טבלת שיאים משפחתית'},
+ {id:'blocks',href:'/blocks/',icon:'/icons/blocks-192.png',name:'בלוקים',sub:'טטריס · שלבים ומשימות'},
+ {id:'snake',href:'/snake/',icon:'/icons/snake-192.png',name:'My Snake',sub:'קלאסי ומבוך · נחש יריב'},
+];
+if(navigator.standalone===true||matchMedia('(display-mode: standalone),(display-mode: fullscreen)').matches)document.documentElement.classList.add('standalone');
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n).toLocaleString('en-US');
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* favorites: per player, kept on this device and in the player's saved data on the server */
+const favKey=()=>'hub-favs:'+(OFEK.player||'');
+let favs=[];
+const readFavs=()=>{try{const a=JSON.parse(LS.get(favKey())||'[]');favs=Array.isArray(a)?a.filter(x=>GAMES.some(g=>g.id===x)):[];}catch(e){favs=[];}};
+async function syncFavs(){if(!OFEK.player)return;
+ try{const d=await OFEK.api('/api/save?app=hub');const s=d.kv&&d.kv['hub-favs'];
+  if(s){const a=JSON.parse(s);if(Array.isArray(a)){favs=a.filter(x=>GAMES.some(g=>g.id===x));LS.set(favKey(),JSON.stringify(favs));render();}}}catch(e){}}
+function saveFavs(){LS.set(favKey(),JSON.stringify(favs));
+ if(OFEK.player)OFEK.api('/api/save?app=hub',{method:'PUT',body:{kv:{'hub-favs':JSON.stringify(favs)}}}).catch(()=>{});}
+
+const leads={};
+function render(){
+ const f=GAMES.filter(g=>favs.includes(g.id)).sort((a,b)=>favs.indexOf(a.id)-favs.indexOf(b.id)),rest=GAMES.filter(g=>!favs.includes(g.id));
+ const tile=g=>`<div class="tile${favs.includes(g.id)?' fav':''}"><a href="${g.href}"><img src="${g.icon}" alt=""><span><b>${esc(g.name)}</b><small>${esc(g.sub)}</small><span class="lead">${leads[g.id]||''}</span></span></a>
+  <button class="star" data-id="${g.id}" aria-pressed="${favs.includes(g.id)}" aria-label="${favs.includes(g.id)?'הסרה מהמועדפים':'הוספה למועדפים'}: ${esc(g.name)}">${favs.includes(g.id)?'★':'☆'}</button></div>`;
+ $('list').innerHTML=(f.length?`<p class="sec">⭐ המועדפים שלי</p><div class="grid">${f.map(tile).join('')}</div><p class="sec">כל המשחקים</p>`:'')+`<div class="grid">${rest.map(tile).join('')}</div>`;}
+$('list').addEventListener('click',e=>{const b=e.target.closest('.star');if(!b)return;e.preventDefault();
+ const id=b.dataset.id;favs=favs.includes(id)?favs.filter(x=>x!==id):[...favs,id];saveFavs();render();});
+
+const showWho=()=>{$('who').textContent=OFEK.player?'👤 '+OFEK.player:'👤 כניסה';$('who').hidden=false;};
+$('who').onclick=()=>OFEK.login({switch:true});
+const lead=(id,best)=>{leads[id]=best?'🏆 '+esc(best.name)+' · '+fmt(best.score):'';render();};
+async function leaders(){
+ if(!(await OFEK.ready))return;
+ showWho();
+ OFEK.api('/api/scores?app=breakout&game=1').then(a=>OFEK.api('/api/scores?app=breakout&game=2').then(b=>{
+  const all=[...(a.top||[]),...(b.top||[])].sort((x,y)=>y.score-x.score);
+  lead('breakout',all[0]&&{name:all[0].player,score:all[0].score});})).catch(()=>{});
+ OFEK.api('/api/tables?app=blocks').then(d=>{const c=(d.tables||{}).classic||[];lead('blocks',c[0]);}).catch(()=>{});
+ OFEK.api('/api/tables?app=snake').then(d=>{const all=Object.values(d.tables||{}).flat().sort((x,y)=>y.score-x.score);
+  lead('snake',all[0]);}).catch(()=>{});
+}
+readFavs();render();
+OFEK.onPlayer(()=>{showWho();readFavs();render();syncFavs();});
+leaders();
+OFEK.ready.then(ok=>{if(!ok)return;if(!OFEK.player)OFEK.ensure();else syncFavs();});
+addEventListener('pageshow',e=>{if(e.persisted)leaders();});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>

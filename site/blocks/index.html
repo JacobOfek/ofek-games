@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>בלוקים</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/blocks-180.png">
+<meta name="apple-mobile-web-app-title" content="בלוקים">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#101218">
+<script src="/ofek.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14161C;--panel:#1C1F27;--ink:#E8EAF0;--muted:#8C93A6;--line:rgba(232,234,240,.14);--glass:rgba(20,22,28,.94);--accent:#4FD6E8;--ghost:rgba(232,234,240,.18)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+body{font-family:'Rubik',system-ui,-apple-system,Arial,sans-serif;display:flex;flex-direction:column;height:100%;padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+button{font:inherit;color:inherit;cursor:pointer;background:transparent}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;align-items:center;gap:14px;padding:6px 12px}
+.stat{display:flex;flex-direction:column;line-height:1.1}
+.stat small{font-size:11px;color:var(--muted)}
+.stat b{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.sp{flex:1}
+.icon{width:38px;height:38px;border:0;border-radius:11px;display:grid;place-items:center;padding:0}
+main{position:relative;flex:1;min-height:0;display:flex;gap:10px;padding:0 10px;justify-content:center;align-items:stretch;touch-action:none}
+#panels{display:contents}
+#sideLeft{order:1}.boardWrap{order:2}#sideRight{order:3}
+@media (max-width:620px){
+ main{flex-direction:column;align-items:center;gap:6px;padding:0 8px}
+ #panels{display:flex;flex-direction:row;gap:6px;width:100%;max-width:460px;order:1}
+ .side{flex-direction:row;width:auto;padding-top:0}
+ #sideLeft{flex:2}#sideRight{flex:1}
+ .side .box{flex:1;padding:4px 6px 6px}
+ .boardWrap{order:2;flex:0 0 auto;min-height:0;width:100%}
+}
+.side{display:flex;flex-direction:column;gap:10px;justify-content:flex-start;padding-top:4px;width:92px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 6px 8px}
+.box h3{margin:0 0 4px;font-size:11px;font-weight:500;color:var(--muted);text-align:center}
+.box canvas{display:block;width:100%;height:auto}
+.boardWrap{position:relative;flex:0 0 auto;display:flex;justify-content:center;align-items:center;min-height:0}
+canvas#board{display:block;touch-action:none;border-radius:10px;background:#0E1015;box-shadow:inset 0 0 0 1px var(--line)}
+.pad{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:8px 10px 4px;max-width:560px;margin:0 auto;width:100%}
+.pad button{height:52px}
+.pad button{background:var(--panel);border:1px solid var(--line);border-radius:14px;height:56px;display:grid;place-items:center;font-size:13px;color:var(--muted)}
+.pad button svg{width:26px;height:26px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pad button:active{background:#262B36}
+@media (hover:hover) and (pointer:fine){.pad{display:none}}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;padding:18px;background:var(--glass);z-index:5;overflow:auto}
+.overlay[hidden]{display:none}
+.card{text-align:center;max-width:330px}
+.card h1{font-size:40px;font-weight:800;margin:0 0 8px;letter-spacing:-.5px}
+.card h1 span{color:var(--accent)}
+.card p{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.55}
+.seg{display:flex;gap:6px;margin:0 0 18px}
+.seg button{flex:1;border:1px solid var(--line);border-radius:999px;padding:9px 4px;font-size:15px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cta{font-size:18px;font-weight:700;padding:14px 32px;border:0;border-radius:999px;background:var(--accent);color:#0E1015}
+.keys{font-size:13px;color:var(--muted);line-height:1.7;text-align:right;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:16px}
+.keys b{color:var(--ink);font-weight:500}
+.lbl{font-size:13px;color:var(--muted);margin:0 0 8px}
+.modeDesc{font-size:13px!important;margin:-8px 0 16px!important;min-height:2.6em}
+.actions{display:flex;flex-direction:column;align-items:center;gap:10px}
+.link{border:1px solid var(--line);border-radius:999px;padding:10px 22px;font-size:15px}
+.card.wide{max-width:380px;width:100%}
+.nameRow{margin:0 0 16px}
+.nameRow input{font:inherit;font-size:16px;width:100%;text-align:center;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;-webkit-user-select:text;user-select:text}
+.nameRow input:focus{outline:2px solid var(--accent);outline-offset:1px}
+table.sc{width:100%;border-collapse:collapse;font-size:14px;margin:0 0 18px;font-variant-numeric:tabular-nums}
+table.sc th{font-weight:500;color:var(--muted);font-size:12px;padding:4px 4px 6px;text-align:right}
+table.sc td{padding:7px 4px;border-top:1px solid var(--line);text-align:right}
+table.sc td.n{color:var(--muted);width:1.6em}
+table.sc td.nm{max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.sc tr.me td{color:var(--accent)}
+.bk{margin:-6px 0 16px;font-size:13px}
+.bk summary{color:var(--muted);cursor:pointer;list-style:none;padding:6px}
+.bk summary::-webkit-details-marker{display:none}
+.bk p{font-size:13px!important;margin:6px 0 8px!important;text-align:right}
+.bk textarea{width:100%;height:70px;font:12px/1.4 ui-monospace,Menlo,monospace;direction:ltr;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px;resize:none;-webkit-user-select:text;user-select:text}
+.bk .row{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.bk .row button{border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px}
+.bk .msg{min-height:1.4em;color:var(--accent);margin-top:6px}
+.warn{color:#F2C14E;font-size:13px;margin:-6px 0 14px}
+.empty{color:var(--muted);margin:10px 0 20px}
+.cfnote{color:var(--muted);font-size:13px;margin:0 0 10px}
+.toast{position:absolute;left:0;top:0;transform:translate(-50%,-50%);opacity:0;pointer-events:none;z-index:3;direction:ltr;white-space:nowrap;
+ font-size:15px;font-weight:600;color:#8BEA8B;background:rgba(111,216,111,.16);border:1px solid rgba(111,216,111,.5);border-radius:999px;padding:2px 10px;font-variant-numeric:tabular-nums}
+.toast.last{color:#F2C14E;background:rgba(242,193,78,.16);border-color:rgba(242,193,78,.55)}
+.toast.show{animation:pop 3s ease-out forwards}   /* pops in, then drifts up slowly while fading out */
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}10%{opacity:.6;transform:translate(-50%,-50%) scale(1.06)}16%{opacity:.6;transform:translate(-50%,-50%) scale(1);animation-timing-function:linear}35%{opacity:.6;transform:translate(-50%,calc(-50% - 14px))}100%{opacity:0;transform:translate(-50%,calc(-50% - 56px))}}
+@media (prefers-reduced-motion:reduce){.toast.show{animation:fade 3s linear forwards}@keyframes fade{0%,35%{opacity:.6}100%{opacity:0}}}
+.bonus{position:absolute;left:0;top:0;transform:translate(-50%,-50%);opacity:0;pointer-events:none;z-index:3;direction:ltr;text-align:center;white-space:nowrap;
+ font-size:16px;font-weight:700;color:#C9CED9;text-shadow:0 1px 6px rgba(0,0,0,.85)}
+.bonus div{margin:3px 0}.bonus b{font-weight:800}
+.bonus .c{color:#F2C14E;font-size:22px;font-weight:800}
+.bonus.show{animation:bonusPop 3s ease-out forwards}
+@keyframes bonusPop{0%{opacity:0;transform:translate(-50%,-40%) scale(.7)}10%{opacity:.9;transform:translate(-50%,-50%) scale(1.08)}16%{opacity:.9;transform:translate(-50%,-50%) scale(1);animation-timing-function:linear}40%{opacity:.9;transform:translate(-50%,calc(-50% - 14px))}100%{opacity:0;transform:translate(-50%,calc(-50% - 50px))}}
+@media (prefers-reduced-motion:reduce){.bonus.show{animation:fade2 3s linear forwards}@keyframes fade2{0%,40%{opacity:.9}100%{opacity:0}}}
+.mlist{display:flex;flex-direction:column;gap:8px;margin:0 0 16px;text-align:right}
+.mi{display:block;width:100%;text-align:right;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel)}
+.mi:active{background:#262B36}
+.mi b{display:block;font-size:16px;font-weight:700;color:var(--ink)}
+.mi small{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.45}
+.mi small.best{color:var(--accent)}
+.selm{width:100%;font:inherit;font-size:16px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 12px}
+.kicker{color:var(--accent);font-weight:700;margin:0 0 4px!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="stat"><small>ניקוד</small><b id="score">0</b></div>
+  <div class="stat"><small>שיא</small><b id="best">0</b></div>
+  <div class="stat"><small id="linesLbl">שורות</small><b id="lines">0</b></div>
+  <div class="stat"><small id="levelLbl">שלב</small><b id="level">1</b></div>
+  <div class="sp"></div>
+  <button class="icon" id="homeBtn" aria-label="מסך הבית" title="מסך הבית"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></button>
+  <button class="icon" id="muteBtn"></button>
+  <button class="icon" id="pauseBtn" aria-label="השהה"><svg width="19" height="19" viewBox="0 0 20 20" fill="currentColor"><rect x="4" y="3" width="4" height="14" rx="2"/><rect x="12" y="3" width="4" height="14" rx="2"/></svg></button>
+</header>
+<main id="main">
+  <div id="panels">
+   <div class="side" id="sideLeft"><div class="box"><h3>הבא</h3><canvas id="next" width="150" height="330"></canvas></div></div>
+   <div class="side" id="sideRight"><div class="box"><h3>שמור</h3><canvas id="hold" width="150" height="110"></canvas></div></div>
+  </div>
+  <div class="boardWrap"><canvas id="board"></canvas><div class="toast" id="toast" role="status" aria-live="polite"></div><div class="bonus" id="bonus" role="status" aria-live="polite"></div></div>
+  <div class="overlay" id="menu"><div class="card">
+    <h1>בלוקים<span>.</span></h1>
+    <p>סדרו את הצורות הנופלות לשורות מלאות. שורה מלאה נעלמת.</p>
+    <p class="lbl">מצב משחק</p>
+    <div class="seg" id="modeSeg"><button data-m="classic">קלאסי</button><button data-m="stages">שלבים</button><button data-m="missions">משימות</button></div>
+    <p class="modeDesc" id="modeDesc"></p>
+    <div id="startWrap"><p class="lbl">שלב התחלה</p>
+    <div class="seg" id="startSeg"><button data-l="1">1</button><button data-l="5">5</button><button data-l="10">10</button></div></div>
+    <div class="keys" id="howto"></div>
+    <div class="actions"><button class="cta" id="startBtn">התחל משחק</button><button class="link" id="scoresBtn">טבלת שיאים</button></div>
+  </div></div>
+  <div class="overlay" id="over" hidden><div class="card">
+    <h1 id="overTitle">המשחק נגמר</h1><p id="overText"></p>
+    <div class="nameRow" id="nameRow" hidden><p class="lbl"><label for="nameIn">נכנסת לטבלת השיאים! השם שלך:</label></p><input id="nameIn" maxlength="14" autocomplete="off" enterkeyhint="done"></div>
+    <div class="actions"><button class="cta" id="againBtn">שחק שוב</button><button class="link" id="otherMission" hidden>משימה אחרת</button><button class="link" id="overScores">טבלת שיאים</button><button class="link" id="menuBtn">תפריט ראשי</button></div>
+  </div></div>
+  <div class="overlay" id="intro" hidden><div class="card">
+    <p class="kicker" id="introKicker"></p><h1 id="introTitle"></h1>
+    <div class="keys" id="introInfo"></div>
+    <button class="cta" id="introBtn">שלב הבא</button>
+  </div></div>
+  <div class="overlay" id="missions" hidden><div class="card wide">
+    <h1 style="font-size:30px">משימות</h1>
+    <p>בחרו משימה. כל משימה היא סבב אחד, ומי שמשלים אותה נכנס לטבלת השיאים שלה.</p>
+    <div class="mlist" id="mlist"></div>
+    <button class="link" id="missionsBack">חזרה</button>
+  </div></div>
+  <div class="overlay" id="scores" hidden><div class="card wide">
+    <h1 style="font-size:30px">טבלת שיאים</h1>
+    <div class="seg" id="scoreTabs"><button data-m="classic">קלאסי</button><button data-m="stages">שלבים</button><button data-m="missions">משימות</button></div>
+    <select class="selm" id="scoreMission" hidden aria-label="בחירת משימה"></select>
+    <div id="scoreList"></div>
+    <p class="warn" id="noStore" hidden>הדפדפן הזה לא מאפשר לשמור נתונים (אולי גלישה פרטית), ולכן השיאים לא יישמרו.</p>
+    <details class="bk" id="bk"><summary>גיבוי ושחזור של השיאים</summary>
+     <p>ספארי באייפון עלול למחוק נתונים של דף שלא נפתח כמה ימים. כדאי להעתיק את הקוד מדי פעם ולשמור אותו, למשל בפתקים. כדי לשחזר, מדביקים קוד בתיבה ולוחצים "שחזר". שיאים קיימים לא יימחקו בשחזור.</p>
+     <textarea id="bkText" spellcheck="false" autocomplete="off" aria-label="קוד גיבוי"></textarea>
+     <div class="row"><button id="bkCopy">העתק קוד</button><button id="bkLoad">שחזר מהקוד</button></div>
+     <div class="msg" id="bkMsg" role="status"></div>
+    </details>
+    <button class="cta" id="scoresBack">חזרה</button>
+  </div></div>
+  <div class="overlay" id="paused" hidden><div class="card"><h1>מושהה</h1><button class="cta" id="resumeBtn">המשך</button></div></div>
+</main>
+<div class="pad" id="pad">
+  <button id="bRight" aria-label="ימינה"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button id="bRot" aria-label="סובב"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6"/><path d="M4 20v-5h5"/></svg></button>
+  <button id="bHold" aria-label="שמור"><svg viewBox="0 0 24 24"><path d="M5 5h9l5 5v9H5z"/><path d="M9 5v5h6"/></svg></button>
+  <button id="bDown" aria-label="הפלה איטית"><svg viewBox="0 0 24 24"><path d="M12 4v13M6 12l6 6 6-6"/></svg></button>
+  <button id="bDrop" aria-label="הפלה מהירה"><svg viewBox="0 0 24 24"><path d="M12 3v10M7 9l5 5 5-5M5 20h14"/></svg></button>
+  <button id="bLeft" aria-label="שמאלה"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+</div>
+<script>/* Fit the page to the part of the screen that is really visible.
+   Chrome on iPad: when claude.ai opens this page in a new tab from another artifact (the links board), it sizes the
+   frame as if Chrome had no toolbars, so the bottom ~130px fall off the screen and nothing inside the frame can see
+   that (innerHeight and visualViewport report the oversized frame). Rotating the iPad fixes it, so we cap the height
+   at what fits under Chrome's toolbars + the claude.ai header (172px, measured on iPad Chrome). A faint ↕ button next to the
+   mute button (Chrome on iPad only) trims more, after a confirmation, if this estimate is ever off; the choice is remembered. */
+(()=>{const ua=navigator.userAgent,iosChrome=/CriOS/.test(ua)&&(/iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)),framed=window.top!==window,UI=172,STEPS=[0,40,80,130,180];
+ let extra=0;try{extra=+localStorage.getItem('fitExtra')||0}catch(e){}
+ let h0=0;
+ const target=()=>{const vv=window.visualViewport;let h=Math.round(vv?Math.min(vv.height,innerHeight):innerHeight);
+  if(iosChrome&&framed){const land=innerWidth>innerHeight,sh=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height);
+   if(h>sh-UI+8)h=sh-UI;h-=extra;}
+  return h;};
+ const f=window.__fitScreen=()=>{const h=target();if(h>0&&h!==h0){h0=h;document.documentElement.style.height=h+'px';dispatchEvent(new Event('resize'));}if(scrollY||scrollX)scrollTo(0,0);};
+ f();addEventListener('resize',f);addEventListener('orientationchange',()=>setTimeout(f,300));if(window.visualViewport)visualViewport.addEventListener('resize',f);setInterval(f,700);
+ if(iosChrome&&framed)addEventListener('DOMContentLoaded',()=>{
+  const mute=document.getElementById('muteBtn'),b=document.createElement('button');b.type='button';b.textContent='↕';b.title='התאמת גובה המסך';b.setAttribute('aria-label','התאמת גובה המסך');
+  if(mute){b.className=mute.className;b.style.cssText='opacity:.3;font-size:15px';mute.insertAdjacentElement('afterend',b);}
+  else{b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:4px;z-index:9999;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:inherit;font:14px/1 system-ui;opacity:.3;padding:0';document.body.appendChild(b);}
+  const save=v=>{extra=v;try{localStorage.setItem('fitExtra',String(v))}catch(_){}h0=0;f();};
+  b.onclick=e=>{e.stopPropagation();b.blur();
+   const ov=document.createElement('div');ov.dir='rtl';
+   ov.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;font:15px/1.5 system-ui,-apple-system,sans-serif';
+   const next=STEPS[Math.min(STEPS.indexOf(extra)+1,STEPS.length-1)];
+   ov.innerHTML='<div style="background:#1f2126;color:#eee;border-radius:14px;max-width:360px;width:100%;padding:18px;text-align:right;box-shadow:0 10px 30px rgba(0,0,0,.4)">'+
+    '<b style="font-size:17px;display:block;margin-bottom:6px">התאמת גובה המסך</b>'+
+    '<p style="margin:0 0 14px;color:#bbb">השתמשו בזה רק אם תחתית המשחק חתוכה. ״הקטן״ מנמיך את המשחק בעוד קצת, וההגדרה נשמרת לפעם הבאה.'+(extra?' כרגע המשחק מוקטן ב-'+extra+' פיקסלים.':'')+'</p>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    (extra<STEPS[STEPS.length-1]?'<button data-a="more" style="flex:1;border:0;border-radius:999px;padding:10px 14px;background:#7FA6FF;color:#111;font:inherit">הקטן ב-'+(next-extra)+' פיקסלים</button>':'')+
+    (extra?'<button data-a="reset" style="flex:1;border:1px solid #555;border-radius:999px;padding:10px 14px;background:transparent;color:#eee;font:inherit">אפס</button>':'')+
+    '<button data-a="no" style="flex:1;border:1px solid #555;border-radius:999px;padding:10px 14px;background:transparent;color:#eee;font:inherit">ביטול</button></div></div>';
+   ov.addEventListener('click',ev=>{ev.stopPropagation();const a=ev.target.closest('[data-a]')?.dataset.a;if(!a&&ev.target!==ov)return;
+    if(a==='more')save(next);else if(a==='reset')save(0);ov.remove();});
+   ['pointerdown','touchstart','touchmove','keydown'].forEach(t=>ov.addEventListener(t,ev=>ev.stopPropagation(),{passive:true}));
+   document.body.appendChild(ov);};
+ });
+})();</script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const bc=$('board'),bx=bc.getContext('2d'),nx=$('next').getContext('2d'),hx=$('hold').getContext('2d');
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const COLS=10,ROWS=20;
+const SHAPES={
+ I:[[0,1],[1,1],[2,1],[3,1]],O:[[1,0],[2,0],[1,1],[2,1]],T:[[1,0],[0,1],[1,1],[2,1]],
+ S:[[1,0],[2,0],[0,1],[1,1]],Z:[[0,0],[1,0],[1,1],[2,1]],J:[[0,0],[0,1],[1,1],[2,1]],L:[[2,0],[0,1],[1,1],[2,1]]};
+const COLORS={G:'#5A6172',I:'#4FD6E8',O:'#F2C14E',T:'#B07CE8',S:'#6FD86F',Z:'#F2706B',J:'#5A8CF0',L:'#F29E4C'};
+const KEYS=Object.keys(SHAPES);
+const SPEEDS=[0,1000,850,720,600,500,400,320,250,190,140,110,90,75,62,52,44,38,33,28,24];
+const speedFor=l=>SPEEDS[Math.min(l,SPEEDS.length-1)]||24;
+
+let W=0,H=0,cell=20,grid=[],cur=null,queue=[],bag=[],hold=null;
+let score=0,lines=0,level=1,startLevel=+store.get('blocks-start',1)||1;
+let mode=(m=>m==='gray'?'missions':['classic','stages','missions'].includes(m)?m:'classic')(store.get('blocks-mode','classic'));
+let missionIdx=0,timeLeft=0,timedOut=false,missionsFrom='menu',scoreMission=0;   // missions mode: chosen mission and time left (ms)
+let landAt=null,lastPiece=null,stage=1,stageLines=0,goal=0,riseEvery=0,riseT=0,lastRise=null,lastEntryId=null,scoresFrom='menu';
+
+/* high-score tables: one per mode, top 10, kept in this browser */
+const SKEY={classic:'blocks-scores-classic',stages:'blocks-scores-stages'};
+const skey=m=>SKEY[m]||('blocks-scores-'+m);   // mission tables: 'm-<id>' -> blocks-scores-m-<id>
+/* each table is written to two keys; reads merge both, so one damaged or missing copy never wipes the table,
+   and every write re-reads first, so two open tabs add to each other instead of overwriting */
+const storeOK=(()=>{try{localStorage.setItem('blocks-t','1');localStorage.removeItem('blocks-t');return true}catch(e){return false}})();
+function readKey(k){try{const a=JSON.parse(store.get(k,'[]'));return Array.isArray(a)?a.filter(x=>x&&typeof x.score==='number'):[]}catch(e){return[]}}
+function mergeScores(...lists){
+ const by=new Map();
+ lists.flat().forEach(x=>{if(!x||typeof x.score!=='number')return;const k=String(x.id??(x.score+'|'+x.d));if(!by.has(k))by.set(k,{...x,id:x.id??k});});
+ const timed=(a,b)=>typeof a.t==='number'&&typeof b.t==='number';   // mission tables rank by fastest time, then score
+ return[...by.values()].sort((a,b)=>timed(a,b)?(a.t-b.t)||(b.score-a.score):b.score-a.score).slice(0,10);
+}
+function getScores(m){return mergeScores(readKey(skey(m)),readKey(skey(m)+'-bak'));}
+function setScores(m,a){const v=JSON.stringify(a);store.set(skey(m),v);store.set(skey(m)+'-bak',v);cfPush(m);
+ if(m==='classic'&&a.length)store.set('blocks-best',Math.max(a[0].score,+store.get('blocks-best',0)||0));}   // older versions of the game read this key
+function topScore(m){const a=getScores(m);return a.length?a[0].score:0;}
+(()=>{   // bring in the single record kept by older versions, including games played on them later
+ const old=+store.get('blocks-best',0)||0,a=getScores('classic');
+ if(old>0&&!a.some(x=>x.score===old))setScores('classic',mergeScores(a,[{id:'legacy-'+old,name:'—',score:old,lines:null,lvl:null,d:''}]));
+ else if(a.length&&!readKey(SKEY.classic+'-bak').length)setScores('classic',a);
+ const b=getScores('stages');if(b.length&&!readKey(SKEY.stages+'-bak').length)setScores('stages',b);
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}   // ask the browser not to evict this page's data
+})();
+
+
+/* ---------- Cloudflare site: the top-10 tables are shared by the whole family ----------
+   Login and personal codes come from /ofek.js (window.OFEK); new results are recorded under the logged-in player. */
+var CF={on:false,quiet:false,dirty:new Set(),t:0};
+try{JSON.parse(store.get('blocks-cf-dirty','[]')).forEach(m=>CF.dirty.add(m))}catch(e){}
+function cfSaveDirty(){store.set('blocks-cf-dirty',JSON.stringify([...CF.dirty]));}
+function cfPush(m){if(!CF||CF.quiet)return;CF.dirty.add(m);cfSaveDirty();if(!CF.on)return;clearTimeout(CF.t);CF.t=setTimeout(cfFlush,1500);}
+async function cfFlush(){
+ if(!CF.on||CF.busy||!OFEK.player)return;CF.busy=true;
+ for(const m of [...CF.dirty]){
+  try{const r=await OFEK.api('/api/tables?app=blocks',{method:'POST',body:{table:m,entries:getScores(m)}});
+   CF.quiet=true;setScores(m,mergeScores(r.entries||[],getScores(m).filter(x=>(r.entries||[]).some(y=>String(y.id)===String(x.id)))));CF.quiet=false;
+   CF.dirty.delete(m);cfSaveDirty();}
+  catch(e){CF.quiet=false;if(e.code===400){CF.dirty.delete(m);cfSaveDirty();continue;}break;}}
+ CF.busy=false;cfRefresh();}
+function cfRefresh(){hud();if(!$('scores').hidden){const b=[...$('scoreTabs').children].find(x=>x.getAttribute('aria-pressed')==='true');
+ if(b)renderScores(b.dataset.m);}}
+function localTables(){const t=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
+ if(k&&k.startsWith('blocks-scores-')&&!k.endsWith('-bak'))t.push(k.slice(14));}}catch(e){}return t;}
+async function cfAfterGame(){if(!CF.on)return;if(!OFEK.player&&!(await OFEK.ensure()))return;cfFlush();}
+async function cfInit(){
+ if(!window.OFEK||!(await OFEK.ready))return;
+ CF.on=true;
+ const note=document.createElement('p');note.className='cfnote';note.textContent='🌐 טבלת שיאים משפחתית, משותפת לכל המכשירים';
+ $('scoreList').before(note);
+ let remote={};try{remote=(await OFEK.api('/api/tables?app=blocks')).tables||{};}catch(e){CF.on=false;return;}
+ const names=new Set([...Object.keys(remote),...localTables()]);
+ for(const m of names){const mine=getScores(m),theirs=remote[m]||[];
+  CF.quiet=true;setScores(m,mergeScores(theirs,mine));CF.quiet=false;
+  const have=new Set(theirs.map(x=>String(x.id)));if(mine.some(x=>!have.has(String(x.id))))CF.dirty.add(m);}
+ cfSaveDirty();cfRefresh();cfFlush();
+ OFEK.onPlayer(()=>cfFlush());}
+window.addEventListener('online',()=>cfFlush());
+cfInit();
+
+/* stage mode: how difficulty grows from stage to stage */
+function stageCfg(n){return{
+ rows:Math.min(10,2+Math.floor(n/2)),          // messy rows on the board at the start (+1 every two stages)
+  holes:n<=7?1:n<=14?2:3,                       // gaps in each messy row
+ align:Math.max(.2,.85-.04*(n-1)),             // chance a gap lines up with the one below (lined-up gaps are easier to clear)
+ goal:Math.min(25,5+n),                        // lines to clear to pass the stage
+ speed:1+Math.floor((n-1)*.35),                // falling speed (same scale as classic levels): +1 every ~3 stages
+ rise:n<6?0:Math.max(10,30-2*(n-6))};}         // seconds between rising rows (0 = none)
+/* missions: one round each; finishing one puts the player in that mission's own record table */
+const MISSIONS=[
+ {id:'quick', name:'ניקוי מהיר',      rows:6, holes:1,align:.7,time:60, speed:2},
+ {id:'ten',   name:'10 שורות בדקה',   rows:10,holes:1,align:.5,time:60, speed:2},
+ {id:'sprint',name:'ספרינט',          rows:5, holes:1,align:.6,time:30, speed:3},
+ {id:'two',   name:'שני חורים',       rows:8, holes:2,align:.4,time:90, speed:2},
+ {id:'tower', name:'מגדל',            rows:14,holes:1,align:.4,time:90, speed:3},
+ {id:'chaos', name:'בלגן מלא',        rows:12,holes:2,align:.2,time:120,speed:3}];
+const curM=()=>MISSIONS[missionIdx]||MISSIONS[0];
+const tableId=()=>mode==='missions'?'m-'+curM().id:mode;
+const fmtT=ms=>{const t=Math.max(0,Math.round(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');};
+const timeWords=s=>s===30?'30 שניות':s===60?'דקה':s===90?'דקה וחצי':s===120?'2 דקות':s+' שניות';
+const missionDesc=M=>`${M.rows} שורות מבולגנות, ${M.holes===1?'חור אחד':M.holes+' חורים'} בכל שורה. נקו את כל האבנים האפורות תוך ${timeWords(M.time)}.`;
+missionIdx=Math.min(MISSIONS.length-1,Math.max(0,+store.get('blocks-mission',0)||0));scoreMission=missionIdx;
+let state='menu',fall=0,lockT=0,lockResets=0,clearing=null,last=performance.now();
+
+/* audio */
+let AC=null,muted=store.get('blocks-muted','0')==='1';
+function unlock(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
+function tone(f,d=.06,t='square',v=.05,delay=0){if(muted||!AC)return;try{const n=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.setValueAtTime(f,n);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(AC.destination);o.start(n);o.stop(n+d+.02);}catch(e){}}
+const sfx={move:()=>tone(300,.03,'square',.03),rot:()=>tone(480,.04,'triangle',.04),lock:()=>tone(200,.07,'square',.045),
+ drop:()=>{tone(160,.09,'square',.05);tone(110,.12,'square',.04,.05);},hold:()=>tone(620,.06,'triangle',.04),
+ clear:n=>[0,523,659,784,1047].slice(0,n+1).forEach((f,i)=>{if(f)tone(f,.13,'triangle',.06,i*.06)}),
+ levelUp:()=>[659,784,988,1319].forEach((f,i)=>tone(f,.14,'triangle',.05,i*.08)),
+ over:()=>[392,330,262,196].forEach((f,i)=>tone(f,i===3?.4:.2,'sawtooth',.05,i*.16))};
+function renderMute(){$('muteBtn').innerHTML=muted?'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>':'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/></svg>';$('muteBtn').setAttribute('aria-label',muted?'הפעל צלילים':'השתק');}
+$('muteBtn').onclick=()=>{muted=!muted;store.set('blocks-muted',muted?'1':'0');unlock();renderMute();};renderMute();
+
+/* layout */
+function size(){
+ const m=$('main').getBoundingClientRect(),narrow0=innerWidth<=620;
+ let avW,avH;
+ if(narrow0){const sh=$('panels').getBoundingClientRect().height;avW=m.width;avH=m.height-sh-12;}
+ else{const sw=$('sideLeft').getBoundingClientRect().width+$('sideRight').getBoundingClientRect().width;avW=m.width-sw-24;avH=m.height-6;}
+ cell=Math.max(8,Math.floor(Math.min(avW/COLS,avH/ROWS)));
+ W=cell*COLS;H=cell*ROWS;
+ const dpr=Math.min(devicePixelRatio||1,3);
+ bc.style.width=W+'px';bc.style.height=H+'px';
+ bc.width=Math.round(W*dpr);bc.height=Math.round(H*dpr);bx.setTransform(dpr,0,0,dpr,0,0);
+ const narrow=narrow0;
+ [['next',nx],['hold',hx]].forEach(([id,c])=>{const el=$(id),r=el.getBoundingClientRect();if(!r.width)return;
+  const h=narrow?44:r.width*(id==='next'?2.2:.75);
+  el.width=Math.round(r.width*dpr);el.height=Math.round(h*dpr);el.style.height=h+'px';c.setTransform(dpr,0,0,dpr,0,0);});
+ drawSide();
+}
+let lastBox='';
+function fitCheck(){const m=$('main').getBoundingClientRect(),k=Math.round(m.width)+'x'+Math.round(m.height);if(k!==lastBox){lastBox=k;size();}}
+
+/* pieces */
+function refill(){if(bag.length)return;bag=KEYS.slice();for(let i=bag.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[bag[i],bag[j]]=[bag[j],bag[i]];}}
+function nextKey(){refill();return bag.pop();}
+function makePiece(k){return{k,cells:SHAPES[k].map(([x,y])=>[x,y]),x:3,y:-1,y0:-1,t0:performance.now(),r:0};}
+function cellsOf(p,cells){return(cells||p.cells).map(([x,y])=>[p.x+x,p.y+y]);}
+function fits(p,cells){return cellsOf(p,cells).every(([x,y])=>x>=0&&x<COLS&&y<ROWS&&(y<0||!grid[y][x]));}
+function rotate(p,dir){
+ if(p.k==='O')return p.cells;
+ const n=p.k==='I'?4:3;
+ return p.cells.map(([x,y])=>dir>0?[n-1-y,x]:[y,n-1-x]);
+}
+function tryRotate(dir){
+ if(!cur)return;
+ const rc=rotate(cur,dir);
+ for(const [dx,dy] of [[0,0],[-1,0],[1,0],[-2,0],[2,0],[0,-1],[-1,-1],[1,-1]]){
+  const t={...cur,x:cur.x+dx,y:cur.y+dy};
+  if(fits(t,rc)){cur.x=t.x;cur.y=t.y;cur.cells=rc;sfx.rot();resetLock();return true;}
+ }
+ return false;
+}
+function spawn(k){
+ cur=makePiece(k||queue.shift());
+ while(queue.length<3)queue.push(nextKey());
+ fall=Math.max(0,gravity()-250);lockT=0;lockResets=0;   // first step comes quickly, so a new piece never looks parked
+ if(!fits(cur)){cur.y++;if(!fits(cur))return gameOver();}
+ drawSide();
+}
+function resetLock(){if(lockResets<15&&lockT>0){lockT=0;lockResets++;}}
+function move(dx){if(!cur)return false;const t={...cur,x:cur.x+dx};if(fits(t)){cur.x=t.x;sfx.move();resetLock();return true;}return false;}
+function softDrop(noLock){if(!cur)return false;const t={...cur,y:cur.y+1};if(fits(t)){cur.y=t.y;score+=1;fall=0;hud();return true;}if(!noLock)lockNow();return false;}   // noLock: continuous drags/repeats stop at the floor and let the normal lock delay take over
+function ghostY(){let y=cur.y;while(fits({...cur,y:y+1}))y++;return y;}
+const DROP_MIN_ROWS=2,DROP_MIN_MS=350;
+function canHardDrop(){return!!cur&&(cur.y-cur.y0>=DROP_MIN_ROWS||performance.now()-cur.t0>=DROP_MIN_MS);}
+function hardDrop(){if(!cur)return;
+ if(!canHardDrop()){tone(140,.04,'square',.025);return;}   // guard against slamming the next piece by mistake
+ const g=ghostY();score+=2*(g-cur.y);cur.y=g;sfx.drop();lockNow();}
+function holdPiece(){
+ if(!cur)return;
+ const k=cur.k;
+ if(hold){const h=hold;hold=k;spawn(h);}   // swap: the stored piece comes back and the current one is stored
+ else{hold=k;spawn();}
+ sfx.hold();drawSide();
+}
+function lockNow(){
+ if(!cur)return;
+ cellsOf(cur).forEach(([x,y])=>{if(y>=0)grid[y][x]=cur.k;});
+ {const c=cellsOf(cur);landAt={x:(Math.min(...c.map(v=>v[0]))+Math.max(...c.map(v=>v[0]))+1)/2,y:Math.min(...c.map(v=>v[1]))};lastPiece={k:cur.k,ys:c.map(v=>v[1])};}   // where the piece landed (lines-left badge) and which rows it covers (piece-wiped bonus)
+ sfx.lock();
+ const full=[];for(let y=0;y<ROWS;y++)if(grid[y].every(Boolean))full.push(y);
+ cur=null;
+ if(full.length){clearing={rows:full,t:.28};sfx.clear(full.length);}
+ else spawn();
+ hud();
+}
+/* bonuses, each times the same multiplier as line clears (stage number in stage mode, level in classic) */
+const BONUS={gray:150,wiped:200,clear:3000};
+function finishClear(){
+ const rows=clearing.rows;clearing=null;
+ const mult=mode==='stages'?stage:mode==='missions'?1:level;
+ const grayN=rows.filter(y=>grid[y].includes('G')).length;                           // cleared rows that still held gray blocks
+ const wiped=!!lastPiece&&lastPiece.ys.every(y=>y>=0&&rows.includes(y));              // every cell of the piece that just landed is gone
+ rows.sort((a,b)=>a-b).forEach(y=>{grid.splice(y,1);grid.unshift(Array(COLS).fill(null));});
+ const allClear=grid.every(r=>r.every(c=>!c));                                        // nothing left on the board
+ const bon=[];
+ if(grayN)bon.push(['g',grayN>1?'Gray rows ×'+grayN:'Gray row',BONUS.gray*grayN*mult]);
+ if(wiped)bon.push(['p','Piece wiped',BONUS.wiped*mult]);
+ if(allClear)bon.push(['c','Board clear!',BONUS.clear*mult]);
+ bon.forEach(b=>score+=b[2]);
+ const n=rows.length;
+ if(mode==='missions'){
+  score+=[0,100,300,500,800][n];lines+=n;hud();
+  const left=grid.flat().filter(c=>c==='G').length;
+  if(!left)return missionWin();
+  showLeft(left);showBonus(bon);
+  return spawn();
+ }
+ if(mode==='stages'){
+  score+=[0,100,300,500,800][n]*stage;lines+=n;stageLines+=n;hud();
+  if(stageLines>=goal)return stageClear(bon);
+  showLeft(goal-stageLines);showBonus(bon);
+  return spawn();
+ }
+ showBonus(bon);
+ score+=[0,100,300,500,800][n]*level;lines+=n;
+ const nl=Math.max(level,startLevel+Math.floor(lines/10));
+ if(nl>level){level=nl;sfx.levelUp();}
+ hud();spawn();
+}
+function gameOver(){
+ state='over';cur=null;$('otherMission').hidden=mode!=='missions';
+ if(mode==='missions'){   // a mission that was not finished never enters the records
+  const left=grid.flat().filter(c=>c==='G').length;
+  $('overTitle').textContent=timedOut?'נגמר הזמן':'הלוח התמלא';
+  $('overText').textContent=`${curM().name}: המשימה לא הושלמה. נשארו ${left} אבנים אפורות.`;
+  $('nameRow').hidden=true;$('againBtn').textContent='נסה שוב';
+  sfx.over();hud();$('over').hidden=false;return;
+ }
+ $('againBtn').textContent='שחק שוב';
+ const list=getScores(mode),reached=mode==='stages'?stage:level;
+ const entry={id:Date.now(),name:(window.OFEK&&OFEK.player)||store.get('blocks-name','')||'שחקן',score,lines,lvl:reached,d:new Date().toLocaleDateString('en-CA')};
+ const qualifies=score>0&&(list.length<10||score>list[list.length-1].score);
+ let rank=-1;
+ if(qualifies){const a=mergeScores(getScores(mode),[entry]);setScores(mode,a);rank=a.findIndex(x=>x.id===entry.id);lastEntryId=entry.id;}
+ $('overTitle').textContent=rank===0?'שיא חדש!':'המשחק נגמר';
+ $('overText').textContent=(mode==='stages'?`${score} נקודות · הגעת לשלב ${stage}`:`${score} נקודות · ${lines} שורות · שלב ${level}`)+(rank>=0?` · מקום ${rank+1} בטבלה`:'');
+ $('nameRow').hidden=!qualifies||!!(window.OFEK&&OFEK.player);if(qualifies)cfAfterGame();if(qualifies)$('nameIn').value=entry.name;
+ sfx.over();hud();$('over').hidden=false;
+}
+function missionWin(){
+ const M=curM(),used=Math.round(M.time*1000-timeLeft),secs=Math.ceil(timeLeft/1000);
+ score+=1000+secs*50;   // completion bonus + 50 for every second left
+ state='over';cur=null;$('otherMission').hidden=false;$('againBtn').textContent='שחק שוב';
+ const id='m-'+M.id,list=getScores(id);
+ const entry={id:Date.now(),name:(window.OFEK&&OFEK.player)||store.get('blocks-name','')||'שחקן',score,t:used,lines,d:new Date().toLocaleDateString('en-CA')};
+ const qualifies=list.length<10||used<list[list.length-1].t||(used===list[list.length-1].t&&score>list[list.length-1].score);
+ let rank=-1;
+ if(qualifies){const a=mergeScores(getScores(id),[entry]);setScores(id,a);rank=a.findIndex(x=>x.id===entry.id);lastEntryId=entry.id;}
+ $('overTitle').textContent=rank===0?'שיא חדש!':'המשימה הושלמה!';
+ $('overText').textContent=`${M.name} · זמן ${fmtT(used)} · ${score} נקודות`+(rank>=0?` · מקום ${rank+1} בטבלה`:'');
+ $('nameRow').hidden=!qualifies||!!(window.OFEK&&OFEK.player);if(qualifies)cfAfterGame();if(qualifies)$('nameIn').value=entry.name;
+ sfx.levelUp();hud();$('over').hidden=false;
+}
+function hud(){
+ $('score').textContent=score;
+ $('lines').style.color='';$('levelLbl').textContent=mode==='missions'?'משימה':'שלב';
+ if(mode==='missions'){const sec=Math.ceil(timeLeft/1000),b=getScores(tableId());$('best').textContent=b.length?fmtT(b[0].t):'—';$('linesLbl').textContent='זמן';$('lines').textContent=state==='menu'?'—':sec;$('lines').style.color=state==='play'&&sec<=10?'#F2706B':'';$('level').textContent=missionIdx+1;return;}
+ $('best').textContent=Math.max(topScore(mode),score);
+ if(mode==='stages'){$('linesLbl').textContent='יעד';$('lines').textContent=goal?Math.min(stageLines,goal)+'/'+goal:'—';$('level').textContent=stage;}
+ else{$('linesLbl').textContent='שורות';$('lines').textContent=lines;$('level').textContent=level;}
+}
+function emptyGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(null));}
+function garbageRow(prev,holes,align){
+ const row=Array(COLS).fill('G'),hs=[];
+ hs.push(prev&&Math.random()<align?prev[0]:Math.random()*COLS|0);
+ while(hs.length<holes){const h=Math.random()*COLS|0;if(!hs.includes(h))hs.push(h);}
+ hs.forEach(h=>row[h]=null);return{row,hs};
+}
+function showLeft(left){   // "N Left" badge above the piece that just landed: lines still needed for the next stage
+ const t=$('toast');
+ t.textContent=left+' Left';
+ t.classList.toggle('last',left===1);
+ const p=landAt||{x:COLS/2,y:ROWS/2};
+ const half=Math.max(1.2,40/cell);   // keep the badge inside the board
+ t.style.left=(bc.offsetLeft+Math.min(COLS-half,Math.max(half,p.x))*cell)+'px';
+ t.style.top=(bc.offsetTop+Math.max(1,p.y-.9)*cell)+'px';
+ t.classList.remove('show');void t.offsetWidth;t.classList.add('show');
+}
+const BONUS_HE={g:'שורות אפורות',p:'השמדת אבן',c:'ניקוי הלוח'};
+function showBonus(bon){   // floating "+points" lines in the middle of the board
+ if(!bon.length)return;
+ const el=$('bonus');
+ el.innerHTML=bon.map(([k,t,v])=>`<div class="${k}"${k==='p'&&lastPiece?` style="color:${COLORS[lastPiece.k]}"`:''}>${t} <b>+${v}</b></div>`).join('');
+ el.style.left=(bc.offsetLeft+W/2)+'px';el.style.top=(bc.offsetTop+H*.4)+'px';
+ el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
+ if(bon.some(b=>b[0]==='c'))sfx.levelUp();else tone(880,.1,'triangle',.04,.12);
+}
+function startMission(){
+ $('bonus').classList.remove('show');$('toast').classList.remove('show');
+ const M=curM();
+ timeLeft=M.time*1000;goal=0;stageLines=0;riseEvery=0;
+ grid=emptyGrid();hold=null;cur=null;clearing=null;
+ let prev=null;
+ for(let i=0;i<M.rows;i++){const r=garbageRow(prev,M.holes,M.align);grid[ROWS-1-i]=r.row;prev=r.hs;}
+ state='intro';
+ const b=getScores('m-'+M.id);
+ $('introKicker').textContent='משימה '+(missionIdx+1);$('introTitle').textContent=M.name;
+ $('introInfo').innerHTML=`<b>המטרה:</b> לנקות את כל האבנים האפורות תוך ${timeWords(M.time)}<br><b>שורות מבולגנות:</b> ${M.rows}, עם ${M.holes===1?'חור אחד':M.holes+' חורים'} בכל שורה<br><b>מהירות נפילה:</b> ${M.speed}<br><b>השיא:</b> ${b.length?fmtT(b[0].t)+' ('+esc(b[0].name||'שחקן')+')':'עדיין אין'}`;
+ $('introBtn').textContent='התחל';$('intro').hidden=false;
+ hud();drawSide();
+}
+function openMissions(from){
+ missionsFrom=from;if(from)$(from).hidden=true;
+ $('mlist').innerHTML=MISSIONS.map((M,i)=>{const b=getScores('m-'+M.id);
+  return`<button class="mi" data-i="${i}"><b>${i+1}. ${M.name}</b><small>${missionDesc(M)}</small><small class="best">${b.length?'השיא: '+fmtT(b[0].t)+' · '+esc(b[0].name||'שחקן'):'עדיין אין שיא'}</small></button>`;}).join('');
+ $('missions').hidden=false;
+}
+function startStage(n,kicker){
+ $('bonus').classList.remove('show');$('introBtn').textContent='שלב הבא';
+ $('toast').classList.remove('show');
+ const c=stageCfg(n);
+ stage=n;stageLines=0;goal=c.goal;riseEvery=c.rise*1000;riseT=riseEvery;lastRise=null;
+ grid=emptyGrid();hold=null;cur=null;clearing=null;
+ let prev=null;
+ for(let i=0;i<c.rows;i++){const r=garbageRow(prev,c.holes,c.align);grid[ROWS-1-i]=r.row;prev=r.hs;}
+ lastRise=null;
+ state='intro';
+ $('introKicker').textContent=kicker||'';$('introTitle').textContent='שלב '+n;
+ let info=`<b>המטרה:</b> להוריד ${c.goal} שורות<br><b>שורות מבולגנות:</b> ${c.rows}, עם ${c.holes===1?'חור אחד':c.holes+' חורים'} בכל שורה<br><b>מהירות נפילה:</b> ${c.speed}<br>`;
+ info+=c.rise?`<b>שורה חדשה עולה מלמטה:</b> כל ${c.rise} שניות`:'<b>שורות עולות:</b> אין בשלב הזה';
+ const pc=n>1?stageCfg(n-1):null;
+ if(c.rise&&pc&&!pc.rise)info+='<br><b style="color:var(--accent)">חדש:</b> מעכשיו שורות עולות מלמטה. הפס בתחתית הלוח מראה מתי תעלה הבאה';
+ if(pc&&c.holes>pc.holes)info+='<br><b style="color:var(--accent)">חדש:</b> יותר חורים בכל שורה';
+ $('introInfo').innerHTML=info;$('intro').hidden=false;
+ hud();drawSide();
+}
+function beginStage(){if(state!=='intro')return;$('intro').hidden=true;state='play';last=performance.now();spawn();}
+function stageClear(bon){
+ const bonus=1000*stage;score+=bonus;sfx.levelUp();
+ const extra=(bon||[]).reduce((a,b)=>a+b[2],0);
+ startStage(stage+1,`שלב ${stage} הושלם! בונוס ${bonus} נקודות`+(extra?` ועוד ${extra} על ${bon.map(b=>BONUS_HE[b[0]]).join(', ')}`:''));
+}
+function riseRow(){
+ if(grid[0].some(Boolean))return gameOver();
+ const r=garbageRow(lastRise,1,.7);lastRise=r.hs;
+ grid.shift();grid.push(r.row);
+ if(cur&&!fits(cur)){cur.y--;if(!fits(cur))return gameOver();}
+ tone(90,.15,'sawtooth',.04);
+}
+function gravity(){return mode==='stages'?speedFor(stageCfg(stage).speed):mode==='missions'?speedFor(curM().speed):speedFor(level);}
+function newGame(){
+ bag=[];queue=[];hold=null;clearing=null;
+ score=0;lines=0;level=mode==='stages'?1:startLevel;
+ while(queue.length<3)queue.push(nextKey());
+ ['menu','over','paused','scores','intro','missions'].forEach(id=>$(id).hidden=true);
+ timedOut=false;
+ if(mode==='stages'){startStage(1);size();return;}
+ if(mode==='missions'){startMission();size();return;}
+ grid=emptyGrid();goal=0;riseEvery=0;
+ spawn();state='play';hud();size();
+}
+function pause(){if(state==='play'){state='paused';$('paused').hidden=false;}}
+function resume(){if(state==='paused'){state='play';last=performance.now();$('paused').hidden=true;}}
+$('pauseBtn').onclick=e=>{unlock();state==='paused'?resume():pause();e.currentTarget.blur();};
+$('resumeBtn').onclick=resume;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+
+/* drawing */
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function block(c,x,y,s,col,alpha){
+ c.globalAlpha=alpha||1;
+ const g=c.createLinearGradient(x,y,x,y+s);g.addColorStop(0,col);g.addColorStop(1,shade(col,-28));
+ roundRect(c,x+1,y+1,s-2,s-2,Math.max(2,s*.16));c.fillStyle=g;c.fill();
+ c.fillStyle='rgba(255,255,255,.35)';c.fillRect(x+s*.18,y+s*.16,s*.64,Math.max(1.5,s*.08));
+ c.globalAlpha=1;
+}
+function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=(n>>16)+amt,g=(n>>8&255)+amt,b=(n&255)+amt;
+ r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+ return'#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function draw(now){
+ bx.clearRect(0,0,W,H);
+ bx.fillStyle='#0E1015';bx.fillRect(0,0,W,H);
+ bx.strokeStyle='rgba(232,234,240,.14)';bx.lineWidth=1;
+ for(let x=1;x<COLS;x++){bx.beginPath();bx.moveTo(x*cell+.5,0);bx.lineTo(x*cell+.5,H);bx.stroke();}
+ for(let y=1;y<ROWS;y++){bx.beginPath();bx.moveTo(0,y*cell+.5);bx.lineTo(W,y*cell+.5);bx.stroke();}
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(grid[y][x])block(bx,x*cell,y*cell,cell,COLORS[grid[y][x]]);
+ if(mode==='missions'&&(state==='play'||state==='paused')){const f=Math.max(0,timeLeft/(curM().time*1000));bx.fillStyle=timeLeft<10000?'#F2706B':'rgba(79,214,232,.75)';bx.fillRect(W*(1-f),H-4,W*f,4);}
+ if(mode==='stages'&&riseEvery&&(state==='play'||state==='paused')){const f=Math.max(0,riseT/riseEvery);bx.fillStyle=riseT<3000?'#F2706B':'rgba(79,214,232,.75)';bx.fillRect(W*(1-f),H-4,W*f,4);}
+ if(clearing){const a=Math.max(0,clearing.t/.28);clearing.rows.forEach(y=>{bx.fillStyle='rgba(255,255,255,'+(.15+.6*a)+')';bx.fillRect(0,y*cell,W,cell);});}
+ if(cur&&state==='play'){
+  const gy=ghostY();
+  cellsOf({...cur,y:gy}).forEach(([x,y])=>{if(y<0)return;bx.strokeStyle=COLORS[cur.k];bx.globalAlpha=.35;bx.lineWidth=2;roundRect(bx,x*cell+2,y*cell+2,cell-4,cell-4,Math.max(2,cell*.15));bx.stroke();bx.globalAlpha=1;});
+  cellsOf(cur).forEach(([x,y])=>{if(y>=0)block(bx,x*cell,y*cell,cell,COLORS[cur.k]);});
+ }
+}
+function drawMini(c,keys){
+ const dpr=Math.min(devicePixelRatio||1,3),el=c.canvas,w=el.width/dpr,h=el.height/dpr;
+ c.clearRect(0,0,w,h);
+ const row=w>h*1.2,n=Math.max(1,keys.length);
+ keys.forEach((k,i)=>{
+  if(!k)return;
+  const cells=SHAPES[k],xs=cells.map(c2=>c2[0]),ys=cells.map(c2=>c2[1]);
+  const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  const bw=maxx-minx+1,bh=maxy-miny+1;
+  const slotW=row?w/n:w,slotH=row?h:h/n;
+  const s=Math.min(slotW*.8/Math.max(bw,1),slotH*.8/Math.max(bh,1),22);
+  const ox=(row?i*slotW:0)+(slotW-bw*s)/2,oy=(row?0:i*slotH)+(slotH-bh*s)/2;
+  cells.forEach(([x,y])=>block(c,ox+(x-minx)*s,oy+(y-miny)*s,s,COLORS[k]));
+ });
+}
+function drawSide(){
+ if($('next').width)drawMini(nx,queue.slice(0,3));
+ if($('hold').width)drawMini(hx,[hold]);
+}
+
+/* input: keyboard */
+const KEYMAP={ArrowLeft:'left',ArrowRight:'right',ArrowDown:'drop',ArrowUp:'rot',KeyA:'left',KeyD:'right',KeyS:'down',KeyW:'rot',KeyX:'rot',KeyZ:'rotccw',KeyC:'hold',ShiftLeft:'hold',ShiftRight:'hold',Space:'down',KeyP:'pause',Escape:'pause'};
+let repeat=null,keyPiece=null;
+function act(a){
+ if(a==='pause'){state==='paused'?resume():pause();return;}
+ if(state!=='play')return;
+ if(a==='left')move(-1);else if(a==='right')move(1);
+ else if(a==='down')softDrop();else if(a==='rot')tryRotate(1);
+ else if(a==='rotccw')tryRotate(-1);else if(a==='drop')hardDrop();else if(a==='hold')holdPiece();
+}
+const typing=e=>e.target&&e.target.closest&&e.target.closest('input,textarea');
+addEventListener('keydown',e=>{
+ if(typing(e))return;
+ if(state==='intro'&&(e.code==='Space'||e.code==='Enter')){e.preventDefault();unlock();beginStage();return;}
+ const a=KEYMAP[e.code];if(!a)return;
+ unlock();e.preventDefault();
+ if(e.repeat&&a!=='down'&&a!=='left'&&a!=='right')return;
+ if((state==='menu'||state==='over')&&e.code==='Space'){if($('scores').hidden&&$('missions').hidden)startOrPick();return;}
+ if(e.repeat){if(cur!==keyPiece||state!=='play')return;if(a==='down'){softDrop(true);return;}}   // a held key never carries over to the next piece
+ else keyPiece=cur;
+ act(a);
+});
+addEventListener('keydown',e=>{if(!typing(e)&&e.code==='Enter'&&(state==='menu'||state==='over')&&$('scores').hidden&&$('missions').hidden){unlock();startOrPick();}});
+function startOrPick(){if(mode==='missions'&&state==='menu')openMissions('menu');else newGame();}   // missions mode asks which mission first
+
+/* input: on-screen buttons (with auto-repeat while held) */
+function bindHold(el,a,every=90){
+ let t=null,iv=null;
+ const start=e=>{e.preventDefault();unlock();act(a);
+  const p0=cur;   // auto-repeat belongs to this piece only
+  if(a==='left'||a==='right'||a==='down'){t=setTimeout(()=>{iv=setInterval(()=>{if(cur!==p0||state!=='play')return stop();a==='down'?softDrop(true):act(a);},every);},200);}};
+ const stop=()=>{clearTimeout(t);clearInterval(iv);t=iv=null;};
+ el.addEventListener('pointerdown',start);['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,stop));
+}
+bindHold($('bLeft'),'left');bindHold($('bRight'),'right');bindHold($('bDown'),'down',60);
+[['bRot','rot'],['bDrop','drop'],['bHold','hold'],['sideRight','hold']].forEach(([id,a])=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();unlock();act(a);}));
+$('sideRight').style.cursor='pointer';
+
+/* input: gestures on the board */
+let g=null;
+const IGNORE='.pad,.overlay,header,.side';   // buttons and panels keep their own behaviour
+addEventListener('pointerdown',e=>{if(state!=='play'||e.target.closest(IGNORE))return;unlock();
+ g={id:e.pointerId,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t:performance.now(),moved:0,axis:null,piece:cur};});
+/* axis lock: each drag commits to one direction, so sideways finger drift while dragging down never moves the piece */
+addEventListener('pointermove',e=>{
+ if(!g||e.pointerId!==g.id||state!=='play')return;
+ if(cur!==g.piece)return;                       // the piece this drag started on has landed: ignore the rest until the finger lifts
+ const th=Math.max(14,cell*.8);
+ g.moved=Math.max(g.moved,Math.hypot(e.clientX-g.x0,e.clientY-g.y0));
+ let dx=e.clientX-g.x,dy=e.clientY-g.y;
+ if(!g.axis){                                   // decide the direction once the finger has clearly moved
+  if(Math.max(Math.abs(dx),Math.abs(dy))<10)return;
+  g.axis=Math.abs(dx)>Math.abs(dy)*1.2?'h':'v';  // slight bias toward vertical: a wobbly drag down stays a drag down
+ }
+ if(g.axis==='h'){
+  while(Math.abs(dx)>=th){const d=Math.sign(dx);move(d);g.x+=d*th;dx-=d*th;}
+  if(dy>=th*2.5){g.axis='v';g.x=e.clientX;}   // allowed: slide sideways, then continue down in the same drag
+ }
+ if(g.axis==='v'){
+  g.x=e.clientX;                                 // horizontal drift is discarded, never accumulated
+  while(dy>=th){softDrop(true);g.y+=th;dy-=th;}
+ }
+});
+function endG(e){
+ if(!g||e.pointerId!==g.id)return;
+ const dt=performance.now()-g.t,dx=e.clientX-g.x0,dy=e.clientY-g.y0;
+ if(state==='play'&&cur&&cur===g.piece){
+  if(g.moved<12&&dt<260)tryRotate(1);                      // tap = rotate
+  else if(g.axis==='v'&&dy<-Math.max(40,cell*2))holdPiece();   // swipe up = hold
+  else if(g.axis==='v'&&dy>Math.max(60,cell*3)&&dt<260)hardDrop(); // flick down = hard drop
+ }
+ g=null;
+}
+addEventListener('pointerup',endG);addEventListener('pointercancel',()=>g=null);
+document.addEventListener('touchmove',e=>{if(!e.target.closest('.overlay'))e.preventDefault();},{passive:false});
+
+/* menu */
+const MODE_DESC={classic:'משחק בלי סוף. המהירות עולה כל 10 שורות.',missions:'בחרו משימה ונסו להשלים אותה בזמן, למשל לנקות 10 שורות מבולגנות תוך דקה. מי שמשלים משימה נכנס לטבלת השיאים שלה.',stages:'כל שלב מתחיל עם שורות מבולגנות. הורידו את מספר השורות הנדרש כדי לעבור לשלב הבא. כל שלב קשה יותר מהקודם.'};
+function markMenu(){
+ [...$('startSeg').children].forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.l===startLevel)));
+ [...$('modeSeg').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===mode)));
+ $('modeDesc').textContent=MODE_DESC[mode];$('startWrap').hidden=mode!=='classic';
+}
+$('modeSeg').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;mode=b.dataset.m;store.set('blocks-mode',mode);
+ if(state==='menu'){stage=1;timeLeft=0;goal=0;stageLines=0;score=0;lines=0;level=mode==='stages'?1:startLevel;}markMenu();hud();};
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function renderScores(m){
+ [...$('scoreTabs').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));
+ const fd=d=>d?d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(2,4):'';
+ const sel=$('scoreMission');sel.hidden=m!=='missions';
+ if(m==='missions'){   // one table per mission, fastest time first
+  sel.innerHTML=MISSIONS.map((M,i)=>`<option value="${i}"${i===scoreMission?' selected':''}>${i+1}. ${M.name}</option>`).join('');
+  const a=getScores('m-'+MISSIONS[scoreMission].id);
+  if(!a.length){$('scoreList').innerHTML='<p class="empty">עדיין אף אחד לא השלים את המשימה הזו.</p>';return;}
+  $('scoreList').innerHTML='<table class="sc"><thead><tr><th></th><th>שם</th><th>זמן</th><th>ניקוד</th><th>תאריך</th></tr></thead><tbody>'+
+   a.map((x,i)=>`<tr${x.id===lastEntryId?' class="me"':''}><td class="n">${i+1}</td><td class="nm">${esc(x.name||'שחקן')}</td><td>${fmtT(x.t)}</td><td>${x.score}</td><td>${fd(x.d||'')}</td></tr>`).join('')+'</tbody></table>';
+  return;
+ }
+ const a=getScores(m);
+ if(!a.length){$('scoreList').innerHTML='<p class="empty">עדיין אין שיאים במצב הזה.</p>';return;}
+ const col=m==='stages'?'שלב':'שורות';
+ $('scoreList').innerHTML='<table class="sc"><thead><tr><th></th><th>שם</th><th>ניקוד</th><th>'+col+'</th><th>תאריך</th></tr></thead><tbody>'+
+  a.map((x,i)=>`<tr${x.id===lastEntryId?' class="me"':''}><td class="n">${i+1}</td><td class="nm">${esc(x.name||'שחקן')}</td><td>${x.score}</td><td>${(m!=='classic'?x.lvl:x.lines)??'—'}</td><td>${fd(x.d||'')}</td></tr>`).join('')+'</tbody></table>';
+}
+function openScores(from){scoresFrom=from;$(from).hidden=true;scoreMission=missionIdx;renderScores(mode);$('noStore').hidden=storeOK;$('bk').open=false;$('scores').hidden=false;}
+$('scoresBtn').onclick=()=>openScores('menu');
+$('overScores').onclick=()=>openScores('over');
+$('scoreTabs').onclick=e=>{const b=e.target.closest('[data-m]');if(b)renderScores(b.dataset.m);};
+$('scoreMission').onchange=e=>{scoreMission=+e.target.value;renderScores('missions');};
+function bkCode(){const j=JSON.stringify({v:1,c:getScores('classic'),s:getScores('stages'),m:Object.fromEntries(MISSIONS.map(M=>[M.id,getScores('m-'+M.id)]))});return'BLK1:'+btoa(unescape(encodeURIComponent(j)));}
+$('bk').addEventListener('toggle',()=>{if($('bk').open){$('bkText').value=bkCode();$('bkMsg').textContent='';}});
+$('bkCopy').onclick=async()=>{
+ const t=$('bkText');t.value=bkCode();
+ try{await navigator.clipboard.writeText(t.value);$('bkMsg').textContent='הקוד הועתק';}
+ catch(e){t.focus();t.select();t.setSelectionRange(0,t.value.length);$('bkMsg').textContent='הקוד מסומן בתיבה. העתיקו אותו ידנית';}
+};
+$('bkLoad').onclick=()=>{
+ try{
+  const raw=$('bkText').value.trim().replace(/^BLK1:/,'');
+  const o=JSON.parse(decodeURIComponent(escape(atob(raw))));
+  if(!o||!Array.isArray(o.c)||!Array.isArray(o.s))throw 0;
+  setScores('classic',mergeScores(getScores('classic'),o.c));setScores('stages',mergeScores(getScores('stages'),o.s));if(o.m&&typeof o.m==='object')MISSIONS.forEach(M=>{if(Array.isArray(o.m[M.id]))setScores('m-'+M.id,mergeScores(getScores('m-'+M.id),o.m[M.id]));});
+  renderScores([...$('scoreTabs').children].find(b=>b.getAttribute('aria-pressed')==='true')?.dataset.m||mode);hud();
+  $('bkText').value=bkCode();$('bkMsg').textContent='השיאים שוחזרו';
+ }catch(e){$('bkMsg').textContent='הקוד לא תקין. בדקו שהעתקתם אותו במלואו';}
+};
+$('scoresBack').onclick=()=>{$('scores').hidden=true;$(scoresFrom).hidden=false;};
+$('mlist').onclick=e=>{const b=e.target.closest('[data-i]');if(!b)return;missionIdx=+b.dataset.i;store.set('blocks-mission',missionIdx);unlock();newGame();};
+$('missionsBack').onclick=()=>{$('missions').hidden=true;$(missionsFrom).hidden=false;};
+$('otherMission').onclick=()=>{state='menu';openMissions('over');};
+$('menuBtn').onclick=()=>{state='menu';$('over').hidden=true;$('menu').hidden=false;markMenu();hud();};
+$('introBtn').onclick=()=>{unlock();beginStage();};
+$('nameIn').addEventListener('input',()=>{
+ const v=$('nameIn').value.trim().slice(0,14);store.set('blocks-name',v);
+ const t=tableId(),a=getScores(t),x=a.find(r=>r.id===lastEntryId);if(x){x.name=v||'שחקן';setScores(t,a);}   // re-read, then change only this row
+});
+$('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
+$('startSeg').onclick=e=>{const b=e.target.closest('[data-l]');if(!b)return;startLevel=+b.dataset.l;store.set('blocks-start',startLevel);markMenu();};
+$('startBtn').onclick=()=>{unlock();startOrPick();};
+$('againBtn').onclick=()=>{unlock();newGame();};
+const touch=matchMedia('(hover:none)').matches;
+$('howto').innerHTML=touch
+ ?'<b>הזזה:</b> גררו את האצבע ימינה או שמאלה, בכל מקום במסך<br><b>סיבוב:</b> הקשה על המסך<br><b>הפלת האבן:</b> החלקה מהירה למטה<br><b>שמירת צורה:</b> החלקה למעלה או הקשה על תיבת "שמור"<br>אפשר גם להשתמש בכפתורים שמתחת ללוח'
+ :'<b>חצים ימינה ושמאלה:</b> הזזה<br><b>חץ למעלה:</b> סיבוב<br><b>חץ למטה:</b> הפלת האבן<br><b>רווח:</b> נפילה מהירה<br><b>Z / X:</b> סיבוב, <b>C או Shift:</b> שמירת צורה<br><b>P:</b> השהיה';
+
+/* loop */
+function frame(now){
+ const dt=now-last;last=now;fitCheck();
+ if(state==='play'){
+  if(clearing){clearing.t-=dt/1000;if(clearing.t<=0)finishClear();}
+  else if(cur){
+   fall+=dt;
+   const sp=gravity();
+   if(fall>=sp){fall=0;const t={...cur,y:cur.y+1};if(fits(t))cur.y=t.y;else lockT=Math.max(lockT,0.0001);}
+   if(!fits({...cur,y:cur.y+1})){lockT+=dt;if(lockT>=500)lockNow();}
+   else lockT=0;
+  }
+  if(state==='play'&&mode==='missions'&&!clearing){const s0=Math.ceil(timeLeft/1000);timeLeft-=dt;if(timeLeft<=0){timeLeft=0;timedOut=true;gameOver();}else if(Math.ceil(timeLeft/1000)!==s0)hud();}
+  if(state==='play'&&mode==='stages'&&riseEvery&&!clearing){riseT-=dt;if(riseT<=0){riseT=riseEvery;riseRow();}}
+ }
+ draw(now);requestAnimationFrame(frame);
+}
+addEventListener('resize',size);addEventListener('orientationchange',size);
+if(window.ResizeObserver)new ResizeObserver(fitCheck).observe(bc.parentElement);
+if(window.visualViewport){visualViewport.addEventListener('resize',fitCheck);visualViewport.addEventListener('scroll',fitCheck);}
+grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+async function saveBeforeHome(){
+ if((state==='play'||state==='paused'||state==='intro')&&score>0&&mode!=='missions')gameOver();   // the game so far goes into the tables
+ clearTimeout(CF.t);if(CF.on)await cfFlush();}
+
+/* ---------- home button: save, sync, then back to the games home page ---------- */
+let goingHome=false;
+const flushWithin=(p,ms)=>Promise.race([Promise.resolve(p).catch(()=>{}),new Promise(r=>setTimeout(r,ms))]);
+async function goHome(){if(goingHome)return;goingHome=true;$('homeBtn').disabled=true;
+ try{await flushWithin(saveBeforeHome(),1500);}catch(e){}
+ location.href='/';}
+$('homeBtn').addEventListener('click',e=>{e.stopPropagation();goHome();});
+markMenu();hud();size();requestAnimationFrame(()=>{size();lastBox='';});requestAnimationFrame(frame);
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
+
+</body></html>
+
+</body></html>

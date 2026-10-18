@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>My Snake</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/snake-180.png">
+<meta name="apple-mobile-web-app-title" content="My Snake">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#111214">
+<script src="/ofek.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#111214;--ink:#E8E8E8;--muted:#9A9CA1;--g1:#26282C;--g2:#212326;--snake:#7FA6FF;--snake2:#A9C4FF;--enemy:#C08AF0;--enemy2:#D8B6F7;--apple:#F0564A;--gold:#F2C343;--fire:#7FD8FF;--shrink:#9BFF4F;--glass:rgba(17,18,20,.94);--line:rgba(232,232,232,.14);color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111214;--ink:#E8E8E8;--muted:#9A9CA1;--g1:#26282C;--g2:#212326;--snake:#7FA6FF;--snake2:#A9C4FF;--enemy:#C08AF0;--enemy2:#D8B6F7;--apple:#F0564A;--gold:#F2C343;--fire:#7FD8FF;--shrink:#9BFF4F;--glass:rgba(17,18,20,.94);--line:rgba(232,232,232,.14)}}
+:root[data-theme="dark"]{--bg:#111214;--ink:#E8E8E8;--muted:#9A9CA1;--g1:#26282C;--g2:#212326;--snake:#7FA6FF;--snake2:#A9C4FF;--enemy:#C08AF0;--enemy2:#D8B6F7;--apple:#F0564A;--gold:#F2C343;--fire:#7FD8FF;--shrink:#9BFF4F;--glass:rgba(17,18,20,.94);--line:rgba(232,232,232,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+/* top/bottom safe areas are already padded on :root by the page frame, so body fills what is left (100%, not 100dvh) and only pads the sides */
+body{font-family:'Varela Round',system-ui,-apple-system,Arial,sans-serif;display:flex;flex-direction:column;height:100%;padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+header{display:flex;align-items:center;gap:14px;padding:8px 12px}
+.stat{display:flex;flex-direction:column;line-height:1.15}
+.stat small{font-size:12px;color:var(--muted)}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums;font-weight:400}
+.stat.st b{color:var(--gold)}.stat.en b{color:var(--enemy)}
+.melt{font-size:13px;margin-inline-start:5px;padding:1px 6px;border-radius:999px;border:1px solid var(--fire);color:var(--fire);vertical-align:middle}
+.melt.warn{background:var(--fire);color:#111214;animation:mb .5s infinite alternate}
+@keyframes mb{to{opacity:.45}}
+.melt[hidden]{display:none}.stat.fi b{color:var(--fire)}
+.stat[hidden]{display:none}
+.sp{flex:1}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--snake);outline-offset:2px}
+.icon{width:40px;height:40px;border:0;border-radius:12px;background:transparent;display:grid;place-items:center;padding:0}
+main{position:relative;flex:1;min-height:0;touch-action:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;padding:18px;background:var(--glass);overflow:auto;touch-action:pan-y}
+.overlay[hidden]{display:none}
+.card{text-align:center;max-width:360px;width:100%}
+.card h1{font-size:40px;margin:0 0 6px;font-weight:400}
+.card p{margin:0 0 16px;color:var(--muted);font-size:16px;line-height:1.5}
+.lbl{font-size:14px;color:var(--muted);margin:0 0 8px}
+.seg{display:flex;gap:6px;justify-content:center;margin:0 0 16px}
+.seg button{flex:1;border:1px solid var(--line);background:transparent;border-radius:999px;padding:9px 6px;font-size:15px;line-height:1.2}
+.seg button small{display:block;font-size:11px;color:var(--muted)}
+.seg button[aria-pressed="true"] small{color:var(--bg);opacity:.85}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:0 0 16px;text-align:right;width:100%;background:transparent}
+.toggle .sw{width:46px;height:28px;border-radius:999px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.toggle .sw::after{content:"";position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:right .15s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.toggle[aria-checked="true"] .sw{background:var(--enemy)}
+.toggle[aria-checked="true"] .sw::after{right:21px}
+.toggle small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.hs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 16px}
+.hs div{border:1px solid var(--line);border-radius:12px;padding:6px}
+.hs small{display:block;color:var(--muted);font-size:12px}
+.hs b{font-size:20px;font-weight:400}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;margin:0 0 20px}
+.stats div{border:1px solid var(--line);border-radius:14px;padding:10px 6px}
+.stats small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.stats b{font-size:24px;font-weight:400;font-variant-numeric:tabular-nums}
+.stats .ap b{color:var(--apple)}.stats .tm b{color:var(--snake)}.stats .hd b{color:var(--gold)}.stats .ht b{color:var(--fire)}.stats .sg b{color:var(--gold)}.stats .ea b{color:var(--enemy)}.stats .ml b{color:var(--fire)}
+#statsOv .card{max-width:440px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 6px}
+.sum>*{border:1px solid var(--line);border-radius:12px;padding:7px 4px;background:transparent;display:block;width:100%}
+.sum button[aria-pressed="true"]{border-color:var(--snake);background:rgba(127,166,255,.12)}
+.sum small{display:block;color:var(--muted);font-size:11px}
+.sum b{font-size:19px;font-weight:400;font-variant-numeric:tabular-nums}
+.hint{font-size:12px;color:var(--muted);margin:0 0 10px}
+.chart{margin:0 0 4px}
+.chart h3{font-size:15px;font-weight:400;margin:0 0 4px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.barlbl{display:flex;justify-content:space-between;gap:6px;color:var(--muted);font-size:11px;margin:2px 0 14px}
+.games{list-style:none;margin:0 0 16px;padding:0;text-align:right}
+.games li{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding:8px 2px}
+.games li>b{font-size:22px;font-weight:400;min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.games .meta{flex:1;min-width:0}
+.games .meta small{display:block;color:var(--muted);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.chips span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 7px;white-space:nowrap}
+.empty{color:var(--muted);margin:10px 0 18px}
+#cfOv .card{max-width:440px}
+.cfrow{margin:0 0 12px;color:var(--muted);font-size:14px}
+.cfrow:empty{display:none}
+.cfrow form{display:flex;gap:6px;justify-content:center;margin-top:6px}
+.cfrow input{font:inherit;font-size:16px;padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);text-align:center;width:150px}
+.cfrow button{font:inherit;font-size:15px;padding:9px 16px;border-radius:999px;border:0;background:var(--snake);color:#111214}
+.fam{width:100%;border-collapse:collapse;margin:0 0 16px;font-variant-numeric:tabular-nums}
+.fam th{font-size:12px;font-weight:400;color:var(--muted);padding:6px;border-bottom:1px solid var(--line)}
+.fam td{padding:8px 6px;border-bottom:1px solid var(--line)}
+.fam td.nm{text-align:right}
+.fam tr.me td{background:rgba(127,166,255,.12)}
+#bk textarea{width:100%;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px;font:12px ui-monospace,Menlo,monospace;margin:0 0 8px;resize:vertical;-webkit-user-select:text;user-select:text}
+.card p.bkp{font-size:13px;margin:8px 0}
+.linkbtn{background:transparent;border:0;color:var(--muted);font-size:15px;text-decoration:underline;padding:10px;margin-top:6px}
+details{text-align:right;margin:0 0 16px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+summary{cursor:pointer;color:var(--muted)}
+details ul{margin:8px 0 0;padding-inline-start:18px;line-height:1.55;font-size:14px}
+.cta{font-size:18px;padding:14px 34px;border:0;border-radius:999px;background:var(--snake);color:#111214}
+.row{display:flex;gap:8px;justify-content:center}
+.ghost{font-size:16px;padding:13px 22px;border:1px solid var(--line);border-radius:999px;background:transparent}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cta{color:#15281B}}
+:root[data-theme="dark"] .cta{color:#15281B}
+</style>
+</head>
+<body>
+<header>
+  <div class="stat"><small>ניקוד</small><b id="score">0</b></div>
+  <div class="stat"><small>שיא</small><b id="best">0</b></div>
+  <div class="stat"><small>אורך</small><b id="len">3</b></div>
+  <div class="stat st" id="stStat" hidden><small>שלב</small><b id="stage">1</b></div>
+  <div class="stat en" id="enStat" hidden><small>יריב</small><b id="enLen">3</b></div>
+  <div class="stat fi" id="fiStat" hidden><small>קרח</small><b><span id="fire">0</span><span class="melt" id="melt" dir="ltr" hidden></span></b></div>
+  <div class="sp"></div>
+  <button class="icon" id="homeBtn" aria-label="מסך הבית" title="מסך הבית"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></button>
+  <button class="icon" id="muteBtn"></button>
+  <button class="icon" id="pauseBtn" aria-label="השהה משחק"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><rect x="4" y="3" width="4" height="14" rx="2"/><rect x="12" y="3" width="4" height="14" rx="2"/></svg></button>
+</header>
+<main id="main" tabindex="-1" style="outline:none">
+  <canvas id="cv"></canvas>
+  <div class="overlay" id="menu"><div class="card">
+    <h1>My Snake</h1>
+    <p>החליקו כדי לפנות, או שחקו עם חצים במקלדת. במצב יריב, הקשה על המסך או רווח יורים כדור קרח.</p>
+    <p class="lbl">מצב משחק</p>
+    <div class="seg" id="modeSeg"><button data-m="classic">קלאסי<small>גוש לבה</small></button><button data-m="maze">מבוך<small>קירות לפי שלבים</small></button></div>
+    <p class="lbl">מהירות</p>
+    <div class="seg" id="speedSeg"><button data-s="90">מהיר</button><button data-s="105">בינוני</button><button data-s="120">איטי</button></div>
+    <button class="toggle" id="enemyToggle" role="switch" aria-checked="false"><span>נחש יריב<small>מתחרה על התפוחים, ואפשר לירות בו כדורי קרח</small></span><span class="sw"></span></button>
+    <p class="lbl">גודל הלוח</p>
+    <div class="seg" id="boardSeg"><button data-b="big">גדול<small>פחות משבצות</small></button><button data-b="small">קטן<small>יותר משבצות</small></button></div>
+    <p class="lbl" id="hsLbl">שיאים</p>
+    <div class="hs"><div><small>מהיר</small><b id="hs90">0</b></div><div><small>בינוני</small><b id="hs105">0</b></div><div><small>איטי</small><b id="hs120">0</b></div></div>
+    <details><summary>החוקים</summary><ul>
+      <li>תפוח אדום: נקודה אחת והנחש מתארך. הקירות לא הורגים, עוברים דרכם לצד השני.</li>
+      <li>אחרי כל תפוח חמישי מופיע בונוס זהב ל-5 שניות. הוא שווה 5 נקודות ועוד מספר השניות שנשארו.</li>
+      <li>גוש הלבה הורג במגע. הוא גדל כל 50 נקודות וקופץ למקום חדש כל 8 שניות.</li>
+      <li>נחש יריב: זז בערך בחצי מהמהירות שלך, ואוסף גם הוא תפוחים ואף פעם לא מת. כל תפוח שהוא אוכל מוריד לך 2 נקודות. אם תיכנס בו, המשחק נגמר. אם הוא נכנס בך, הוא מתקצר ב-1 (לא פחות מ-3).</li>
+      <li>מצב מבוך: במקום גוש הלבה יש קירות פנימיים קבועים. כל 10 תפוחים עולים שלב והמבוך מתחלף. נגיעה בקיר הורגת, אבל שולי הלוח עדיין פתוחים. קיר חדש שנופל עליך מופיע שקוף ונהיה מוצק רק אחרי שעברת. כדורי קרח נעצרים בקירות. לכל מצב יש שיאים משלו.</li>
+      <li>כל דקה מופיע יהלום ירוק ל-8 שניות. אכילתו מקצרת את הנחש שלך ב-8 חוליות (לא פחות מ-3).</li>
+      <li>רגע הצלה: ממש לפני התנגשות הנחש עוצר לרגע קצרצר. פנייה לכיוון פנוי בזמן הזה מצילה אותך.</li>
+      <li>כדור קרח: במצב יריב כל בונוס מוסיף יריה אחת, וצוברים כמה יריות ברצף. אפשר לירות אותן בזו אחר זו. היריה טסה ישר במהירות כפולה. פגיעה ביריב מקצרת אותו ב-2, מקפיאה אותו לשתי שניות ונותנת 20 נקודות. פגיעה בראש שלו מכפילה את זמן ההקפאה ואת הניקוד. כשהיריב קפוא, היריות עוברות דרכו בלי להשפיע. הקרח נמס: כשיש לך יותר מיריה אחת, יריה עודפת שלא נוצלה תוך 10 שניות נעלמת. טיימר ליד ״קרח״ בסרגל העליון וליד ראש הנחש מראה כמה זמן נשאר, והראש מהבהב ב-3 השניות האחרונות. כשיש לך יריה מוכנה, ראש הנחש שלך זוהר בסימן קרח.</li>
+      <li>בסוף כל משחק מוצגות סטטיסטיקות: תפוחים שנאכלו, זמן שרידה, במצב יריב גם כמה תפוחים אכל היריב, פגיעות ופגיעות בראש, ובמצב מבוך גם השלב שהגעת אליו. כפתור ״סטטיסטיקה״ מציג את 20 המשחקים האחרונים.</li>
+      <li>השיאים נשמרים בכמה מקומות בדפדפן כדי שלא יימחקו. במסך הסטטיסטיקה יש ״גיבוי ושחזור שיאים״ עם קוד שאפשר לשמור ולהדביק בחזרה.</li>
+      <li>במקלדת (מחשב או אייפד): חצים או WASD לתנועה, רווח או Shift ליריה, P להשהיה, Enter להתחלה.</li>
+    </ul></details>
+    <button class="cta" id="startBtn">התחל משחק</button>
+    <div><button class="linkbtn" id="statsBtn">סטטיסטיקה</button><button class="linkbtn" id="cfBtn" hidden>🏆 טבלה משפחתית</button></div>
+  </div></div>
+  <div class="overlay" id="over" hidden><div class="card">
+    <h1 id="overTitle">המשחק נגמר</h1><p id="overText"></p><div class="cfrow" id="cfRow"></div>
+    <div class="stats" id="overStats"></div>
+    <div class="row"><button class="cta" id="againBtn">שחק שוב</button><button class="ghost" id="menuBtn">תפריט</button></div>
+    <div><button class="linkbtn" id="statsBtn2">סטטיסטיקה</button><button class="linkbtn" id="cfBtn2" hidden>🏆 טבלה משפחתית</button></div>
+  </div></div>
+  <div class="overlay" id="statsOv" hidden><div class="card">
+    <h1>סטטיסטיקה</h1><p>20 המשחקים האחרונים</p>
+    <div id="statsBody"></div>
+    <details id="bk"><summary>גיבוי ושחזור שיאים</summary>
+      <p class="bkp">הדפדפן עלול למחוק נתונים שמורים. העתיקו את קוד הגיבוי ושמרו אותו (למשל בפתקים). כדי לשחזר, הדביקו קוד והקישו ״שחזר״. השחזור רק מוסיף, ואף פעם לא מוריד שיא קיים.</p>
+      <textarea id="bkText" rows="3" dir="ltr" spellcheck="false" placeholder="קוד גיבוי"></textarea>
+      <div class="row"><button class="ghost" id="bkCopy">העתק קוד גיבוי</button><button class="ghost" id="bkLoad">שחזר מקוד</button></div>
+      <p class="bkp" id="bkMsg" aria-live="polite"></p>
+    </details>
+    <div class="row"><button class="cta" id="statsClose">חזרה</button><button class="ghost" id="statsReset">איפוס רשימה</button></div>
+  </div></div>
+  <div class="overlay" id="cfOv" hidden><div class="card">
+    <h1>טבלה משפחתית</h1><p>10 התוצאות הכי טובות של כל המשפחה, מכל המכשירים</p>
+    <div class="seg" id="cfMode"><button data-m="c">קלאסי</button><button data-m="m">מבוך</button></div>
+    <div class="seg" id="cfSpeed"><button data-s="90">מהיר</button><button data-s="105">בינוני</button><button data-s="120">איטי</button></div>
+    <div id="cfBody"></div>
+    <div class="row"><button class="cta" id="cfClose">חזרה</button><button class="ghost" id="cfName">שינוי שם</button></div>
+  </div></div>
+  <div class="overlay" id="paused" hidden><div class="card"><h1>מושהה</h1><p></p><button class="cta" id="resumeBtn">המשך</button></div></div>
+</main>
+<script>/* Fit the page to the part of the screen that is really visible.
+   Chrome on iPad: when claude.ai opens this page in a new tab from another artifact (the links board), it sizes the
+   frame as if Chrome had no toolbars, so the bottom ~130px fall off the screen and nothing inside the frame can see
+   that (innerHeight and visualViewport report the oversized frame). Rotating the iPad fixes it, so we cap the height
+   at what fits under Chrome's toolbars + the claude.ai header (172px, measured on iPad Chrome). A faint ↕ button next to the
+   mute button (Chrome on iPad only) trims more, after a confirmation, if this estimate is ever off; the choice is remembered. */
+(()=>{const ua=navigator.userAgent,iosChrome=/CriOS/.test(ua)&&(/iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)),framed=window.top!==window,UI=172,STEPS=[0,40,80,130,180];
+ let extra=0;try{extra=+localStorage.getItem('fitExtra')||0}catch(e){}
+ let h0=0;
+ const target=()=>{const vv=window.visualViewport;let h=Math.round(vv?Math.min(vv.height,innerHeight):innerHeight);
+  if(iosChrome&&framed){const land=innerWidth>innerHeight,sh=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height);
+   if(h>sh-UI+8)h=sh-UI;h-=extra;}
+  return h;};
+ const f=window.__fitScreen=()=>{const h=target();if(h>0&&h!==h0){h0=h;document.documentElement.style.height=h+'px';dispatchEvent(new Event('resize'));}if(scrollY||scrollX)scrollTo(0,0);};
+ f();addEventListener('resize',f);addEventListener('orientationchange',()=>setTimeout(f,300));if(window.visualViewport)visualViewport.addEventListener('resize',f);setInterval(f,700);
+ if(iosChrome&&framed)addEventListener('DOMContentLoaded',()=>{
+  const mute=document.getElementById('muteBtn'),b=document.createElement('button');b.type='button';b.textContent='↕';b.title='התאמת גובה המסך';b.setAttribute('aria-label','התאמת גובה המסך');
+  if(mute){b.className=mute.className;b.style.cssText='opacity:.3;font-size:15px';mute.insertAdjacentElement('afterend',b);}
+  else{b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:4px;z-index:9999;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:inherit;font:14px/1 system-ui;opacity:.3;padding:0';document.body.appendChild(b);}
+  const save=v=>{extra=v;try{localStorage.setItem('fitExtra',String(v))}catch(_){}h0=0;f();};
+  b.onclick=e=>{e.stopPropagation();b.blur();
+   const ov=document.createElement('div');ov.dir='rtl';
+   ov.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;font:15px/1.5 system-ui,-apple-system,sans-serif';
+   const next=STEPS[Math.min(STEPS.indexOf(extra)+1,STEPS.length-1)];
+   ov.innerHTML='<div style="background:#1f2126;color:#eee;border-radius:14px;max-width:360px;width:100%;padding:18px;text-align:right;box-shadow:0 10px 30px rgba(0,0,0,.4)">'+
+    '<b style="font-size:17px;display:block;margin-bottom:6px">התאמת גובה המסך</b>'+
+    '<p style="margin:0 0 14px;color:#bbb">השתמשו בזה רק אם תחתית המשחק חתוכה. ״הקטן״ מנמיך את המשחק בעוד קצת, וההגדרה נשמרת לפעם הבאה.'+(extra?' כרגע המשחק מוקטן ב-'+extra+' פיקסלים.':'')+'</p>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    (extra<STEPS[STEPS.length-1]?'<button data-a="more" style="flex:1;border:0;border-radius:999px;padding:10px 14px;background:#7FA6FF;color:#111;font:inherit">הקטן ב-'+(next-extra)+' פיקסלים</button>':'')+
+    (extra?'<button data-a="reset" style="flex:1;border:1px solid #555;border-radius:999px;padding:10px 14px;background:transparent;color:#eee;font:inherit">אפס</button>':'')+
+    '<button data-a="no" style="flex:1;border:1px solid #555;border-radius:999px;padding:10px 14px;background:transparent;color:#eee;font:inherit">ביטול</button></div></div>';
+   ov.addEventListener('click',ev=>{ev.stopPropagation();const a=ev.target.closest('[data-a]')?.dataset.a;if(!a&&ev.target!==ov)return;
+    if(a==='more')save(next);else if(a==='reset')save(0);ov.remove();});
+   ['pointerdown','touchstart','touchmove','keydown'].forEach(t=>ov.addEventListener(t,ev=>ev.stopPropagation(),{passive:true}));
+   document.body.appendChild(ov);};
+ });
+})();</script>
+<script>
+(()=>{
+const cv=document.getElementById('cv'),$=id=>document.getElementById(id);let ctx=cv.getContext('2d');
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let C={};function readColors(){const s=getComputedStyle(document.documentElement);['bg','ink','muted','g1','g2','snake','snake2','enemy','enemy2','apple','gold','fire','shrink'].forEach(k=>C[k]=s.getPropertyValue('--'+k).trim());}
+readColors();matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readColors);
+
+/* rules */
+const BONUS_MS=5000,BONUS_EVERY=5,LAVA_BASE=5,LAVA_GROW_EVERY=50,LAVA_SHIFT_MS=8000,ENEMY_SLOW=1.8,FREEZE_MS=2000,FIRE_STEPS=2,SHRINK_EVERY=60000,SHRINK_BY=8,SHRINK_MS=8000;
+let mode=store.get('mysnake-mode','classic')==='maze'?'maze':'classic',speed=+store.get('mysnake-speed',90)||90,enemyMode=store.get('mysnake-enemy','0')==='1';
+const BOARDS={small:20,big:14};   // squares along the short side: fewer squares = bigger squares
+let board=BOARDS[store.get('mysnake-board','')]?store.get('mysnake-board'):(Math.min(innerWidth,innerHeight)<500?'big':'small');
+const base=()=>BOARDS[board];
+const lavaBase=()=>Math.max(3,Math.round(base()/4));
+const hk=s=>(mode==='maze'?'m':'')+s;   // separate high scores per mode
+const APPLES_PER_STAGE=10;
+const HISTORY_MAX=20;
+/* ---- durable records (high scores + last 20 games) ----
+   Browsers sometimes wipe one kind of storage (Safari/iOS especially), so the records are kept in
+   three places at once: localStorage, IndexedDB and a long-lived cookie (highs only). On load all copies
+   are MERGED (best score per key, union of games), so a wiped copy is refilled from the others and a
+   save can never lower a record. A copy/paste backup code in the stats screen covers a full wipe. */
+const parse=(v,d)=>{try{const x=JSON.parse(v);return x==null?d:x}catch(e){return d}};
+const cleanHighs=o=>{const r={};if(o&&typeof o==='object')for(const k in o){const v=Math.floor(+o[k]);if(/^m?(90|105|120)$/.test(k)&&v>0)r[k]=v;}return r;};
+const cleanLog=a=>Array.isArray(a)?a.filter(g=>g&&typeof g==='object'&&+g.t>0&&Number.isFinite(+g.sc)):[];
+function mergeHighs(...xs){const r={};xs.forEach(x=>{x=cleanHighs(x);for(const k in x)r[k]=Math.max(r[k]||0,x[k]);});return r;}
+function mergeLog(...xs){const m=new Map();xs.forEach(x=>cleanLog(x).forEach(g=>m.set(+g.t,g)));return[...m.values()].sort((a,b)=>b.t-a.t).slice(0,HISTORY_MAX);}
+function highsFromLog(log){const r={};log.forEach(g=>{const k=(g.m==='maze'?'m':'')+g.sp;if(g.sc>0)r[k]=Math.max(r[k]||0,g.sc);});return r;}
+const cookie={get(){try{const m=document.cookie.match(/(?:^|;\s*)mysnakeHighs=([^;]*)/);return m?parse(decodeURIComponent(m[1]),{}):{}}catch(e){return{}}},
+ set(o){try{document.cookie='mysnakeHighs='+encodeURIComponent(JSON.stringify(o))+';max-age=31536000;path=/;SameSite=None;Secure';}catch(e){}}};
+const idb={db:null,open(){if(this.db)return this.db;this.db=new Promise(res=>{try{const r=indexedDB.open('mysnake',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null);r.onblocked=()=>res(null);}catch(e){res(null);}});return this.db;},
+ async get(k){const d=await this.open();if(!d)return null;return new Promise(res=>{try{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result??null);q.onerror=()=>res(null);}catch(e){res(null);}});},
+ async set(k,v){const d=await this.open();if(!d)return;try{d.transaction('kv','readwrite').objectStore('kv').put(v,k);}catch(e){}}};
+let gameLog=mergeLog(parse(store.get('mysnake-history','[]'),[]));
+let highs=mergeHighs(parse(store.get('mysnake-highs','{}'),{}),cookie.get(),highsFromLog(gameLog));
+function saveRecords(){ // merge with whatever is stored right now, then write every copy
+ highs=mergeHighs(highs,parse(store.get('mysnake-highs','{}'),{}),cookie.get(),highsFromLog(gameLog));
+ const h=JSON.stringify(highs),l=JSON.stringify(gameLog);
+ store.set('mysnake-highs',h);store.set('mysnake-history',l);cookie.set(highs);idb.set('highs',h);idb.set('history',l);}
+async function syncRecords(){ // pull the IndexedDB copy (async) and fold it in
+ const [h,l]=await Promise.all([idb.get('highs'),idb.get('history')]);
+ const before=JSON.stringify([highs,gameLog]);
+ if(!resetLog)gameLog=mergeLog(gameLog,parse(l,[]));
+ highs=mergeHighs(highs,parse(h,{}),highsFromLog(gameLog));
+ saveRecords();if(JSON.stringify([highs,gameLog])!==before){markMenu();hud();if(!$('statsOv').hidden)renderHistory();}}
+let resetLog=false;
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
+
+
+/* ---- Cloudflare site: family high-score table, one per mode + speed, shared by all devices ----
+   Login and personal codes come from /ofek.js (window.OFEK); results are recorded under the logged-in player. */
+const CF={on:false,pending:parse(store.get('mysnake-cf-pending','[]'),[]),last:null,tm:'c',ts:90,from:'menu'};
+const cfTable=(m,sp)=>(m==='maze'||m==='m'?'m':'c')+'-'+sp;
+const cfEsc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function cfSavePending(){store.set('mysnake-cf-pending',JSON.stringify(CF.pending));}
+async function cfFlush(){
+ if(!CF.on||CF.busy||!OFEK.player)return;CF.busy=true;
+ while(CF.pending.length){const p=CF.pending[0];
+  if(p.p&&p.p!==OFEK.player){CF.pending.shift();cfSavePending();continue;}   // played by someone who is no longer logged in here
+  try{const r=await OFEK.api('/api/tables?app=snake',{method:'POST',body:{table:p.table,entries:[p.e]}});
+   CF.pending.shift();cfSavePending();
+   if(CF.last&&CF.last.id===p.e.id){const i=(r.entries||[]).findIndex(x=>String(x.id)===String(p.e.id));
+    $('cfRow').textContent=i>=0?`🏆 מקום ${i+1} בטבלה המשפחתית`:'';}}
+  catch(e){if(e.code===400){CF.pending.shift();cfSavePending();continue;}break;}}
+ CF.busy=false;}
+function cfScore(g){
+ $('cfRow').textContent='';if(!CF.on||!(g.sc>0))return;
+ const d=new Date(g.t),e={id:g.t,score:g.sc,d:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+ CF.last=e;CF.pending.push({p:OFEK.player||null,table:cfTable(g.m,g.sp),e});cfSavePending();
+ if(OFEK.player){cfFlush();return;}
+ $('cfRow').innerHTML='<form id="cfForm"><button>🏆 כניסה, כדי לשמור בטבלה המשפחתית</button></form>';
+ $('cfForm').onsubmit=async ev=>{ev.preventDefault();if(await OFEK.ensure()){CF.pending.forEach(p=>{if(!p.p)p.p=OFEK.player;});cfSavePending();$('cfRow').textContent='שומר…';cfFlush();}};}
+function cfMark(){[...$('cfMode').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===CF.tm)));
+ [...$('cfSpeed').children].forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===CF.ts)));
+ $('cfName').textContent=OFEK.player?'👤 '+OFEK.player+' · החלפה':'כניסה';}
+async function cfRender(){cfMark();const el=$('cfBody');el.innerHTML='<p class="empty">טוען…</p>';
+ let t;try{t=(await OFEK.api('/api/tables?app=snake')).tables||{};}catch(e){el.innerHTML=`<p class="empty">${e.code===401?'צריך את הקוד המשפחתי כדי לראות את הטבלה.':'אין חיבור לאינטרנט כרגע.'}</p>`;return;}
+ const a=t[CF.tm+'-'+CF.ts]||[],me=OFEK.player;
+ if(!a.length){el.innerHTML='<p class="empty">עדיין אין תוצאות בטבלה הזו.</p>';return;}
+ const fd=d=>d?d.slice(8,10)+'/'+d.slice(5,7):'';
+ el.innerHTML='<table class="fam"><thead><tr><th></th><th>שם</th><th>ניקוד</th><th>תאריך</th></tr></thead><tbody>'+
+  a.map((x,i)=>`<tr${x.name===me?' class="me"':''}><td>${['🥇','🥈','🥉'][i]||i+1}</td><td class="nm">${cfEsc(x.name)}</td><td>${x.score}</td><td>${fd(x.d)}</td></tr>`).join('')+'</tbody></table>';}
+function cfOpen(from){CF.from=from;CF.tm=mode==='maze'?'m':'c';CF.ts=speed;$(from).hidden=true;$('cfOv').hidden=false;$('cfOv').scrollTop=0;cfRender();}
+$('cfBtn').onclick=()=>cfOpen('menu');$('cfBtn2').onclick=()=>cfOpen('over');
+$('cfClose').onclick=()=>{$('cfOv').hidden=true;$(CF.from).hidden=false;};
+$('cfMode').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;CF.tm=b.dataset.m;cfRender();};
+$('cfSpeed').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;CF.ts=+b.dataset.s;cfRender();};
+$('cfName').onclick=async()=>{await OFEK.login({switch:true});cfRender();cfFlush();};
+(async()=>{if(!window.OFEK||!(await OFEK.ready))return;
+ CF.on=true;$('cfBtn').hidden=false;$('cfBtn2').hidden=false;cfFlush();OFEK.onPlayer(()=>cfFlush());})();
+addEventListener('online',()=>cfFlush());
+
+/* state */
+let W=0,H=0,cell=20,ox=0,oy=0,cols=20,rows=20;
+let snake=[],prev=[],dir={x:1,y:0},lastDir={x:1,y:0},queue=[],undo=null,grow=0;
+let food=null,bonus=null,lava=null,lavaSize=5,lavaNext=0;
+let enemy=[],ePrev=[],eDir={x:1,y:0},eAcc=0,frozenUntil=0;
+const MELT_MS=10000;   // an extra (2nd+) ice shot melts if not used within 10s
+let meltAt=0,melted=0,fireCharge=0,fires=[],popups=[],shrinkItem=null,shrinkNext=SHRINK_EVERY;
+let readyNudge=0,graceLeft=0,graceCell=null,graceFrom=0;
+let score=0,apples=0,gt=0,acc=0,state='menu',dying=0,last=performance.now();
+let hits=0,headshots=0,enemyApples=0,stage=1,walls=new Map();   // walls: 'x,y' -> 1 solid, 0 pending (not deadly yet)   // end-of-game stats (apples and survival time come from apples and gt)
+
+/* audio */
+let AC=null,muted=store.get('mysnake-muted','0')==='1';
+function unlock(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
+function tone(f,d,t='square',v=.05,delay=0){if(muted||!AC)return;try{const n=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.setValueAtTime(f,n);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(AC.destination);o.start(n);o.stop(n+d+.02);}catch(e){}}
+function sweep(a,b,d,v=.05){if(muted||!AC)return;try{const n=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(a,n);o.frequency.exponentialRampToValueAtTime(b,n+d);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(AC.destination);o.start(n);o.stop(n+d+.02);}catch(e){}}
+function noise(d,v=.08){if(muted||!AC)return;try{const n=AC.currentTime,len=Math.max(1,AC.sampleRate*d|0),buf=AC.createBuffer(1,len,AC.sampleRate),dt=buf.getChannelData(0);for(let i=0;i<len;i++)dt[i]=Math.random()*2-1;const s=AC.createBufferSource(),g=AC.createGain();s.buffer=buf;g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);s.connect(g);g.connect(AC.destination);s.start(n);s.stop(n+d);}catch(e){}}
+const sfx={apple:()=>tone(880,.1,'square',.06),bonus:()=>{tone(988,.1,'square',.06);tone(1319,.15,'square',.06,.09);},enemyApple:()=>tone(440,.12,'triangle',.06),
+ launch:()=>{tone(1568,.18,'sine',.06);tone(2093,.22,'sine',.045,.05);},impact:()=>{noise(.12,.07);[2637,3136,2349,2794].forEach((f,i)=>tone(f,.12,'triangle',.045,i*.035));},enemyHit:()=>{tone(180,.15,'square',.07);noise(.1,.06);},
+ shrink:()=>{if(muted||!AC)return;try{const n=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(1300,n);o.frequency.exponentialRampToValueAtTime(160,n+.5);g.gain.setValueAtTime(.07,n);g.gain.exponentialRampToValueAtTime(.0001,n+.55);o.connect(g);g.connect(AC.destination);o.start(n);o.stop(n+.6);}catch(e){}[900,700,520,1040].forEach((f,i)=>tone(f,.06,'triangle',.05,.5+i*.07));},
+ stage:()=>[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,.14,'triangle',.055,i*.09)),
+ melt:()=>{[1760,1397,1175,880].forEach((f,i)=>tone(f,.12,'sine',.045,i*.07));noise(.25,.03);},
+ shrinkAppear:()=>{tone(1320,.12,'sine',.04);tone(1760,.18,'sine',.035,.1);},
+ headshot:()=>{noise(.15,.08);[1568,2093,2637,3136,4186].forEach((f,i)=>tone(f,.16,'triangle',.05,i*.055));tone(523,.35,'sine',.06,.3);tone(784,.45,'sine',.05,.38);},
+ over:()=>[392,329.63,261.63].forEach((f,i)=>tone(f,i===2?.35:.2,'sawtooth',.06,i*.18)),high:()=>[523.25,659.25,783.99].forEach((f,i)=>tone(f,i===2?.2:.12,'square',.06,i*.12))};
+function renderMute(){$('muteBtn').innerHTML=muted?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/></svg>';$('muteBtn').setAttribute('aria-label',muted?'הפעל צלילים':'השתק צלילים');}
+$('muteBtn').onclick=e=>{e.currentTarget.blur();muted=!muted;store.set('mysnake-muted',muted?'1':'0');unlock();renderMute();};renderMute();
+
+/* layout */
+function size(){const r=cv.getBoundingClientRect();W=r.width;H=r.height;const d=Math.min(devicePixelRatio||1,3);cv.width=Math.round(W*d);cv.height=Math.round(H*d);ctx.setTransform(d,0,0,d,0,0);fit();}
+function pickGrid(){const n=base(),mx=Math.round(n*1.6);if(H>=W){cols=n;rows=Math.max(n,Math.min(mx,Math.round(n*H/W)));}else{rows=n;cols=Math.max(n,Math.min(mx,Math.round(n*W/H)));}fit();}
+function fit(){cell=Math.floor(Math.min((W-8)/cols,(H-8)/rows));ox=Math.floor((W-cell*cols)/2);oy=Math.floor((H-cell*rows)/2);}
+
+/* helpers */
+const wrap=p=>({x:(p.x+cols)%cols,y:(p.y+rows)%rows});
+const same=(a,b)=>a.x===b.x&&a.y===b.y;
+function inLava(x,y){return lava&&x>=lava.x&&x<lava.x+lava.size&&y>=lava.y&&y<lava.y+lava.size;}
+const wk=(x,y)=>x+','+y;
+function isWall(x,y){return walls.get(wk(x,y))===1;}
+function blocked(x,y){return inLava(x,y)||isWall(x,y);}
+function randCell(ex){for(let i=0;i<600;i++){const p={x:Math.random()*cols|0,y:Math.random()*rows|0};if(!ex.some(s=>same(s,p))&&!inLava(p.x,p.y)&&!walls.has(wk(p.x,p.y)))return p;}return{x:0,y:0};}
+/* maze: fixed inner-wall layouts, one per stage (cycling), scaled to the board */
+function layout(n){
+ const c=cols,r=rows,c4=Math.round(c/4),r4=Math.round(r/4),mx=Math.floor(c/2),my=Math.floor(r/2),L=Math.max(3,Math.round(Math.min(c,r)/5)),out=[];
+ const h=(y,x0,x1,gap)=>{for(let x=x0;x<=x1;x++)if(!gap||Math.abs(x-mx+.5)>1)out.push([x,y]);};
+ const v=(x,y0,y1,gap)=>{for(let y=y0;y<=y1;y++)if(!gap||Math.abs(y-my+.5)>1)out.push([x,y]);};
+ const corners=()=>{h(r4,c4,c4+L-1);v(c4,r4,r4+L-1);h(r4,c-c4-L,c-1-c4);v(c-1-c4,r4,r4+L-1);h(r-1-r4,c4,c4+L-1);v(c4,r-r4-L,r-1-r4);h(r-1-r4,c-c4-L,c-1-c4);v(c-1-c4,r-r4-L,r-1-r4);};
+ switch((n-1)%6){
+  case 0:corners();break;
+  case 1:h(r4,c4,c-1-c4,true);h(r-1-r4,c4,c-1-c4,true);break;
+  case 2:v(c4,r4,r-1-r4,true);v(c-1-c4,r4,r-1-r4,true);h(my,mx-L+1,mx+L-2);break;
+  case 3:h(r4,c4,c-1-c4,true);h(r-1-r4,c4,c-1-c4,true);v(c4,r4,r-1-r4,true);v(c-1-c4,r4,r-1-r4,true);break;
+  case 4:{const n=Math.max(3,Math.round(c/5)),g=c/(n+1);for(let i=1;i<=n;i++){const x=Math.round(g*i);if(i%2)v(x,0,Math.round(r*.6)-1);else v(x,Math.round(r*.4),r-1);}break;}
+  case 5:corners();h(my,c4+2,c-3-c4,true);v(mx,r4+2,r-3-r4,true);break;
+ }
+ return out.filter(([x,y])=>x>=0&&x<cols&&y>=0&&y<rows);
+}
+function aheadOrOn(x,y){ // snake body, rival, or the 4 cells in front of the head
+ if(snake.some(s=>s.x===x&&s.y===y)||enemy.some(s=>s.x===x&&s.y===y))return true;
+ const h=snake[0];if(!h)return false;for(let k=1;k<=4;k++){const c=wrap({x:h.x+dir.x*k,y:h.y+dir.y*k});if(c.x===x&&c.y===y)return true;}return false;}
+function buildWalls(n){walls=new Map();layout(n).forEach(([x,y])=>walls.set(wk(x,y),aheadOrOn(x,y)?0:1));
+ const fix=it=>it&&walls.has(wk(it.x,it.y))?{...it,...randCell(occupied())}:it;food=fix(food);bonus=fix(bonus);shrinkItem=fix(shrinkItem);}
+function settleWalls(){for(const [k,v] of walls)if(v===0){const [x,y]=k.split(',').map(Number);if(!aheadOrOn(x,y))walls.set(k,1);}}
+function occupied(){return[...snake,...enemy,...(food?[food]:[]),...(bonus?[bonus]:[]),...(shrinkItem?[shrinkItem]:[])];}
+function spawnLava(sz){
+ const mx=cols-sz,my=rows-sz;if(mx<0||my<0){lava=null;return;}
+ const h=snake[0];let best=null;
+ for(let i=0;i<300;i++){const p={x:Math.random()*(mx+1)|0,y:Math.random()*(my+1)|0};
+  const nx=Math.max(p.x,Math.min(h.x,p.x+sz-1)),ny=Math.max(p.y,Math.min(h.y,p.y+sz-1));
+  const near=Math.abs(nx-h.x)+Math.abs(ny-h.y)<5;
+  const cover=c=>c&&c.x>=p.x&&c.x<p.x+sz&&c.y>=p.y&&c.y<p.y+sz;
+  let ahead=false;for(let k=1;k<=10;k++){const c={x:((h.x+dir.x*k)%cols+cols)%cols,y:((h.y+dir.y*k)%rows+rows)%rows};if(cover(c)){ahead=true;break;}}
+  if(near||ahead||cover(food)||cover(bonus)||cover(shrinkItem))continue;
+  best=p;if(!snake.some(cover)&&!enemy.some(cover))break;}
+ lava=best?{...best,size:sz}:lava;
+}
+function popup(x,y,text,col){popups.push({x,y,text,col,t:gt});}
+function hud(){$('score').textContent=score;$('best').textContent=Math.max(highs[hk(speed)]||0,score);$('stStat').hidden=mode!=='maze';$('stage').textContent=stage;$('len').textContent=snake.length;
+ $('enStat').hidden=!enemyMode;$('enLen').textContent=enemy.length;$('fiStat').hidden=!(enemyMode&&fireCharge>0);$('fire').textContent=String(fireCharge);meltHud();}
+let meltShown='';
+function meltHud(){const m=$('melt');if(!(enemyMode&&meltAt&&fireCharge>=2)){if(meltShown!==''){m.hidden=true;meltShown='';}return;}
+ const left=Math.max(0,Math.ceil((meltAt-gt)/1000)),t=left+'s|'+(left<=3);if(t===meltShown)return;meltShown=t;
+ m.hidden=false;m.textContent='⏱'+left;m.classList.toggle('warn',left<=3);m.setAttribute('aria-label','יריה עודפת תימס בעוד '+left+' שניות');}
+function syncMelt(restart){if(fireCharge>=2){if(!meltAt||restart)meltAt=gt+MELT_MS;}else meltAt=0;}
+
+/* game */
+function newGame(){
+ pickGrid();const cy=Math.floor(rows/2),cx=Math.floor(cols/3);
+ snake=[{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];prev=snake.map(s=>({...s}));
+ dir={x:1,y:0};lastDir={x:1,y:0};queue=[];undo=null;dirFresh=false;grow=0;score=0;apples=0;gt=0;acc=0;dying=0;hits=0;headshots=0;enemyApples=0;stage=1;walls=new Map();
+ bonus=null;food=null;lava=null;lavaSize=lavaBase();fires=[];fireCharge=0;meltAt=0;melted=0;shrinkItem=null;shrinkNext=SHRINK_EVERY;popups=[];enemy=[];ePrev=[];
+ if(mode==='maze')buildWalls(stage);else{spawnLava(lavaSize);lavaNext=LAVA_SHIFT_MS;}
+ if(enemyMode){let p;for(let i=0;i<200;i++){p=randCell(snake);const w=q=>blocked(((q%cols)+cols)%cols,p.y)||walls.has(wk(((q%cols)+cols)%cols,p.y));if(Math.abs(p.x-snake[0].x)+Math.abs(p.y-snake[0].y)>=5&&!w(p.x-1)&&!w(p.x-2))break;}
+  enemy=[p,{x:p.x-1,y:p.y},{x:p.x-2,y:p.y}].map(wrap);ePrev=enemy.map(s=>({...s}));eDir={x:1,y:0};eAcc=0;frozenUntil=0;}
+ food=randCell(occupied());
+ state='ready';['menu','over','paused'].forEach(id=>$(id).hidden=true);hud();
+}
+function turn(nx,ny){
+ if(state==='grace'){const d={x:nx,y:ny};if(nx===-dir.x&&ny===-dir.y){readyNudge=performance.now();return;}
+  if(safeDir(d)){dir=d;lastDir={...d};queue=[];undo=null;acc=0;state='play';graceCell=null;dirFresh=true;}return;}
+ if(state==='ready'){if(nx===-dir.x&&ny===-dir.y){readyNudge=performance.now();return;}dir={x:nx,y:ny};lastDir={...dir};queue=[];undo=null;acc=0;last=performance.now();state='play';dirFresh=true;return;}
+ if(state!=='play')return;
+ // Early turn: a press that lands just after a step re-does that step in the new direction, so the turn
+ // feels instant. Only when that re-done move is safe; otherwise the press is queued like any other,
+ // so a quick sequence (e.g. down then left) always plays out in order, one cell per step.
+ if(!queue.length&&undo&&acc<speed*.45){const d0=undo.dir;
+  if(!(nx===d0.x&&ny===d0.y)&&!(nx===-d0.x&&ny===-d0.y)&&!(nx===dir.x&&ny===dir.y)&&redoSafe(nx,ny)){snake=undo.snake;grow=undo.grow;lastDir=d0;dir={x:nx,y:ny};undo=null;step(true);return;}}
+ const l=queue.length?queue[queue.length-1]:dir;
+ if((nx===l.x&&ny===l.y)||(nx===-l.x&&ny===-l.y))return;
+ if(queue.length<3)queue.push({x:nx,y:ny});
+}
+function redoSafe(nx,ny){const s0=snake,g0=grow;snake=undo.snake;grow=undo.grow;const ok=!fatal(wrap({x:snake[0].x+nx,y:snake[0].y+ny}));snake=s0;grow=g0;return ok;}
+function fatal(h){const body=grow===0?snake.slice(0,-1):snake;
+ return body.some(s=>same(s,h))||blocked(h.x,h.y)||(enemyMode&&enemy.some(s=>same(s,h)));}
+function safeDir(d){return!fatal(wrap({x:snake[0].x+d.x,y:snake[0].y+d.y}));}
+function enterGrace(h){state='grace';graceCell=h;graceFrom=graceLeft=speed*0.8/1000;}
+// dirFresh: a direction chosen at the start or in the rescue moment has not moved yet. The first step always
+// goes that way, so a fast follow-up press (e.g. up then left) waits for the next step instead of replacing it.
+let dirFresh=false;
+function step(redo){
+ if(!redo&&queue.length&&!dirFresh)dir=queue.shift();
+ dirFresh=false;
+ const before={snake:snake.map(s=>({...s})),grow};
+ prev=snake.map(s=>({...s}));
+ const h=wrap({x:snake[0].x+dir.x,y:snake[0].y+dir.y});
+ if(fatal(h))return enterGrace(h);
+ snake.unshift(h);
+ if(grow>0)grow--;else snake.pop();
+ if(prev.length<snake.length)prev.push({...prev[prev.length-1]});
+ undo={snake:before.snake,grow:before.grow,dir:lastDir};lastDir={...dir};
+ if(bonus&&gt>bonus.exp)bonus=null;
+ if(same(h,food)){undo=null;score++;apples++;grow++;popup(h.x,h.y,'+1',C.snake);sfx.apple();food=randCell(occupied());
+  if(!bonus&&apples%BONUS_EVERY===0)bonus={...randCell(occupied()),exp:gt+BONUS_MS};
+  if(mode==='maze'&&apples%APPLES_PER_STAGE===0){stage++;buildWalls(stage);sfx.stage();popup(h.x,h.y-.9,'שלב '+stage+'!',C.gold);}}
+ else if(bonus&&same(h,bonus)){undo=null;const amt=5+Math.ceil(Math.max(0,bonus.exp-gt)/1000);score+=amt;grow++;bonus=null;sfx.bonus();
+  if(enemyMode){fireCharge++;syncMelt(false);popup(h.x,h.y,`+${amt} ❄️`,C.gold);}else popup(h.x,h.y,`+${amt}`,C.gold);}
+ else if(shrinkItem&&same(h,shrinkItem)){undo=null;shrinkItem=null;const t=Math.max(3,snake.length-SHRINK_BY),cut=snake.length-t;
+  snake.length=t;prev.length=Math.min(prev.length,t);grow=0;sfx.shrink();popup(h.x,h.y,cut?'−'+cut:'0',C.shrink);popup(h.x,h.y-.8,'כיווץ!',C.shrink);}
+ if(mode==='maze')settleWalls();
+ hud();
+}
+function world(){ // lava + fire, once per player tick (not repeated on early-turn redo)
+ if(mode!=='maze'){const target=lavaBase()+Math.floor(score/LAVA_GROW_EVERY);
+ if(target!==lavaSize){lavaSize=target;spawnLava(lavaSize);lavaNext=gt+LAVA_SHIFT_MS;}
+ else if(gt>=lavaNext){spawnLava(lavaSize);lavaNext=gt+LAVA_SHIFT_MS;}}
+ if(gt>=shrinkNext){shrinkNext+=SHRINK_EVERY;if(!shrinkItem){shrinkItem={...randCell(occupied()),exp:gt+SHRINK_MS};sfx.shrinkAppear();}}
+ for(let fi=fires.length-1;fi>=0;fi--){let fire=fires[fi];
+ for(let i=0;i<FIRE_STEPS&&fire;i++){
+  fire.px=fire.x;fire.py=fire.y;fire.x+=fire.dir.x;fire.y+=fire.dir.y;
+  if(fire.x<0||fire.x>=cols||fire.y<0||fire.y>=rows||isWall(fire.x,fire.y)){fire=null;break;}
+  if(shotHit(fire))fire=null;
+ }
+  if(!fire)fires.splice(fi,1);}
+}
+// One place that decides whether an ice shot hits the rival (and whether it's a headshot).
+// Called when a shot is fired, after every cell a shot moves, and after every rival move.
+function shotHit(fire){
+ if(!enemyMode||!enemy.length||gt<frozenUntil)return false;   // a frozen rival can't be hit: shots pass through
+ const hf=(fire.size-1)/2,inShot=q=>q.x>=fire.x-hf&&q.x<=fire.x+hf&&q.y>=fire.y-hf&&q.y<=fire.y+hf;
+ if(!enemy.some(inShot))return false;
+ const head=inShot(enemy[0]),mult=head?2:1;   // headshot: double freeze and double points
+ hits++;if(head)headshots++;
+ const t=Math.max(3,enemy.length-2);while(enemy.length>t){enemy.pop();ePrev.pop();}
+ score+=20*mult;frozenUntil=gt+FREEZE_MS*mult;
+ if(head){sfx.headshot();popup(fire.x,fire.y,'פגיעה בראש!',C.gold);popup(fire.x,fire.y-.9,'הקפאה ×2',C.snake2);}
+ else{sfx.impact();popup(fire.x,fire.y,'-2',C.gold);popup(fire.x,fire.y-.8,'הקפאה',C.snake2);}
+ popup(snake[0].x,snake[0].y,'+'+20*mult,C.snake);hud();return true;
+}
+function enemyStep(){
+ const cand=[{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}].filter(d=>!(d.x===-eDir.x&&d.y===-eDir.y));
+ let best=eDir,bs=1e9;
+ cand.forEach(d=>{const p=wrap({x:enemy[0].x+d.x,y:enemy[0].y+d.y});let sc=Math.abs(p.x-food.x)+Math.abs(p.y-food.y);if(enemy.some(s=>same(s,p)))sc+=1000;if(blocked(p.x,p.y))sc+=1000;if(sc<bs){bs=sc;best=d;}});
+ eDir=best;ePrev=enemy.map(s=>({...s}));
+ const eh=wrap({x:enemy[0].x+eDir.x,y:enemy[0].y+eDir.y}),old=enemy.length,hitPlayer=snake.some(s=>same(s,eh));
+ enemy.unshift(eh);
+ if(hitPlayer){const t=Math.max(3,old-1);while(enemy.length>t)enemy.pop();popup(eh.x,eh.y,'-1',C.enemy);sfx.enemyHit();}
+ else if(same(eh,food)){enemyApples++;popup(eh.x,eh.y,'+1',C.enemy);sfx.enemyApple();food=randCell(occupied());
+  const lost=Math.min(2,score);score-=lost;if(lost)popup(snake[0].x,snake[0].y,'−'+lost,C.apple);}   // penalty: rival ate an apple
+ else enemy.pop();
+ while(ePrev.length<enemy.length)ePrev.push({...ePrev[ePrev.length-1]});ePrev.length=enemy.length;
+ for(let i=fires.length-1;i>=0;i--)if(shotHit(fires[i]))fires.splice(i,1);
+ hud();
+}
+function shoot(){
+ if(state!=='play'||!enemyMode||fireCharge<=0)return;
+ const f={x:snake[0].x+dir.x,y:snake[0].y+dir.y,px:snake[0].x,py:snake[0].y,dir:{...dir},size:1};fireCharge--;syncMelt(true);sfx.launch();
+ if(f.x>=0&&f.x<cols&&f.y>=0&&f.y<rows&&!isWall(f.x,f.y)&&!shotHit(f))fires.push(f);hud();
+}
+function fmtTime(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60);return m+':'+String(s%60).padStart(2,'0');}
+function renderStats(){
+ const items=[['ap','תפוחים',apples],['tm','זמן שרידה',fmtTime(gt)]];
+ if(mode==='maze')items.push(['sg','שלב',stage]);
+ if(enemyMode)items.push(['ea','תפוחים ליריב',enemyApples],['ml','יריות שנמסו',melted],['hd','פגיעות בראש',headshots],['ht','פגיעות ביריב',hits]);
+ $('overStats').innerHTML=items.map(([c,l,v])=>`<div class="${c}"><small>${l}</small><b dir="ltr">${v}</b></div>`).join('');
+}
+function die(){
+ undo=null;state='dying';dying=.7;
+ const isHigh=score>(highs[hk(speed)]||0);
+ if(isHigh){highs[hk(speed)]=score;setTimeout(sfx.high,150);}else sfx.over();
+ $('overTitle').textContent=isHigh?'שיא חדש!':'המשחק נגמר';$('overText').textContent=`ניקוד: ${score}`;renderStats();hud();
+ const g={t:Date.now(),m:mode,sp:speed,e:enemyMode?1:0,b:board,sc:score,ap:apples,ms:Math.round(gt),st:mode==='maze'?stage:0,ea:enemyApples,hd:headshots,ht:hits,ml:melted,hi:isHigh?1:0};
+ gameLog=mergeLog([g],gameLog);saveRecords();cfScore(g);
+}
+/* last-20-games statistics (saved in this browser) */
+function renderHistory(){
+ const H=gameLog,el=$('statsBody');
+ if(!H.length){el.innerHTML='<p class="empty">עוד אין משחקים שמורים. שחקו משחק אחד והנתונים יופיעו כאן.</p>';return;}
+ const sum=k=>H.reduce((a,g)=>a+(g[k]||0),0),avg=k=>sum(k)/H.length,best=Math.max(...H.map(g=>g.sc));
+ const en=H.filter(g=>g.e),esum=k=>en.reduce((a,g)=>a+(g[k]||0),0);
+ const tiles=[['משחקים',H.length],['ממוצע ניקוד',Math.round(avg('sc')),'sc'],['הכי טוב',best,'sc'],['סה״כ תפוחים',sum('ap'),'ap'],['זמן ממוצע',fmtTime(avg('ms')),'ms'],['זמן כולל',fmtTime(sum('ms')),'ms']];
+ const mz=H.filter(g=>g.m==='maze');if(mz.length)tiles.push(['שלב מקסימלי',Math.max(...mz.map(g=>g.st||1)),'st']);
+ if(en.length)tiles.push(['תפוחים ליריב',esum('ea'),'ea'],['פגיעות בראש',esum('hd'),'hd'],['פגיעות ביריב',esum('ht'),'ht']);
+ const spN={90:'מהיר',105:'בינוני',120:'איטי'};
+ const d=t=>{const x=new Date(t);return x.getDate()+'/'+(x.getMonth()+1)+' '+String(x.getHours()).padStart(2,'0')+':'+String(x.getMinutes()).padStart(2,'0');};
+ const tileBtn=([l,v,k])=>k?`<button data-k="${k}" aria-pressed="${k===statKey}"><small>${l}</small><b dir="ltr">${v}</b></button>`:`<div><small>${l}</small><b dir="ltr">${v}</b></div>`;
+ if(!METRICS[statKey]||METRICS[statKey].only&&!H.some(METRICS[statKey].only))statKey='sc';
+ el.innerHTML=`<div class="sum">${tiles.map(tileBtn).join('')}</div><p class="hint">לחצו על נתון כדי להציג אותו בגרף</p>${chart(H)}
+ <ul class="games">${H.map(g=>`<li><b style="color:${g.hi?'var(--gold)':'var(--ink)'}">${g.sc}</b><div class="meta"><small>${d(g.t)} · ${g.m==='maze'?'מבוך':'קלאסי'} · ${spN[g.sp]||''}${g.e?' · יריב':''}${g.hi?' · שיא!':''}</small><div class="chips">
+  <span>🍎 ${g.ap}</span><span dir="ltr">⏱ ${fmtTime(g.ms)}</span>${g.m==='maze'?`<span>שלב ${g.st}</span>`:''}${g.e?`<span>יריב אכל ${g.ea}</span><span>פגיעות ${g.ht}</span><span>בראש ${g.hd}</span>${g.ml?`<span>נמסו ${g.ml}</span>`:''}`:''}</div></div></li>`).join('')}</ul>`;
+}
+const METRICS={sc:{t:'ניקוד'},ap:{t:'תפוחים'},ms:{t:'זמן שרידה',f:v=>fmtTime(v)},st:{t:'שלב שהגעת אליו (מבוך)',only:g=>g.m==='maze'},
+ ea:{t:'תפוחים שאכל היריב',only:g=>g.e},hd:{t:'פגיעות בראש',only:g=>g.e},ht:{t:'פגיעות ביריב',only:g=>g.e}};
+let statKey=store.get('mysnake-statkey','sc');
+// line chart with dots, oldest game on the left; only games where the metric applies
+function chart(H){
+ const M=METRICS[statKey],G=H.filter(g=>!M.only||M.only(g)).slice().reverse(),fmt=M.f||(v=>v),vals=G.map(g=>g[statKey]||0);
+ const W=400,Hh=150,pl=34,pr=10,pt=12,pb=10,mx=Math.max(1,...vals),n=G.length,avg=vals.reduce((a,b)=>a+b,0)/Math.max(1,n);
+ const x=i=>n<2?(pl+W-pr)/2:pl+i*(W-pl-pr)/(n-1),y=v=>pt+(Hh-pt-pb)*(1-v/mx);
+ const pts=G.map((g,i)=>[x(i),y(vals[i])]),line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join('');
+ const area=n>1?`${line}L${pts[n-1][0].toFixed(1)} ${Hh-pb}L${pts[0][0].toFixed(1)} ${Hh-pb}Z`:'';
+ const grid=[0,.5,1].map(f=>{const v=mx*f,yy=y(v);return`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text x="${pl-6}" y="${yy+4}" text-anchor="end" font-size="11" fill="var(--muted)">${statKey==='ms'?fmt(v):Math.round(v)}</text>`;}).join('');
+ const bestI=vals.indexOf(Math.max(...vals));
+ return`<div class="chart"><h3>${M.t} לפי משחק</h3><svg viewBox="0 0 ${W} ${Hh+14}" dir="ltr" role="img" aria-label="${M.t} ב-${n} המשחקים האחרונים">
+ <defs><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FA6FF" stop-opacity=".28"/><stop offset="1" stop-color="#7FA6FF" stop-opacity="0"/></linearGradient></defs>
+ ${grid}${area?`<path d="${area}" fill="url(#ar)"/>`:''}
+ <line x1="${pl}" x2="${W-pr}" y1="${y(avg)}" y2="${y(avg)}" stroke="var(--muted)" stroke-dasharray="4 4" opacity=".7"/>
+ ${n>1?`<path d="${line}" fill="none" stroke="var(--snake)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:''}
+ ${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${i===bestI?6:4.5}" fill="${G[i].m==='maze'?'var(--gold)':'var(--snake)'}" stroke="var(--bg)" stroke-width="2"><title>${fmt(vals[i])}</title></circle>`).join('')}
+ ${n?`<text x="${pts[bestI][0]}" y="${pts[bestI][1]-10}" text-anchor="middle" font-size="12" fill="var(--ink)">${fmt(vals[bestI])}</text>`:''}
+ </svg></div><div class="barlbl" dir="ltr"><span>ישן</span><span dir="rtl">נקודה כחולה קלאסי, זהובה מבוך · קו מקווקו ממוצע (${fmt(Math.round(avg))})</span><span>חדש</span></div>`;
+}
+$('statsBody').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;statKey=b.dataset.k;store.set('mysnake-statkey',statKey);renderHistory();});
+let statsFrom='menu';
+function openStats(from){statsFrom=from;$(from).hidden=true;renderHistory();$('statsReset').textContent='איפוס רשימה';$('bkMsg').textContent='';$('statsOv').hidden=false;$('statsOv').scrollTop=0;}
+$('statsBtn').onclick=()=>openStats('menu');$('statsBtn2').onclick=()=>openStats('over');
+$('statsClose').onclick=()=>{$('statsOv').hidden=true;$(statsFrom).hidden=false;};
+$('statsReset').onclick=e=>{const b=e.currentTarget;if(b.textContent==='איפוס רשימה'){b.textContent='בטוח? לחץ שוב';return;}
+ gameLog=[];resetLog=true;const e0='[]';store.set('mysnake-history',e0);idb.set('history',e0);renderHistory();b.textContent='איפוס רשימה';};
+const bkCode=()=>'SNK1.'+btoa(unescape(encodeURIComponent(JSON.stringify({h:highs,l:gameLog}))));
+$('bkCopy').onclick=async()=>{const c=bkCode(),t=$('bkText');t.value=c;t.focus();t.select();let ok=false;
+ try{await navigator.clipboard.writeText(c);ok=true;}catch(e){try{ok=document.execCommand('copy');}catch(e2){}}
+ $('bkMsg').textContent=ok?'הקוד הועתק. שמרו אותו במקום בטוח.':'הקוד מסומן בתיבה — העתיקו אותו ידנית.';};
+$('bkLoad').onclick=()=>{const v=$('bkText').value.trim();let d=null;
+ try{if(v.startsWith('SNK1.'))d=JSON.parse(decodeURIComponent(escape(atob(v.slice(5)))));}catch(e){d=null;}
+ if(!d){$('bkMsg').textContent='הקוד לא תקין.';return;}
+ resetLog=false;gameLog=mergeLog(gameLog,d.l);highs=mergeHighs(highs,d.h,highsFromLog(gameLog));saveRecords();markMenu();hud();renderHistory();
+ $('bkMsg').textContent='השחזור הצליח.';};
+
+/* menu & overlays */
+function preview(){ // board shown behind the menu
+ const cy=Math.floor(rows/2),cx=Math.floor(cols/3);snake=[{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];prev=snake.map(s=>({...s}));dir={x:1,y:0};enemy=[];
+ food=null;bonus=null;shrinkItem=null;lava=null;walls=new Map();stage=1;
+ if(mode==='maze')buildWalls(1);else{lavaSize=lavaBase();spawnLava(lavaSize);}food=randCell(occupied());}
+function markMenu(){[...$('speedSeg').children].forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===speed)));[...$('boardSeg').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.b===board)));$('enemyToggle').setAttribute('aria-checked',String(enemyMode));
+ [...$('modeSeg').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===mode)));$('hsLbl').textContent=mode==='maze'?'שיאים במבוך':'שיאים';
+ [90,105,120].forEach(s=>$('hs'+s).textContent=highs[hk(s)]||0);}
+$('speedSeg').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;speed=+b.dataset.s;store.set('mysnake-speed',speed);markMenu();hud();};
+$('boardSeg').onclick=e=>{const b=e.target.closest('[data-b]');if(!b)return;board=b.dataset.b;store.set('mysnake-board',board);markMenu();pickGrid();preview();};
+$('modeSeg').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;mode=b.dataset.m;store.set('mysnake-mode',mode);markMenu();preview();hud();};
+$('enemyToggle').onclick=()=>{enemyMode=!enemyMode;store.set('mysnake-enemy',enemyMode?'1':'0');markMenu();};
+$('startBtn').onclick=()=>{unlock();newGame();focusGame();};
+$('againBtn').onclick=()=>{unlock();newGame();focusGame();};
+$('menuBtn').onclick=()=>{state='menu';$('over').hidden=true;markMenu();$('menu').hidden=false;};
+function pause(){if(state==='play'){state='paused';$('paused').hidden=false;}}
+function resume(){if(state==='paused'){state='play';last=performance.now();$('paused').hidden=true;focusGame();}}
+$('pauseBtn').onclick=e=>{unlock();state==='paused'?resume():pause();e.currentTarget.blur();};$('resumeBtn').onclick=resume;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+
+/* input: swipe to turn, quick tap to fire */
+let sw=null;const mainEl=$('main');
+mainEl.addEventListener('pointerdown',e=>{if(e.target.closest('.overlay'))return;unlock();sw={x:e.clientX,y:e.clientY,id:e.pointerId,t:performance.now(),moved:false};});
+mainEl.addEventListener('pointermove',e=>{if(!sw||e.pointerId!==sw.id||(e.pointerType==='mouse'&&!e.buttons))return;const dx=e.clientX-sw.x,dy=e.clientY-sw.y,th=Math.max(10,cell*.35);
+ if(Math.abs(dx)<th&&Math.abs(dy)<th)return;sw.moved=true;
+ if(Math.abs(dx)>Math.abs(dy))turn(Math.sign(dx),0);else turn(0,Math.sign(dy));sw.x=e.clientX;sw.y=e.clientY;});
+const endSw=e=>{if(!sw||e.pointerId!==sw.id)return;if(!sw.moved&&performance.now()-sw.t<300)shoot();sw=null;};
+mainEl.addEventListener('pointerup',endSw);mainEl.addEventListener('pointercancel',()=>sw=null);
+document.addEventListener('touchmove',e=>{if(!e.target.closest('.overlay'))e.preventDefault();},{passive:false});
+// Keyboard: physical key codes, so it works with any layout (Hebrew included) on iPad and desktop
+const KEYDIR={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],KeyW:[0,-1],KeyS:[0,1],KeyA:[-1,0],KeyD:[1,0]};
+addEventListener('keydown',e=>{
+ if(e.metaKey||e.ctrlKey||e.altKey)return;
+ const code=e.code||'',k=e.key;
+ const m=KEYDIR[code]||KEYDIR[k]||({w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]})[(k||'').toLowerCase()];
+ const isFire=code==='Space'||k===' '||code==='ShiftLeft'||code==='ShiftRight'||k==='Shift';
+ const isPause=code==='KeyP'||k==='p'||k==='P'||code==='Escape'&&state==='play';
+ if(m&&(state==='play'||state==='ready'||state==='grace')){unlock();turn(m[0],m[1]);e.preventDefault();}
+ else if(isFire&&state==='play'){if(!e.repeat)shoot();e.preventDefault();}
+ else if(isPause&&(state==='play'||state==='paused')){state==='paused'?resume():pause();e.preventDefault();}
+ else if((code==='Enter'||code==='NumpadEnter'||k==='Enter')&&(state==='over'||state==='menu'||state==='paused')){unlock();state==='paused'?resume():(newGame(),focusGame());e.preventDefault();}
+});
+function focusGame(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();try{$('main').focus({preventScroll:true});}catch(e){}}
+
+/* render */
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+const X=x=>ox+(x+.5)*cell,Y=y=>oy+(y+.5)*cell;
+function lerpPts(cur,old,k){return cur.map((s,i)=>{const p=old[i]||s,dx=s.x-p.x,dy=s.y-p.y;if(Math.abs(dx)>1||Math.abs(dy)>1)return{x:s.x,y:s.y,j:true};return{x:p.x+dx*k,y:p.y+dy*k};});}
+function drawSnake(pts,d,col,col2,flash,ice){
+ const c=flash?C.apple:col;ctx.lineCap='round';ctx.lineJoin='round';
+ const path=()=>{ctx.beginPath();pts.forEach((p,i)=>{if(i===0||p.j||pts[i-1].j)ctx.moveTo(X(p.x),Y(p.y));else ctx.lineTo(X(p.x),Y(p.y));});};
+ ctx.strokeStyle=c;ctx.lineWidth=cell*.72;path();ctx.stroke();
+ ctx.strokeStyle=flash?C.apple:col2;ctx.lineWidth=cell*.2;ctx.globalAlpha=.55;path();ctx.stroke();ctx.globalAlpha=1;
+ const h=pts[0],hx=X(h.x),hy=Y(h.y);
+ const ia=ice&&meltAt&&meltAt-gt<3000?.2+.8*Math.abs(Math.sin(performance.now()/110)):1;   // blinks before an extra shot melts
+ if(ice){const t=performance.now(),pu=.5+.5*Math.sin(t/180);   // glowing ice aura: ready to fire
+  const g=ctx.createRadialGradient(hx,hy,cell*.3,hx,hy,cell*(.95+.15*pu));g.addColorStop(0,'rgba(127,216,255,.55)');g.addColorStop(1,'rgba(127,216,255,0)');
+  ctx.globalAlpha=ia;ctx.fillStyle=g;ctx.beginPath();ctx.arc(hx,hy,cell*(.95+.15*pu),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+ ctx.fillStyle=c;ctx.beginPath();ctx.arc(hx,hy,cell*.42,0,Math.PI*2);ctx.fill();
+ if(ice){const t=performance.now(),pu=.5+.5*Math.sin(t/180);
+  ctx.save();ctx.shadowColor='#BDEBFF';ctx.shadowBlur=10+8*pu;ctx.strokeStyle=C.fire;ctx.lineWidth=Math.max(2,cell*.1);
+  ctx.globalAlpha=ia;ctx.beginPath();ctx.arc(hx,hy,cell*.46,0,Math.PI*2);ctx.stroke();
+  const fr=cell*.2,sx=hx-d.x*cell*.14,sy=hy-d.y*cell*.14;ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(1.2,cell*.06);ctx.lineCap='round';
+  for(let a=0;a<3;a++){const an=a*Math.PI/3+t/900;ctx.beginPath();ctx.moveTo(sx-Math.cos(an)*fr,sy-Math.sin(an)*fr);ctx.lineTo(sx+Math.cos(an)*fr,sy+Math.sin(an)*fr);ctx.stroke();}
+  ctx.restore();}
+ const px=-d.y,py=d.x,e=cell*.17,f=cell*.12;
+ [1,-1].forEach(sd=>{const ex=hx+px*e*sd+d.x*f,ey=hy+py*e*sd+d.y*f;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ex,ey,cell*.11,0,Math.PI*2);ctx.fill();ctx.fillStyle='#10213F';ctx.beginPath();ctx.arc(ex+d.x*cell*.04,ey+d.y*cell*.04,cell*.055,0,Math.PI*2);ctx.fill();});
+}
+
+// Steel wall block: light metal plate with rivets and a soft glow, so walls stand out on the dark board
+function drawWall(x0,y0,s,rad){const g=ctx.createLinearGradient(x0,y0,x0+s,y0+s);g.addColorStop(0,'#DDE3EE');g.addColorStop(.5,'#9AA6BD');g.addColorStop(1,'#5F6B82');
+ ctx.save();ctx.shadowColor='rgba(170,190,230,.45)';ctx.shadowBlur=6;ctx.fillStyle=g;rr(x0,y0,s,s,rad);ctx.fill();ctx.restore();
+ ctx.strokeStyle='#2B3242';ctx.lineWidth=1.2;rr(x0+.5,y0+.5,s-1,s-1,rad);ctx.stroke();
+ ctx.fillStyle='#3A4356';[[.22,.22],[.78,.22],[.22,.78],[.78,.78]].forEach(([a,b])=>{ctx.beginPath();ctx.arc(x0+s*a,y0+s*b,Math.max(1,s*.06),0,Math.PI*2);ctx.fill();});}
+// Solid walls are drawn once into an offscreen layer and copied each frame. Drawing every block live (gradient +
+// glow per block) is slow, and stage 5's comb layout has the most blocks, which made the game stutter there.
+let wallLayer=null,wallKey='';
+function drawWallLayer(){
+ let solid='';for(const [k,v] of walls)if(v===1)solid+=k+';';
+ if(!solid)return;
+ const d=Math.min(devicePixelRatio||1,3),key=solid+'|'+cell+'|'+cols+'|'+rows+'|'+d;
+ if(key!==wallKey){wallKey=key;
+  const w=Math.ceil(cols*cell),h=Math.ceil(rows*cell);
+  wallLayer=wallLayer||document.createElement('canvas');wallLayer.width=Math.max(1,Math.round(w*d));wallLayer.height=Math.max(1,Math.round(h*d));
+  const main=ctx;ctx=wallLayer.getContext('2d');ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);
+  try{for(const [k,v] of walls)if(v===1){const [wx,wy]=k.split(',').map(Number);drawWall(wx*cell+1,wy*cell+1,cell-2,Math.min(5,cell*.2));}}finally{ctx=main;}}
+ ctx.drawImage(wallLayer,ox,oy,cols*cell,rows*cell);
+}
+function draw(now){
+ ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);
+ rr(ox,oy,cols*cell,rows*cell,Math.min(14,cell*.6));ctx.save();ctx.clip();
+ for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){ctx.fillStyle=(x+y)%2?C.g2:C.g1;ctx.fillRect(ox+x*cell,oy+y*cell,cell,cell);}
+ if(lava){const lx=ox+lava.x*cell+1,ly=oy+lava.y*cell+1,lw=lava.size*cell-2,t=now/400;
+  const g=ctx.createLinearGradient(lx,ly,lx+lw,ly+lw);g.addColorStop(0,'#450A0A');g.addColorStop(Math.min(1,Math.max(0,.55+Math.sin(t)*.1)),'#C2410C');g.addColorStop(1,'#FBBF24');
+  ctx.save();ctx.shadowColor='#FBBF24';ctx.shadowBlur=8+Math.sin(t*1.7)*4;ctx.fillStyle=g;rr(lx,ly,lw,lw,Math.min(8,cell*.35));ctx.fill();ctx.restore();
+  ctx.strokeStyle='#EA580C';ctx.lineWidth=2;rr(lx,ly,lw,lw,Math.min(8,cell*.35));ctx.stroke();
+  for(let ix=0;ix<lava.size;ix++)for(let iy=0;iy<lava.size;iy++){const sd=(ix*928371+iy*123457+lava.x*71+lava.y*131)%100;if(sd<18){const p=(Math.sin(t*2+sd)+1)/2;ctx.globalAlpha=.35+p*.65;ctx.fillStyle='#FDE68A';ctx.beginPath();ctx.arc(lx+ix*cell+cell/2,ly+iy*cell+cell/2,cell*.07+p*cell*.1,0,Math.PI*2);ctx.fill();}}ctx.globalAlpha=1;}
+ drawWallLayer();
+ for(const [key,v] of walls){if(v===1)continue;const [wx,wy]=key.split(',').map(Number),x0=ox+wx*cell+1,y0=oy+wy*cell+1,s=cell-2,rad=Math.min(5,cell*.2);
+  {ctx.globalAlpha=.35+.15*Math.sin(now/150);ctx.strokeStyle='#8C95AA';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);rr(x0+1,y0+1,s-2,s-2,rad);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;}}
+ if(food){const x=X(food.x),y=Y(food.y);ctx.fillStyle=C.apple;ctx.beginPath();ctx.arc(x,y+cell*.04,cell*.34,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#5B3A1E';ctx.lineWidth=Math.max(1.5,cell*.07);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y-cell*.26);ctx.lineTo(x+cell*.05,y-cell*.42);ctx.stroke();
+  ctx.fillStyle='#3E8E3A';ctx.beginPath();ctx.ellipse(x+cell*.16,y-cell*.36,cell*.12,cell*.06,-.5,0,Math.PI*2);ctx.fill();}
+ if(shrinkItem){const x=X(shrinkItem.x),y=Y(shrinkItem.y),p=1+.12*Math.sin(now/160),r=cell*.46*p;
+  ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4+now/1500);ctx.shadowColor=C.shrink;ctx.shadowBlur=12;ctx.fillStyle=C.shrink;ctx.fillRect(-r*.75,-r*.75,r*1.5,r*1.5);ctx.restore();
+  ctx.strokeStyle='#123015';ctx.lineWidth=Math.max(1.5,cell*.08);ctx.lineCap='round';const a=cell*.22;
+  [[-1,0],[1,0]].forEach(([d])=>{ctx.beginPath();ctx.moveTo(x+d*a,y-a*.6);ctx.lineTo(x+d*a*.25,y);ctx.lineTo(x+d*a,y+a*.6);ctx.stroke();});
+  const left=Math.max(0,shrinkItem.exp-gt),frac=left/SHRINK_MS;ctx.strokeStyle=C.shrink;ctx.lineWidth=Math.max(2,cell*.09);ctx.beginPath();ctx.arc(x,y,cell*.85,-Math.PI/2,-Math.PI/2+frac*Math.PI*2);ctx.stroke();
+  ctx.fillStyle=C.shrink;ctx.font=`${Math.max(12,cell*.55)|0}px 'Varela Round',system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.direction='ltr';ctx.globalAlpha=left<2000?.5+.5*Math.abs(Math.sin(now/120)):1;ctx.fillText(String(Math.ceil(left/1000)),x,y-cell*1.25);ctx.globalAlpha=1;}
+ if(bonus){const x=X(bonus.x),y=Y(bonus.y),left=Math.max(0,bonus.exp-gt),frac=left/BONUS_MS,p=1+.12*Math.sin(now/160),r=cell*.46*p;
+  ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4+now/1500);ctx.shadowColor=C.gold;ctx.shadowBlur=12;ctx.fillStyle=C.gold;ctx.fillRect(-r*.75,-r*.75,r*1.5,r*1.5);ctx.restore();
+  ctx.strokeStyle='#3A2A05';ctx.lineWidth=Math.max(1.5,cell*.08);ctx.lineCap='round';const a=cell*.22;
+  if(enemyMode){for(let k=0;k<3;k++){const an=k*Math.PI/3;ctx.beginPath();ctx.moveTo(x-Math.cos(an)*a,y-Math.sin(an)*a);ctx.lineTo(x+Math.cos(an)*a,y+Math.sin(an)*a);ctx.stroke();}}
+  else{ctx.fillStyle='#3A2A05';ctx.beginPath();ctx.arc(x,y,a*.45,0,Math.PI*2);ctx.fill();}
+  ctx.strokeStyle=C.gold;ctx.lineWidth=Math.max(2,cell*.09);ctx.beginPath();ctx.arc(x,y,cell*.85,-Math.PI/2,-Math.PI/2+frac*Math.PI*2);ctx.stroke();
+  ctx.fillStyle=C.gold;ctx.font=`${Math.max(12,cell*.55)|0}px 'Varela Round',system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.direction='ltr';ctx.globalAlpha=left<2000?.5+.5*Math.abs(Math.sin(now/120)):1;ctx.fillText(String(Math.ceil(left/1000)),x,y-cell*1.25);ctx.globalAlpha=1;}
+ const k=state==='play'?Math.min(1,acc/speed):1;
+ if(enemyMode&&enemy.length){const ek=state==='play'&&gt>=frozenUntil?Math.min(1,eAcc/(speed*ENEMY_SLOW)):1;const frozen=gt<frozenUntil;
+  if(frozen)ctx.globalAlpha=.55+.25*Math.sin(now/90);drawSnake(lerpPts(enemy,ePrev,ek),eDir,C.enemy,C.enemy2,false);ctx.globalAlpha=1;}
+ drawSnake(lerpPts(snake,prev,k),dir,C.snake,C.snake2,state==='dying'&&Math.floor(dying*10)%2===0,enemyMode&&fireCharge>0&&state!=='dying');
+ if(enemyMode&&meltAt&&fireCharge>=2&&(state==='play'||state==='grace'||state==='paused')){   // melt countdown next to the head
+  const hp=lerpPts(snake.slice(0,1),prev.slice(0,1),k)[0],left=Math.max(0,Math.ceil((meltAt-gt)/1000)),warn=left<=3;
+  const side=dir.y!==0,hx=X(hp.x)+(side?(hp.x<cols-2?1:-1)*cell*1.35:0),hy=Y(hp.y)+(side?0:(hp.y>=1.5?-1:1)*cell*1.05),fs=Math.max(11,cell*.5)|0,txt='⏱'+left;
+  ctx.font=`${fs}px 'Varela Round',system-ui,sans-serif`;ctx.direction='ltr';ctx.textAlign='center';ctx.textBaseline='middle';
+  const w=ctx.measureText(txt).width+fs*.8,hh=fs*1.45;
+  ctx.globalAlpha=warn?.45+.55*Math.abs(Math.sin(now/110)):.92;
+  ctx.fillStyle=warn?C.fire:'rgba(17,18,20,.85)';rr(hx-w/2,hy-hh/2,w,hh,hh/2);ctx.fill();
+  ctx.strokeStyle=C.fire;ctx.lineWidth=1.5;rr(hx-w/2,hy-hh/2,w,hh,hh/2);ctx.stroke();
+  ctx.fillStyle=warn?'#111214':C.fire;ctx.fillText(txt,hx,hy+1);ctx.globalAlpha=1;}
+ for(const fire of fires){const fk=k,fx=fire.px+(fire.x-fire.px)*fk,fy=fire.py+(fire.y-fire.py)*fk,sz=fire.size*cell,cx=X(fx),cy=Y(fy);
+  const g=ctx.createRadialGradient(cx,cy,1,cx,cy,sz/2);g.addColorStop(0,'#FFFFFF');g.addColorStop(.45,C.fire);g.addColorStop(1,'rgba(20,70,160,.9)');ctx.save();ctx.shadowColor='#BDEBFF';ctx.shadowBlur=12;ctx.fillStyle=g;rr(cx-sz/2+1,cy-sz/2+1,sz-2,sz-2,Math.min(10,sz*.25));ctx.fill();ctx.restore();ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=Math.max(1.2,cell*.06);ctx.lineCap='round';const fr=Math.min(sz*.32,cell*.9);for(let a=0;a<3;a++){const an=a*Math.PI/3+now/400;ctx.beginPath();ctx.moveTo(cx-Math.cos(an)*fr,cy-Math.sin(an)*fr);ctx.lineTo(cx+Math.cos(an)*fr,cy+Math.sin(an)*fr);ctx.stroke();}}
+ ctx.restore();
+ ctx.direction='ltr';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`${Math.max(13,cell*.6)|0}px 'Varela Round',system-ui,sans-serif`;
+ if(state==='ready'){const shake=Math.max(0,1-(now-readyNudge)/350),dx=shake?Math.sin(now/25)*6*shake:0,hx=X(snake[0].x),hy=Y(snake[0].y);
+  const arrows=[[0,-1,'↑'],[1,0,'→'],[0,1,'↓']];ctx.font=`${Math.max(18,cell*.9)|0}px 'Varela Round',system-ui,sans-serif`;
+  arrows.forEach(([ax,ay,t])=>{const pulse=.55+.45*Math.sin(now/220);ctx.globalAlpha=pulse;ctx.fillStyle=C.ink;ctx.fillText(t,hx+ax*cell*1.6,hy+ay*cell*1.6);});ctx.globalAlpha=1;
+  const bw=Math.min(W-24,330),bh=58,bx=W/2-bw/2+dx,by=oy+rows*cell*.22;ctx.fillStyle='rgba(17,18,20,.82)';rr(bx,by,bw,bh,14);ctx.fill();
+  ctx.fillStyle=C.ink;ctx.direction='rtl';ctx.font=`16px 'Varela Round',system-ui,sans-serif`;ctx.fillText('החליקו או לחצו על חץ כדי להתחיל',W/2+dx,by+20);
+  ctx.fillStyle=shake?C.apple:C.muted;ctx.font=`13px 'Varela Round',system-ui,sans-serif`;ctx.fillText(shake?'אי אפשר להתחיל אחורה':'למעלה, ימינה או למטה',W/2+dx,by+42);ctx.direction='ltr';}
+ popups=popups.filter(p=>gt-p.t<1000);popups.forEach(p=>{const a=(gt-p.t)/1000;ctx.globalAlpha=1-a;ctx.fillStyle=p.col;ctx.strokeStyle=C.bg;ctx.lineWidth=3;const x=X(p.x),y=Y(p.y)-a*cell*1.4;ctx.direction=/[֐-׿]/.test(p.text)?'rtl':'ltr';ctx.strokeText(p.text,x,y);ctx.fillText(p.text,x,y);ctx.direction='ltr';});ctx.globalAlpha=1;
+}
+
+/* loop */
+function frame(now){
+ const dt=Math.min(100,now-last);last=now;fitCheck();
+ if(state==='play'){
+  gt+=dt;acc+=dt;
+  if(meltAt&&gt>=meltAt){fireCharge--;melted++;meltAt=0;syncMelt(true);sfx.melt();popup(snake[0].x,snake[0].y,'הקרח נמס',C.fire);popup(snake[0].x,snake[0].y-.8,'−1 ❄️',C.fire);hud();}
+  meltHud();
+  if(shrinkItem&&gt>=shrinkItem.exp)shrinkItem=null;
+  while(acc>=speed&&state==='play'){acc-=speed;step();if(state==='play')world();}
+  if(enemyMode&&state==='play'){if(gt>=frozenUntil){eAcc+=dt;const ei=speed*ENEMY_SLOW;while(eAcc>=ei){eAcc-=ei;enemyStep();}}}
+ }else if(state==='grace'){graceLeft-=dt/1000;if(graceLeft<=0){graceCell=null;die();}
+ }else if(state==='dying'){dying-=dt/1000;if(dying<=0){state='over';$('over').hidden=false;}}
+ draw(now);requestAnimationFrame(frame);
+}
+// The visible box can change without a window 'resize' (iOS toolbars, split view),
+// which would leave the canvas bitmap at its old size and stretch everything.
+// Size the page to the area actually visible. Some in-app browsers (e.g. a link opened from inside the Claude
+// iPad app) report a layout viewport taller than what is on screen, so 100% alone can push the board's bottom
+// under a toolbar. visualViewport.height is the part the user can really see.
+function fitViewport(){if(window.__fitScreen)window.__fitScreen();}   // sizing lives in the fit script at the top of the page
+fitViewport();
+function fitCheck(){fitViewport();const r=cv.getBoundingClientRect();if(Math.abs(r.width-W)>.5||Math.abs(r.height-H)>.5){size();if(state==='menu'){pickGrid();preview();}}}
+addEventListener('resize',fitCheck);addEventListener('orientationchange',fitCheck);
+if(window.ResizeObserver)new ResizeObserver(fitCheck).observe(cv);
+if(window.visualViewport){visualViewport.addEventListener('resize',fitCheck);visualViewport.addEventListener('scroll',fitCheck);}
+async function saveBeforeHome(){
+ if(['play','paused','ready','grace'].includes(state)&&score>0)die();   // records the game and queues it for the family table
+ saveRecords();if(CF.on)await cfFlush();}
+
+/* ---------- home button: save, sync, then back to the games home page ---------- */
+let goingHome=false;
+const flushWithin=(p,ms)=>Promise.race([Promise.resolve(p).catch(()=>{}),new Promise(r=>setTimeout(r,ms))]);
+async function goHome(){if(goingHome)return;goingHome=true;$('homeBtn').disabled=true;
+ try{await flushWithin(saveBeforeHome(),1500);}catch(e){}
+ location.href='/';}
+$('homeBtn').addEventListener('click',e=>{e.stopPropagation();goHome();});
+size();pickGrid();preview();
+markMenu();hud();requestAnimationFrame(frame);syncRecords();
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
+
+</body></html>
