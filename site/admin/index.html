@@ -43,6 +43,8 @@ section[hidden]{display:none}
 .sw input:disabled+span{opacity:.4}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .btn{font:inherit;font-size:15px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:11px 18px;background:var(--panel2);color:var(--ink);cursor:pointer}
+.btn{text-decoration:none;display:inline-block;text-align:center}
+.pinset input::placeholder{letter-spacing:0}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:#1d1600}
 .btn.danger{color:var(--bad)}
 .btn:disabled{opacity:.5}
@@ -69,6 +71,20 @@ input.f{display:block;width:100%;font:inherit;font-size:17px;padding:12px 14px;b
 .codebox .c{font-size:30px;font-weight:800;letter-spacing:.2em;direction:ltr;font-variant-numeric:tabular-nums}
 .codebox p{margin:6px 0 0;color:var(--muted);font-size:13px}
 .empty{color:var(--muted);text-align:center;padding:16px 0}
+.lbl{display:block;font-size:13px;color:var(--muted);margin-top:12px}
+.lbl+input.f{margin-top:4px}
+.inv{border-top:1px solid var(--line);padding:12px 0}
+.inv:first-child{border-top:0}
+.inv .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.inv .mail{direction:ltr;unicode-bidi:isolate;font-size:15px;font-weight:600;word-break:break-all}
+.inv .code{direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,Menlo,monospace;font-size:16px;font-weight:700;letter-spacing:.12em;color:var(--accent);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:2px 8px}
+.inv .meta{color:var(--muted);font-size:12.5px;margin-top:4px}
+.inv .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.inv .acts .btn,.pinset .btn{font-size:13px;padding:7px 12px}
+.tag.ok{background:rgba(74,222,128,.14);color:var(--ok)}
+.tag.wait{background:rgba(141,148,167,.16);color:var(--muted)}
+.pinset{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.pinset input{width:110px;font:inherit;font-size:17px;letter-spacing:.3em;text-align:center;direction:ltr;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .gate{text-align:center;padding:60px 10px;color:var(--muted)}
 </style>
 </head>
@@ -105,7 +121,7 @@ input.f{display:block;width:100%;font:inherit;font-size:17px;padding:12px 14px;b
     <section id="t-users" hidden>
       <div class="card">
         <h2>משתמשים רשומים</h2>
-        <p class="hint">חסימה מונעת כניסה ושמירת שיאים, ואפשר לבטל אותה. הסרה מוחקת את המשתמש (ואם בוחרים, גם את השיאים וההתקדמות שלו). "קוד חדש" נותן קוד זמני בן 4 ספרות למי ששכח.</p>
+        <p class="hint">חסימה מונעת כניסה ושמירת שיאים, ואפשר לבטל אותה. הסרה מוחקת את המשתמש (ואם בוחרים, גם את השיאים וההתקדמות שלו). "קוד חדש" קובע למי ששכח קוד של 4 ספרות: כותבים אותו בעצמך או מגרילים.</p>
         <div id="users"></div>
       </div>
     </section>
@@ -115,7 +131,7 @@ input.f{display:block;width:100%;font:inherit;font-size:17px;padding:12px 14px;b
         <h2>איך נרשמים</h2>
         <div class="modes">
           <label class="mode"><input type="radio" name="mode" value="family"><span><b>סיסמה משפחתית אחת</b><small>כל מי שמקבל את הסיסמה יכול להירשם. פשוט לשיתוף.</small></span></label>
-          <label class="mode"><input type="radio" name="mode" value="email"><span><b>קוד אישי לפי אימייל</b><small>לכל אדם קוד משלו שמחושב מהמייל שלו בנוסחה סודית. הקוד עובד רק עם המייל הזה, כך שאם הוא עובר הלאה, אי אפשר להירשם איתו.</small></span></label>
+          <label class="mode"><input type="radio" name="mode" value="email"><span><b>קוד אישי לפי אימייל</b><small>מזמינים כל אדם לפי המייל שלו ושולחים לו קוד אישי. הקוד עובד רק עם המייל הזה, כך שאם הוא עובר הלאה, אי אפשר להירשם איתו.</small></span></label>
         </div>
         <p class="msg" id="modeMsg"></p>
       </div>
@@ -129,11 +145,19 @@ input.f{display:block;width:100%;font:inherit;font-size:17px;padding:12px 14px;b
         <p class="msg" id="famMsg"></p>
       </div>
       <div class="card" id="invCard">
-        <h2>קוד אישי לפי אימייל</h2>
-        <p class="hint">כותבים את המייל של מי שרוצים להזמין, ומקבלים את הקוד שלו. אותו מייל תמיד מקבל אותו קוד.</p>
-        <input class="f" id="invMail" type="email" inputmode="email" dir="ltr" placeholder="name@example.com">
-        <div class="row"><button class="btn pri" id="invGo">יצירת קוד</button></div>
-        <div id="invOut"></div>
+        <h2>הזמנת משתמש חדש</h2>
+        <p class="hint">כותבים את המייל של מי שמזמינים. הקוד הראשוני נוצר בנוסחה סודית מהמייל ומהתאריך של היום, ואפשר גם לכתוב קוד משלך. אחרי זה שולחים לו מייל עם הקוד בלחיצה. קוד חדש לאותו מייל מבטל את הקודם.</p>
+        <label class="lbl" for="invMail">אימייל</label>
+        <input class="f" id="invMail" type="email" inputmode="email" dir="ltr" autocomplete="off" placeholder="name@example.com">
+        <label class="lbl" for="invCode">קוד משלך (לא חובה, אותיות באנגלית וספרות, 4 עד 12)</label>
+        <input class="f" id="invCode" type="text" dir="ltr" autocomplete="off" autocapitalize="characters" maxlength="16" placeholder="ריק = קוד מהנוסחה">
+        <div class="row"><button class="btn pri" id="invGo">הוספה ויצירת קוד</button></div>
+        <p class="msg" id="invMsg"></p>
+      </div>
+      <div class="card" id="invList">
+        <h2>המוזמנים</h2>
+        <p class="hint">"נרשם" אומר שהמוזמן כבר בחר שם. הקוד ממשיך לעבוד עם המייל שלו גם כשהוא נכנס ממכשיר חדש.</p>
+        <div id="invites"></div>
       </div>
     </section>
   </div>
@@ -193,16 +217,26 @@ $('users').addEventListener('click',async e=>{
  const b=e.target.closest('[data-a]');if(!b)return;const box=b.closest('.user'),name=box.dataset.n,a=b.dataset.a,msg=box.querySelector('.msg');
  if(a==='remove'&&!b.dataset.sure){b.dataset.sure=1;b.textContent='בטוח? לחץ שוב';
   const k=document.createElement('button');k.className='btn danger';k.dataset.a='remove-all';k.textContent='הסרה כולל השיאים';b.after(k);return;}
- const action=a==='remove-all'?'remove':a;
- try{const r=await OFEK.api('/api/admin/player',{method:'POST',body:{name,action,removeData:a==='remove-all'}});
-  if(action==='reset'){msg.textContent=`הקוד החדש של ${name}: ${r.pin}`;return;}
+ if(a==='reset'){   // choose the new 4-digit code, or draw one
+  if(box.querySelector('.pinset'))return;
+  const f=document.createElement('div');f.className='pinset';
+  f.innerHTML='<input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 ספרות" aria-label="קוד חדש בן 4 ספרות"><button class="btn pri" data-a="pin-set">שמירה</button><button class="btn" data-a="pin-rand">הגרלה</button><button class="btn" data-a="pin-x">ביטול</button>';
+  box.querySelector('.acts').after(f);f.querySelector('input').focus();msg.textContent='';return;}
+ if(a==='pin-x'){box.querySelector('.pinset').remove();msg.textContent='';return;}
+ let body={name,action:a==='remove-all'?'remove':a,removeData:a==='remove-all'};
+ if(a==='pin-set'||a==='pin-rand'){body.action='reset';
+  if(a==='pin-set'){const v=box.querySelector('.pinset input').value.trim();
+   if(!/^\d{4}$/.test(v)){msg.textContent='צריך בדיוק 4 ספרות';msg.classList.add('err');return;}body.pin=v;}}
+ msg.classList.remove('err');
+ try{const r=await OFEK.api('/api/admin/player',{method:'POST',body});
+  if(body.action==='reset'){box.querySelector('.pinset').remove();msg.textContent=`הקוד החדש של ${name}: ${r.pin}`;return;}
   await load();}
  catch(err){msg.textContent='הפעולה לא הצליחה';msg.classList.add('err');}});
 
 /* passwords */
 function renderPass(){
  document.querySelectorAll('[name=mode]').forEach(r=>r.checked=r.value===ov.mode);
- $('famCard').hidden=ov.mode!=='family';$('invCard').hidden=ov.mode!=='email';
+ $('famCard').hidden=ov.mode!=='family';$('invCard').hidden=$('invList').hidden=ov.mode!=='email';renderInvites();
  $('famState').textContent=ov.familySet?'יש סיסמה משפחתית. אפשר להחליף אותה: מי שכבר מחובר נשאר מחובר, ומכשירים חדשים יצטרכו את הסיסמה החדשה.'
   +(ov.familyFromSecret?' (יש גם סיסמה שהוגדרה בהגדרות Cloudflare, והיא ממשיכה לעבוד.)':''):'כרגע אין סיסמה: כל מי שיש לו את הכתובת יכול להירשם.';
  $('famClear').hidden=!ov.familySet;
@@ -219,14 +253,47 @@ $('famSave').onclick=async()=>{const p=$('famPass').value.trim();if(p.length<4){
  catch(e){say('famMsg','השמירה לא הצליחה',true);}};
 $('famClear').onclick=async()=>{try{await OFEK.api('/api/admin/config',{method:'POST',body:{familyPassword:''}});ov.familySet=ov.familyFromSecret;ov.familyPassword=null;renderPass();say('famMsg','הסיסמה בוטלה');}
  catch(e){say('famMsg','הפעולה לא הצליחה',true);}};
-$('invGo').onclick=async()=>{const email=$('invMail').value.trim();
- try{const r=await OFEK.api('/api/admin/invite',{method:'POST',body:{email}});
-  const text=`הזמנה ל-AI Games Center 🎮\n${location.origin}\nהמייל שלך: ${r.email}\nהקוד האישי שלך: ${r.code}`;
-  $('invOut').innerHTML=`<div class="codebox"><div class="c">${esc(r.code)}</div><p>${esc(r.email)}</p>
-   <div class="row" style="justify-content:center"><button class="btn" id="invCopy">העתקת הודעה</button>${navigator.share?'<button class="btn" id="invShare">שיתוף</button>':''}</div></div>`;
-  $('invCopy').onclick=async()=>{try{await navigator.clipboard.writeText(text);$('invCopy').textContent='הועתק ✓';}catch(e){prompt('העתיקו:',text);}};
-  if($('invShare'))$('invShare').onclick=()=>navigator.share({text}).catch(()=>{});}
- catch(e){$('invOut').innerHTML='<p class="msg err">כתובת המייל לא תקינה</p>';}};
+/* invites (email mode) */
+const SITE=location.origin;
+const mailText=(email,code)=>({subject:'הזמנה ל-AI Games Center 🎮',
+ body:`שלום,\n\nהוזמנת ל-AI Games Center, אתר המשחקים המשפחתי שלנו.\n\nנכנסים כאן: ${SITE}\n\nבכניסה הראשונה מקלידים:\nאימייל: ${email}\nקוד אישי: ${code}\n\nאחר כך בוחרים שם משתמש וקוד של 4 ספרות. המכשיר יזכור אותך, ואת הקוד צריך רק כשמחליפים שחקן.\n\nבאייפון ובאייפד אפשר להוסיף את האתר למסך הבית ולפתוח אותו כמו אפליקציה. סרטון הסבר קצר:\n${SITE}/help/install-iphone.mp4\n\nמשחק נעים!`});
+const mailto=(email,code)=>{const m=mailText(email,code);return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;};
+const gmail=(email,code)=>{const m=mailText(email,code);return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;};
+function renderInvites(){
+ const l=ov.invites||[];
+ if(!l.length){$('invites').innerHTML='<p class="empty">עוד לא הזמנת אף אחד.</p>';return;}
+ $('invites').innerHTML=l.map(i=>`<div class="inv" data-e="${esc(i.email)}">
+  <div class="hd"><span class="mail">${esc(i.email)}</span>${i.player?`<span class="tag ok">נרשם · ${esc(i.player)}</span>`:'<span class="tag wait">ממתין להרשמה</span>'}</div>
+  <div class="hd" style="margin-top:6px"><span class="code">${esc(i.code)}</span></div>
+  <div class="meta">${i.custom?'קוד שבחרת':'קוד מהנוסחה'} · נוצר ${when(i.created)} · ${i.sent?'נשלח '+when(i.sent):'עוד לא נשלח'}</div>
+  <div class="acts"><a class="btn pri" data-a="mail" href="${mailto(i.email,i.code)}">✉️ שליחת מייל</a>
+   <a class="btn" data-a="gmail" href="${gmail(i.email,i.code)}" target="_blank" rel="noopener">שליחה ב-Gmail</a>
+   <button class="btn" data-a="copy">העתקה</button>
+   <button class="btn" data-a="new">קוד חדש</button>
+   <button class="btn danger" data-a="del">מחיקה</button></div><p class="msg"></p></div>`).join('');}
+$('invites').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;const box=b.closest('.inv'),email=box.dataset.e,msg=box.querySelector('.msg');
+ const i=(ov.invites||[]).find(x=>x.email===email);if(!i)return;
+ if(b.dataset.a==='mail'||b.dataset.a==='gmail'){   // the link opens the mail app; remember that it was sent
+  OFEK.api('/api/admin/invite',{method:'POST',body:{email,sent:true}}).then(()=>{i.sent=Date.now();
+   box.querySelector('.meta').textContent=`${i.custom?'קוד שבחרת':'קוד מהנוסחה'} · נוצר ${when(i.created)} · נשלח עכשיו`;}).catch(()=>{});return;}
+ if(b.dataset.a==='copy'){const m=mailText(email,i.code),t=m.subject+'\n\n'+m.body;
+  try{await navigator.clipboard.writeText(t);b.textContent='הועתק ✓';}catch(err){prompt('העתיקו:',t);}return;}
+ if(b.dataset.a==='del'&&!b.dataset.sure){b.dataset.sure=1;b.textContent='בטוח? לחץ שוב';return;}
+ try{await OFEK.api('/api/admin/invite',{method:'POST',body:b.dataset.a==='del'?{email,remove:true}:{email}});
+  await load();
+  if(b.dataset.a==='new'){const nb=document.querySelector(`.inv[data-e="${CSS.escape(email)}"] .msg`);if(nb)nb.textContent='נוצר קוד חדש. הקוד הקודם כבר לא עובד, אז שולחים את החדש.';}}
+ catch(err){msg.textContent='הפעולה לא הצליחה';msg.classList.add('err');}});
+$('invGo').onclick=async()=>{const email=$('invMail').value.trim(),code=$('invCode').value.trim();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){say('invMsg','כתובת המייל לא תקינה',true);return;}
+ if(code&&!/^[A-Za-z0-9 -]+$/.test(code)){say('invMsg','בקוד אפשר רק אותיות באנגלית וספרות',true);return;}
+ if(code&&(code.replace(/[^A-Za-z0-9]/g,'').length<4||code.replace(/[^A-Za-z0-9]/g,'').length>12)){say('invMsg','הקוד צריך להיות באורך 4 עד 12',true);return;}
+ const old=(ov.invites||[]).find(x=>x.email===email.toLowerCase());
+ try{const r=await OFEK.api('/api/admin/invite',{method:'POST',body:{email,code}});
+  $('invMail').value='';$('invCode').value='';await load();
+  say('invMsg',(old?'הקוד של המייל הזה הוחלף. ':'')+`הקוד של ${r.email}: ${r.code}. עכשיו לוחצים "שליחת מייל" ברשימה למטה.`);
+  const box=document.querySelector(`.inv[data-e="${CSS.escape(r.email)}"]`);if(box)box.scrollIntoView({block:'nearest',behavior:'smooth'});}
+ catch(e){say('invMsg','השמירה לא הצליחה',true);}};
 
 /* start: only the site owner gets in */
 (async()=>{

@@ -3,7 +3,8 @@
 //
 // Who may use the family data (tables, saves, player list) is set in the admin dashboard (/admin):
 //   mode "family": one family password (stored hashed in the database; the FAMILY_CODE secret also works)
-//   mode "email":  each person gets a personal sign-up code computed from their email with a server secret
+//   mode "email":  each invited person gets a personal sign-up code computed from their email and the day
+//                    it was issued with a server secret, or a code the owner typed (list in the dashboard)
 // Players have a name + 4-digit code; logging in returns a token the device keeps. Every write is
 // recorded under the token's player. Blocked players cannot log in or write.
 //
@@ -43,12 +44,18 @@ async function setup(db) {
       fails INTEGER NOT NULL DEFAULT 0, locked_until INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL,
       blocked INTEGER NOT NULL DEFAULT 0, last_seen INTEGER NOT NULL DEFAULT 0)`),
     db.prepare(`CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)`),
+    // email mode: the people the owner invited and the sign-up code each one got
+    db.prepare(`CREATE TABLE IF NOT EXISTS invites (
+      email TEXT PRIMARY KEY, code TEXT NOT NULL, custom INTEGER NOT NULL DEFAULT 0,
+      created INTEGER NOT NULL, sent INTEGER NOT NULL DEFAULT 0, day TEXT NOT NULL DEFAULT '', round INTEGER NOT NULL DEFAULT 0)`),
     db.prepare(`INSERT OR IGNORE INTO meta (k, v) VALUES ('secret', ?)`).bind(randHex(32)),
   ]);
   // older databases: add the newer player columns when missing
   for (const sql of [`ALTER TABLE players ADD COLUMN email TEXT NOT NULL DEFAULT ''`,
                      `ALTER TABLE players ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0`,
-                     `ALTER TABLE players ADD COLUMN last_seen INTEGER NOT NULL DEFAULT 0`]) {
+                     `ALTER TABLE players ADD COLUMN last_seen INTEGER NOT NULL DEFAULT 0`,
+                     `ALTER TABLE invites ADD COLUMN day TEXT NOT NULL DEFAULT ''`,
+                     `ALTER TABLE invites ADD COLUMN round INTEGER NOT NULL DEFAULT 0`]) {
     try { await db.prepare(sql).run(); } catch (e) { /* already there */ }
   }
   ready = true;
@@ -90,14 +97,22 @@ async function setMeta(db, k, v) {
 let secretCache = null;
 async function secret(db) { if (!secretCache) secretCache = await meta(db, 'secret'); return secretCache; }
 
-// personal sign-up code for an email (email mode): 6 characters, no look-alike letters
+// personal sign-up code for an email (email mode): 6 characters, no look-alike letters.
+// It is computed with the server secret from the email and the day it was issued (Israel time),
+// so issuing a new code on another day replaces the old one.
 const ALPH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-async function inviteCode(db, email) {
-  const h = await hmac(await secret(db), 'invite|' + email);
+const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });   // YYYY-MM-DD
+async function inviteCode(db, email, day) {
+  const h = await hmac(await secret(db), 'invite|' + email + (day ? '|' + day : ''));
   let s = ''; for (let i = 0; i < 6; i++) s += ALPH[parseInt(h.slice(i * 4, i * 4 + 4), 16) % ALPH.length];
   return s;
 }
 const normInvite = c => (typeof c === 'string' ? c.toUpperCase().replace(/[^A-Z0-9]/g, '') : '');
+// the code stored for an invited email; emails invited before the invites list keep the older email-only code
+async function inviteOK(db, email, given) {
+  const row = await db.prepare(`SELECT code FROM invites WHERE email=?`).bind(email).first();
+  return same(normInvite(given), row ? row.code : await inviteCode(db, email));
+}
 
 /* ---- access ---- */
 async function settings(db, env) {
@@ -157,7 +172,7 @@ async function api(req, env, url) {
     if (b.create) {
       const email = cleanEmail(b.email);
       if (!email) return json({ error: 'email' }, 400);
-      if (s.mode === 'email') { if (!same(normInvite(b.invite), await inviteCode(db, email))) return json({ error: 'invite' }, 403); }
+      if (s.mode === 'email') { if (!(await inviteOK(db, email, b.invite))) return json({ error: 'invite' }, 403); }
       else if (isLocked(s) && !(await familyOK(req, s))) return json({ error: 'code' }, 401);
       if (row) return json({ error: 'taken' }, 409);
       if (await db.prepare(`SELECT 1 FROM players WHERE email=?`).bind(email).first()) return json({ error: 'email-used' }, 409);
@@ -179,7 +194,7 @@ async function api(req, env, url) {
   if (path === '/api/unlock' && req.method === 'POST') {   // email mode: a registered person on a new device
     const b = await req.json().catch(() => null);
     const email = cleanEmail(b && b.email);
-    if (!email || !same(normInvite(b.invite), await inviteCode(db, email))) return json({ error: 'invite' }, 403);
+    if (!email || !(await inviteOK(db, email, b.invite))) return json({ error: 'invite' }, 403);
     const row = await db.prepare(`SELECT name, blocked FROM players WHERE email=?`).bind(email).first();
     if (!row) return json({ error: 'unknown' }, 404);
     if (row.blocked) return json({ error: 'blocked' }, 403);
@@ -230,10 +245,13 @@ async function api(req, env, url) {
       const players = (await db.prepare(`SELECT name, email, created, last_seen, blocked FROM players ORDER BY created ASC`).all()).results;
       const counts = (await db.prepare(`SELECT player, COUNT(*) AS n, MAX(at) AS last FROM scores GROUP BY player`).all()).results;
       const h = await meta(db, 'home-games');
+      const invites = (await db.prepare(`SELECT i.email, i.code, i.custom, i.created, i.sent, p.name AS player
+        FROM invites i LEFT JOIN players p ON p.email = i.email ORDER BY i.created DESC`).all()).results;
       return json({
         mode: s.mode, familySet: !!(s.famHash || s.envCode), familyFromSecret: !!s.envCode,
         familyPassword: (await meta(db, 'family-plain')) || null,
         homeGames: h ? JSON.parse(h) : null, deployRequest: JSON.parse((await meta(db, 'deploy-request')) || 'null'),
+        invites,
         players: players.map(p => ({ ...p, games: (counts.find(c => c.player === p.name) || {}).n || 0 })),
       });
     }
@@ -255,7 +273,24 @@ async function api(req, env, url) {
       const b = await req.json().catch(() => null);
       const email = cleanEmail(b && b.email);
       if (!email) return json({ error: 'email' }, 400);
-      return json({ email, code: await inviteCode(db, email) });
+      if (b.remove) { await db.prepare(`DELETE FROM invites WHERE email=?`).bind(email).run(); return json({ ok: true }); }
+      if (b.sent) { await db.prepare(`UPDATE invites SET sent=? WHERE email=?`).bind(Date.now(), email).run(); return json({ ok: true }); }
+      let code = '', custom = 0;
+      if (typeof b.code === 'string' && b.code.trim()) {   // a code the owner typed
+        if (!/^[A-Za-z0-9 -]+$/.test(b.code.trim())) return json({ error: 'chars' }, 400);
+        code = normInvite(b.code);
+        if (code.length < 4 || code.length > 12) return json({ error: 'length' }, 400);
+        custom = 1;
+      }
+      // from the formula: email + today's date; asking again on the same day moves to the next round, so the code always changes
+      const old = await db.prepare(`SELECT day, round FROM invites WHERE email=?`).bind(email).first();
+      const day = today(), round = custom ? 0 : (old && old.day === day ? old.round + 1 : 1);
+      if (!custom) code = await inviteCode(db, email, round > 1 ? day + '#' + round : day);
+      const now = Date.now();
+      await db.prepare(`INSERT INTO invites (email, code, custom, created, sent, day, round) VALUES (?,?,?,?,0,?,?)
+        ON CONFLICT(email) DO UPDATE SET code=excluded.code, custom=excluded.custom, created=excluded.created, sent=0,
+          day=excluded.day, round=CASE WHEN excluded.custom=1 THEN invites.round ELSE excluded.round END`).bind(email, code, custom, now, day, round).run();
+      return json({ email, code, custom, created: now });
     }
     if (path === '/api/admin/player' && req.method === 'POST') {
       const b = await req.json().catch(() => null);
@@ -267,8 +302,9 @@ async function api(req, env, url) {
         await db.prepare(`UPDATE players SET blocked=? WHERE name=?`).bind(b.action === 'block' ? 1 : 0, name).run();
         return json({ ok: true });
       }
-      if (b.action === 'reset') {   // a new temporary code to give the player
-        const pin = String(Math.floor(1000 + Math.random() * 9000)), salt = randHex(16), hash = await sha256(salt + '|' + pin);
+      if (b.action === 'reset') {   // a new code for the player: the one the owner typed, or a random one
+        if (b.pin != null && !cleanPin(b.pin)) return json({ error: 'pin' }, 400);
+        const pin = cleanPin(b.pin) || String(Math.floor(1000 + Math.random() * 9000)), salt = randHex(16), hash = await sha256(salt + '|' + pin);
         await db.prepare(`UPDATE players SET salt=?, hash=?, fails=0, locked_until=0 WHERE name=?`).bind(salt, hash, name).run();
         return json({ ok: true, pin });
       }
