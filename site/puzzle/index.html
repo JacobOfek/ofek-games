@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>פאזל מהתמונות שלך</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ECE9F2;--well:#DAD5E6;--ink:#231F33;--muted:#5E5873;--accent:#5B4BDB;--accentInk:#FFFFFF;--line:rgba(35,31,51,.16);--glass:rgba(236,233,242,.94)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1E1B29;--well:#2B2739;--ink:#ECE9F2;--muted:#A7A0BD;--accent:#9D90FF;--accentInk:#1E1B29;--line:rgba(236,233,242,.14);--glass:rgba(30,27,41,.95)}}
+:root[data-theme="dark"]{--bg:#1E1B29;--well:#2B2739;--ink:#ECE9F2;--muted:#A7A0BD;--accent:#9D90FF;--accentInk:#1E1B29;--line:rgba(236,233,242,.14);--glass:rgba(30,27,41,.95)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+body{font-family:'Heebo',system-ui,-apple-system,Arial,sans-serif;display:flex;flex-direction:column;height:100%;padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+button,label.btn{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,label.btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+header[hidden]{display:none}
+header{display:flex;align-items:center;gap:14px;padding:8px 12px;border-bottom:1px solid var(--line);-webkit-user-select:none;user-select:none}
+.stat{display:flex;flex-direction:column;line-height:1.15}
+.stat small{font-size:12px;color:var(--muted)}
+.stat b{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.sp{flex:1}
+.tool{border:1px solid var(--line);background:transparent;border-radius:10px;padding:7px 10px;font-size:14px;display:flex;align-items:center;gap:6px}
+.tool[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tool svg{flex:none}
+@media (max-width:420px){.tool span{display:none}.tool{padding:8px}}
+main{position:relative;flex:1;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.screen{position:absolute;inset:0;overflow:auto;background:var(--bg);padding:22px 18px 40px}
+.screen[hidden]{display:none}
+.inner{max-width:520px;margin:0 auto}
+h1{font-family:'Suez One',serif;font-weight:400;font-size:40px;line-height:1.1;margin:8px 0 8px}
+.lead{color:var(--muted);font-size:17px;line-height:1.55;margin:0 0 20px}
+.pick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:transparent;border-radius:12px;padding:12px 16px;font-size:16px;font-weight:500}
+.btn.primary{background:var(--accent);color:var(--accentInk);border-color:var(--accent)}
+.btn input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:0 0 26px}
+.tile{position:relative;border:0;padding:0;border-radius:10px;overflow:hidden;background:var(--well);aspect-ratio:3/2;cursor:pointer}
+.tile img{display:block;width:100%;height:100%;object-fit:cover}
+.tile span{position:absolute;inset:auto 0 0 0;padding:14px 8px 5px;font-size:13px;font-weight:700;color:#fff;text-align:right;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.tile span small{display:block;font-weight:400;font-size:11px;opacity:.9}
+.tile[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
+.del{position:absolute;top:5px;left:5px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:16px;line-height:28px;padding:0;cursor:pointer}
+.gh{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.gh small{color:var(--muted);font-size:13px}
+.catpick{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin:-6px 0 16px}
+.catpick[hidden]{display:none}
+.catpick select{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.note{color:var(--muted);font-size:14px;margin:-4px 0 14px;line-height:1.5}
+.preview{display:none;margin:0 0 20px;border-radius:12px;overflow:hidden;background:var(--well);text-align:center}
+.preview.on{display:block}
+.preview img{display:block;max-width:100%;max-height:32dvh;margin:0 auto}
+h2{font-family:'Suez One',serif;font-weight:400;font-size:22px;margin:0 0 10px}
+.counts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px}
+.count{border:1px solid var(--line);background:transparent;border-radius:12px;padding:10px 2px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.count b{font-family:'Suez One',serif;font-weight:400;font-size:24px;line-height:1.1}
+.count small{font-size:12px;color:var(--muted)}
+.count[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+.hint{font-size:14px;color:var(--muted);margin:0 0 22px;min-height:1.4em}
+.start{width:100%;justify-content:center;padding:15px;font-size:18px;font-weight:700}
+.start:disabled{opacity:.4;cursor:default}
+.err{color:#C0392B;font-size:14px;margin:-8px 0 16px}
+.done{position:absolute;inset:auto 12px 12px 12px;background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center;max-width:420px;margin:0 auto}
+.done[hidden]{display:none}
+.done h2{font-size:28px;margin:0 0 4px}
+.done p{margin:0 0 12px;color:var(--muted)}
+.done .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+</style>
+<link rel="manifest" href="/puzzle/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/puzzle-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="פאזל">
+<meta name="theme-color" content="#1E1B29">
+</head>
+<body>
+<header id="hdr" hidden>
+  <div class="stat"><small>על הלוח</small><b id="prog">0/0</b></div>
+  <div class="stat"><small>זמן</small><b id="time">0:00</b></div>
+  <div class="sp"></div>
+  <button class="tool" id="muteBtn"></button>
+  <button class="tool" id="peekBtn" aria-pressed="false" aria-label="הצג את התמונה ברקע"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>תמונה</span></button>
+  <button class="tool" id="scatterBtn" aria-label="פזר מחדש"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg><span>פזר</span></button>
+  <button class="tool" id="newBtn" aria-label="פאזל חדש"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>חדש</span></button>
+</header>
+<main>
+  <canvas id="cv"></canvas>
+  <div class="done" id="done" hidden>
+    <h2>הפאזל הושלם!</h2><p id="doneText"></p>
+    <div class="row"><button class="btn primary" id="moreBtn">אותה תמונה, יותר חלקים</button><button class="btn" id="againBtn">פאזל חדש</button></div>
+  </div>
+  <div class="screen" id="setup">
+    <div class="inner">
+      <h1>פאזל מהתמונות שלך</h1>
+      <p class="lead">בחר תמונה מהטלפון או מהמחשב, מהאוסף שלך או מהמקומות בעולם למטה, קבע כמה חלקים, והרכב אותה מחדש.</p>
+      <div class="pick">
+        <label class="btn primary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-9 8"/></svg>בחר תמונה<input type="file" id="file" accept="image/*"></label>
+      </div>
+      <label class="catpick" id="catPick" hidden>שמור תמונות חדשות ב: <select id="catSel"></select></label>
+      <p class="note" id="saveNote" hidden></p>
+      <p class="err" id="err" hidden></p>
+      <div class="preview" id="preview"><img id="previewImg" alt="התמונה שנבחרה"></div>
+      <h2>כמה חלקים?</h2>
+      <div class="counts" id="counts"></div>
+      <p class="hint" id="hint"></p>
+      <button class="btn primary start" id="startBtn" disabled>בחר תמונה כדי להתחיל</button>
+      <div style="height:30px"></div>
+      <p class="note" id="colNote">תמונות שתבחר נשמרות אוטומטית באוסף, ואפשר לחזור אליהן בכל פעם.</p>
+      <div id="collections"></div>
+      <div class="gh"><h2>מקומות בעולם</h2><small>איורים</small></div>
+      <div class="gal" id="placeGal"></div>
+    </div>
+  </div>
+</main>
+<script>/* Fit the page to the part of the screen that is really visible.
+   Chrome on iPad: when claude.ai opens this page in a new tab from another artifact (the links board), it sizes the
+   frame as if Chrome had no toolbars, so the bottom ~130px fall off the screen and nothing inside the frame can see
+   that (innerHeight and visualViewport report the oversized frame). Rotating the iPad fixes it, so we cap the height
+   at what fits under Chrome's toolbars + the claude.ai header (172px, measured on iPad Chrome). A faint ↕ button next to the
+   mute button (Chrome on iPad only) trims more, after a confirmation, if this estimate is ever off; the choice is remembered. */
+(()=>{const ua=navigator.userAgent,iosChrome=/CriOS/.test(ua)&&(/iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)),framed=window.top!==window,UI=172,STEPS=[0,40,80,130,180];
+ let extra=0;try{extra=+localStorage.getItem('fitExtra')||0}catch(e){}
+ let h0=0;
+ const target=()=>{const vv=window.visualViewport;let h=Math.round(vv?Math.min(vv.height,innerHeight):innerHeight);
+  if(iosChrome&&framed){const land=innerWidth>innerHeight,sh=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height);
+   if(h>sh-UI+8)h=sh-UI;h-=extra;}
+  return h;};
+ const f=window.__fitScreen=()=>{const h=target();if(h>0&&h!==h0){h0=h;document.documentElement.style.height=h+'px';dispatchEvent(new Event('resize'));}if(scrollY||scrollX)scrollTo(0,0);};
+ f();addEventListener('resize',f);addEventListener('orientationchange',()=>setTimeout(f,300));if(window.visualViewport)visualViewport.addEventListener('resize',f);setInterval(f,700);
+ if(iosChrome&&framed)addEventListener('DOMContentLoaded',()=>{
+  const mute=document.getElementById('muteBtn'),b=document.createElement('button');b.type='button';b.textContent='↕';b.title='התאמת גובה המסך';b.setAttribute('aria-label','התאמת גובה המסך');
+  if(mute){b.className=mute.className;b.style.cssText='opacity:.3;font-size:15px';mute.insertAdjacentElement('afterend',b);}
+  else{b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:4px;z-index:9999;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:inherit;font:14px/1 system-ui;opacity:.3;padding:0';document.body.appendChild(b);}
+  const save=v=>{extra=v;try{localStorage.setItem('fitExtra',String(v))}catch(_){}h0=0;f();};
+  b.onclick=e=>{e.stopPropagation();b.blur();
+   const ov=document.createElement('div');ov.dir='rtl';
+   ov.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;font:15px/1.5 system-ui,-apple-system,sans-serif';
+   const next=STEPS[Math.min(STEPS.indexOf(extra)+1,STEPS.length-1)];
+   ov.innerHTML='<div style="background:#1f2126;color:#eee;border-radius:14px;max-width:360px;width:100%;padding:18px;text-align:right;box-shadow:0 10px 30px rgba(0,0,0,.4)">'+
+    '<b style="font-size:17px;display:block;margin-bottom:6px">התאמת גובה המסך</b>'+
+    '<p style="margin:0 0 14px;color:#bbb">השתמשו בזה רק אם תחתית המשחק חתוכה. ״הקטן״ מנמיך את המשחק בעוד קצת, וההגדרה נשמרת לפעם הבאה.'+(extra?' כרגע המשחק מוקטן ב-'+extra+' פיקסלים.':'')+'</p>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    (extra<STEPS[STEPS.length-1]?'<button data-a="more" style="flex:1;border:0;border-radius:999px;padding:10px 14px;background:#7FA6FF;color:#111;font:inherit">הקטן ב-'+(next-extra)+' פיקסלים</button>':'')+
+    (extra?'<button data-a="reset" style="flex:1;border:1px solid #555;border-radius:999px;padding:10px 14px;background:transparent;color:#eee;font:inherit">אפס</button>':'')+
+    '<button data-a="no" style="flex:1;border:1px solid #555;border-radius:999px;padding:10px 14px;background:transparent;color:#eee;font:inherit">ביטול</button></div></div>';
+   ov.addEventListener('click',ev=>{ev.stopPropagation();const a=ev.target.closest('[data-a]')?.dataset.a;if(!a&&ev.target!==ov)return;
+    if(a==='more')save(next);else if(a==='reset')save(0);ov.remove();});
+   ['pointerdown','touchstart','touchmove','keydown'].forEach(t=>ov.addEventListener(t,ev=>ev.stopPropagation(),{passive:true}));
+   document.body.appendChild(ov);};
+ });
+})();</script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+const hit=document.createElement('canvas').getContext('2d');
+const OPTIONS=[{n:12,l:'קל מאוד'},{n:24,l:'קל'},{n:48,l:'בינוני'},{n:96,l:'קשה'},{n:150,l:'מאתגר'}];
+let src=null,srcAspect=1,chosen=+(()=>{try{return localStorage.getItem('puzzle-count')}catch(e){return null}})()||24;
+let P=null; // puzzle state
+let W=0,H=0,dpr=1,s=1,ox=0,oy=0,layoutKind='';
+let drag=null,peek=false,dirty=true,timer=null;
+
+/* ---------- setup screen ---------- */
+function gridFor(n,a){let best=null;for(let c=2;c<=30;c++){const r=Math.max(2,Math.round(n/c)),pa=a*r/c,sc=Math.abs(Math.log(pa))*2+Math.abs(r*c-n)/n;if(!best||sc<best.sc)best={c,r,sc};}return best;}
+function renderCounts(){
+ $('counts').innerHTML=OPTIONS.map(o=>{const g=gridFor(o.n,srcAspect);return`<button class="count" data-n="${o.n}" aria-pressed="${o.n===chosen}"><b>${src?g.r*g.c:o.n}</b><small>${o.l}</small></button>`;}).join('');
+ const g=gridFor(chosen,srcAspect);
+ $('hint').textContent=src?`${g.r} שורות על ${g.c} עמודות`+(chosen>=96&&matchMedia('(max-width:600px)').matches?'. על מסך טלפון החלקים יהיו קטנים, כדאי לנסות קודם 48.':''):'';
+}
+$('counts').onclick=e=>{const b=e.target.closest('[data-n]');if(!b)return;chosen=+b.dataset.n;try{localStorage.setItem('puzzle-count',chosen)}catch(e){}renderCounts();};
+function setSource(canvas){
+ src=canvas;srcAspect=canvas.width/canvas.height;
+ $('previewImg').src=canvas.toDataURL('image/jpeg',.85);$('preview').classList.add('on');
+ $('startBtn').disabled=false;$('startBtn').textContent='התחל פאזל';$('err').hidden=true;renderCounts();
+}
+function fromImage(img){const m=1600,k=Math.min(1,m/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c;}
+$('file').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+ const fname=f.name;const rd=new FileReader();rd.onload=()=>{const img=new Image();img.onload=()=>{const c=fromImage(img);selectTile(null);setSource(c);saveToCollection(c,fname);};
+  img.onerror=()=>{$('err').textContent='לא הצלחתי לפתוח את הקובץ הזה. נסה תמונה בפורמט JPG או PNG.';$('err').hidden=false;};img.src=rd.result;};
+ rd.readAsDataURL(f);e.target.value='';};
+$('startBtn').onclick=()=>{if(src)startPuzzle(chosen);};
+
+/* ---------- world places (drawn in code) ---------- */
+const PW=1500,PH=1000;
+function prng(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return()=>(s=s*16807%2147483647)/2147483647;}
+function vg(g,y0,y1,stops){const gr=g.createLinearGradient(0,y0,0,y1);stops.forEach(([o,c])=>gr.addColorStop(o,c));return gr;}
+function ridge(g,base,amp,freq,col,ph){g.fillStyle=col;g.beginPath();g.moveTo(0,PH);for(let x=0;x<=PW;x+=6)g.lineTo(x,base-Math.abs(Math.sin(x*freq+ph))*amp-Math.sin(x*freq*3.3+ph*2)*amp*.18);g.lineTo(PW,PH);g.closePath();g.fill();}
+function starsF(g,r,n,maxY,alpha=.9){for(let i=0;i<n;i++){g.globalAlpha=alpha*(.3+r()*.7);g.fillStyle='#fff';g.beginPath();g.arc(r()*PW,r()*maxY,r()*1.8+.4,0,7);g.fill();}g.globalAlpha=1;}
+function ripples(g,r,y0,y1,n,col){g.strokeStyle=col;g.lineCap='round';for(let i=0;i<n;i++){const y=y0+r()*(y1-y0),x=r()*PW,l=15+r()*70*(y-y0)/(y1-y0+1)+10;g.globalAlpha=.2+r()*.45;g.lineWidth=1.5+2*(y-y0)/(y1-y0);g.beginPath();g.moveTo(x,y);g.lineTo(x+l,y);g.stroke();}g.globalAlpha=1;}
+function cloud(g,x,y,s,col){g.fillStyle=col;[[0,0,1],[.8,-.25,.8],[1.5,0,.9],[.6,.15,.9],[-.6,.1,.7]].forEach(([dx,dy,k])=>{g.beginPath();g.ellipse(x+dx*60*s,y+dy*60*s,70*s*k,42*s*k,0,0,7);g.fill();});}
+function reflect(g,src,yAxis,alpha,tint){g.save();g.globalAlpha=alpha;g.translate(0,yAxis*2);g.scale(1,-1);g.drawImage(src,0,0,PW,yAxis,0,0,PW,yAxis);g.restore();if(tint){g.fillStyle=tint;g.fillRect(0,yAxis,PW,PH-yAxis);}}
+function snapshot(c){const k=document.createElement('canvas');k.width=PW;k.height=PH;k.getContext('2d').drawImage(c,0,0);return k;}
+
+const PLACES=[
+{name:'פריז',sub:'מגדל אייפל בשקיעה',draw(g,r){
+ g.fillStyle=vg(g,0,640,[[0,'#3B2C6B'],[.45,'#C9577E'],[.8,'#F5A25D'],[1,'#FFD58A']]);g.fillRect(0,0,PW,PH);
+ g.fillStyle='#FFE7B0';g.beginPath();g.arc(1120,520,80,0,7);g.fill();
+ cloud(g,300,200,1.1,'rgba(255,190,170,.45)');cloud(g,1250,150,.9,'rgba(255,200,180,.4)');
+ for(let i=0;i<46;i++){const x=i*34+r()*10,h=40+r()*90;g.fillStyle=i%3?'#6E3F5E':'#5B3350';g.fillRect(x,640-h,30+r()*14,h);g.fillStyle='rgba(255,210,140,.75)';for(let k=0;k<5;k++)if(r()<.5)g.fillRect(x+4+r()*20,640-h+8+r()*(h-16),4,6);}
+ g.fillStyle=vg(g,640,1000,[[0,'#6C4C84'],[1,'#27305C']]);g.fillRect(0,640,PW,360);
+ ripples(g,r,650,1000,220,'#FFC98A');
+ const T='#2B1D2A',cx=720,base=820;g.fillStyle=T;g.beginPath();g.moveTo(cx-190,base);g.quadraticCurveTo(cx-60,520,cx-14,120);g.lineTo(cx+14,120);g.quadraticCurveTo(cx+60,520,cx+190,base);g.lineTo(cx+120,base);g.quadraticCurveTo(cx,650,cx-120,base);g.closePath();g.fill();
+ g.fillRect(cx-4,60,8,70);[[590,150],[440,90],[270,50]].forEach(([y,w])=>g.fillRect(cx-w/2,y,w,14));
+ g.strokeStyle='rgba(255,200,150,.35)';g.lineWidth=2;for(let y=160;y<790;y+=34){const w=(y-120)/700*190;g.beginPath();g.moveTo(cx-w*.9,y);g.lineTo(cx+w*.9,y+34);g.moveTo(cx+w*.9,y);g.lineTo(cx-w*.9,y+34);g.stroke();}
+ g.fillStyle='#233A2A';for(let i=0;i<30;i++){const x=i*52+r()*20;g.beginPath();g.ellipse(x,850+r()*30,50+r()*30,40+r()*20,0,0,7);g.fill();}
+ g.fillStyle='#1B2B20';g.fillRect(0,880,PW,120);g.fillStyle='rgba(255,220,150,.8)';for(let i=0;i<14;i++){const x=40+i*110;g.fillRect(x,860,3,40);g.beginPath();g.arc(x+1.5,858,7,0,7);g.fill();}
+}},
+{name:'גיזה',sub:'הפירמידות במדבר',draw(g,r){
+ g.fillStyle=vg(g,0,620,[[0,'#3D8BD1'],[.7,'#A8D4F0'],[1,'#F8E5B8']]);g.fillRect(0,0,PW,PH);
+ g.fillStyle='rgba(255,255,230,.9)';g.beginPath();g.arc(1250,170,70,0,7);g.fill();
+ ridge(g,640,40,.004,'#E1BC7E',1);
+ const pyr=(x,b,w,h,l,d)=>{g.fillStyle=l;g.beginPath();g.moveTo(x-w/2,b);g.lineTo(x,b-h);g.lineTo(x+w*.12,b);g.closePath();g.fill();g.fillStyle=d;g.beginPath();g.moveTo(x+w*.12,b);g.lineTo(x,b-h);g.lineTo(x+w/2,b);g.closePath();g.fill();
+  g.strokeStyle='rgba(90,60,30,.25)';g.lineWidth=2;for(let k=1;k<14;k++){const y=b-h*k/14,ww=w/2*(1-k/14);g.beginPath();g.moveTo(x-ww,y);g.lineTo(x+ww,y);g.stroke();}};
+ pyr(1130,700,420,280,'#E8C286','#B98B52');pyr(420,720,640,430,'#F0CD8E','#C0915A');pyr(820,740,520,350,'#EDC98B','#BC8E56');
+ g.fillStyle=vg(g,680,1000,[[0,'#F0CE8C'],[1,'#D49A55']]);g.beginPath();g.moveTo(0,760);for(let x=0;x<=PW;x+=10)g.lineTo(x,740+Math.sin(x*.006)*30+Math.sin(x*.017)*10);g.lineTo(PW,PH);g.lineTo(0,PH);g.fill();
+ g.fillStyle='rgba(180,120,60,.35)';for(let i=0;i<9;i++){g.beginPath();g.ellipse(r()*PW,820+r()*160,120+r()*120,10,0,0,7);g.fill();}
+ const camel=(x,y,s)=>{g.fillStyle='#4A3322';g.save();g.translate(x,y);g.scale(s,s);g.beginPath();g.ellipse(0,0,50,24,0,0,7);g.fill();g.beginPath();g.ellipse(-8,-20,20,18,0,0,7);g.fill();g.fillRect(40,-50,12,50);g.beginPath();g.ellipse(52,-52,18,9,0,0,7);g.fill();[-35,-15,15,32].forEach(lx=>g.fillRect(lx,10,7,48));g.restore();};
+ camel(250,860,1);camel(420,880,.9);camel(1260,840,.7);
+ const palm=(x,y,s)=>{g.strokeStyle='#5A3B22';g.lineWidth=12*s;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+30*s,y-120*s,x+10*s,y-230*s);g.stroke();g.fillStyle='#2F6B3A';for(let i=0;i<7;i++){g.save();g.translate(x+10*s,y-230*s);g.rotate(-2.9+i*.55);g.beginPath();g.ellipse(80*s,0,85*s,16*s,.25,0,7);g.fill();g.restore();}};
+ palm(1400,960,1.1);palm(1320,990,.8);palm(80,990,.9);
+}},
+{name:'הר פוג׳י',sub:'פריחת הדובדבן ביפן',draw(g,r){
+ g.fillStyle=vg(g,0,560,[[0,'#6FA8DC'],[.7,'#C7DDF0'],[1,'#F6D6E0']]);g.fillRect(0,0,PW,PH);
+ cloud(g,280,160,1,'rgba(255,255,255,.7)');cloud(g,1150,230,.8,'rgba(255,255,255,.6)');
+ const m=(col)=>{g.fillStyle=col;g.beginPath();g.moveTo(180,600);g.quadraticCurveTo(560,420,690,190);g.lineTo(810,190);g.quadraticCurveTo(940,420,1320,600);g.closePath();g.fill();};
+ m('#5E6FA3');g.fillStyle='#F8FAFF';g.beginPath();g.moveTo(600,300);g.quadraticCurveTo(650,240,690,190);g.lineTo(810,190);g.quadraticCurveTo(850,240,900,300);for(let x=900;x>=600;x-=25)g.lineTo(x,300+((x/25)%2?40:0)+r()*20);g.closePath();g.fill();
+ ridge(g,610,40,.005,'#3F6E5A',2);ridge(g,640,30,.008,'#335C4A',4);
+ const shot=snapshot(g.canvas);g.fillStyle=vg(g,640,1000,[[0,'#8FB6D8'],[1,'#476E96']]);g.fillRect(0,640,PW,360);
+ g.save();g.globalAlpha=.35;g.translate(0,1280);g.scale(1,-1);g.drawImage(shot,0,0,PW,640,0,0,PW,640);g.restore();ripples(g,r,650,1000,160,'#E8F1FA');
+ const pag=(x,b)=>{g.fillStyle='#A8322D';for(let k=0;k<4;k++){const y=b-k*55,w=110-k*18;g.fillRect(x-w*.35,y-40,w*.7,40);g.fillStyle='#3A2A2A';g.beginPath();g.moveTo(x-w/2-15,y-40);g.lineTo(x+w/2+15,y-40);g.lineTo(x+w*.3,y-60);g.lineTo(x-w*.3,y-60);g.fill();g.fillStyle='#A8322D';}g.fillStyle='#3A2A2A';g.fillRect(x-3,b-280,6,60);};
+ pag(1180,640);
+ const branch=(x,y,dir)=>{g.strokeStyle='#4A2F2A';g.lineCap='round';g.lineWidth=26;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+dir*150,y-120,x+dir*330,y-160);g.stroke();g.lineWidth=12;g.beginPath();g.moveTo(x+dir*150,y-90);g.quadraticCurveTo(x+dir*220,y-10,x+dir*360,y+10);g.stroke();
+  for(let i=0;i<260;i++){const t=r(),bx=x+dir*(40+t*340),by=y-60-t*100+(r()-.5)*170;g.fillStyle=['#F7C6D6','#F2A7C0','#FFE1EA','#E98AA9'][i%4];g.beginPath();g.arc(bx,by,6+r()*9,0,7);g.fill();}};
+ branch(-20,300,1);branch(1520,120,-1);
+ g.fillStyle='#F2A7C0';for(let i=0;i<60;i++){g.globalAlpha=.7;g.beginPath();g.ellipse(r()*PW,r()*PH,5,3,r()*3,0,7);g.fill();}g.globalAlpha=1;
+}},
+{name:'סנטוריני',sub:'בתים לבנים מעל הים',draw(g,r){
+ g.fillStyle=vg(g,0,520,[[0,'#4AA3DF'],[1,'#BFE3F5']]);g.fillRect(0,0,PW,PH);
+ g.fillStyle=vg(g,420,1000,[[0,'#2E86C1'],[1,'#123F74']]);g.fillRect(0,420,PW,580);ripples(g,r,430,1000,200,'#D6ECFA');
+ g.fillStyle='#8C6A55';g.beginPath();g.moveTo(PW,420);g.lineTo(PW,1000);g.lineTo(380,1000);g.quadraticCurveTo(560,700,800,560);g.quadraticCurveTo(1050,430,PW,380);g.fill();
+ const houses=[];for(let row=0;row<9;row++)for(let i=0;i<9;i++){const x=560+row*25+i*105+r()*30,y=940-row*62-i*14-r()*20;if(x>1480||y<380)continue;houses.push([x,y]);}
+ houses.sort((a,b)=>a[1]-b[1]).forEach(([x,y])=>{const w=70+r()*40,h=55+r()*30;g.fillStyle='#F7F7F2';g.fillRect(x,y-h,w,h);g.fillStyle='#D9DDE3';g.fillRect(x+w*.7,y-h,w*.3,h);
+  g.fillStyle=r()<.5?'#2B6CB0':'#394B6B';g.fillRect(x+10,y-h*.6,12,20);if(r()<.5){g.fillStyle='#E7A33E';g.fillRect(x+w*.4,y-h*.55,12,18);}
+  if(r()<.28){g.fillStyle='#1F5FAE';g.beginPath();g.arc(x+w/2,y-h,w*.32,Math.PI,0);g.fill();g.fillStyle='#F7F7F2';g.fillRect(x+w/2-2,y-h-w*.32-18,4,18);g.fillRect(x+w/2-8,y-h-w*.32-12,16,4);}});
+ for(let i=0;i<14;i++){const x=600+r()*880,y=520+r()*420;g.fillStyle=['#D63384','#E85D9A','#B0226E'][i%3];for(let k=0;k<14;k++){g.beginPath();g.arc(x+(r()-.5)*50,y+(r()-.5)*30,7+r()*6,0,7);g.fill();}}
+ g.fillStyle='#fff';g.beginPath();g.moveTo(230,650);g.lineTo(230,560);g.lineTo(290,640);g.fill();g.fillStyle='#5A3E2B';g.fillRect(180,650,130,14);
+}},
+{name:'נורווגיה',sub:'זוהר צפוני מעל הפיורד',draw(g,r){
+ g.fillStyle=vg(g,0,640,[[0,'#050B24'],[.6,'#0E2350'],[1,'#1B4A6B']]);g.fillRect(0,0,PW,PH);starsF(g,r,260,560);
+ const band=(y0,amp,col,w)=>{for(let k=0;k<22;k++){g.globalAlpha=.06;g.strokeStyle=col;g.lineWidth=w-k*3;g.beginPath();for(let x=-50;x<=PW+50;x+=20){const y=y0+Math.sin(x*.004+amp)*80+Math.sin(x*.011)*25;x<0?g.moveTo(x,y):g.lineTo(x,y);}g.stroke();}g.globalAlpha=1;};
+ band(220,1,'#43F2A0',90);band(300,2.4,'#34D399',70);band(170,4,'#A78BFA',60);band(260,5.5,'#5EEAD4',40);
+ ridge(g,560,190,.0032,'#0F1E30',1.2);g.fillStyle='rgba(235,245,255,.85)';g.beginPath();for(let x=0;x<=PW;x+=6){const y=560-Math.abs(Math.sin(x*.0032+1.2))*190-Math.sin(x*.0032*3.3+2.4)*190*.18;x?g.lineTo(x,y+18):g.moveTo(x,y);}for(let x=PW;x>=0;x-=6){const y=560-Math.abs(Math.sin(x*.0032+1.2))*190-Math.sin(x*.0032*3.3+2.4)*190*.18;g.lineTo(x,y+(Math.sin(x*.08)>0?30:12));}g.fill();
+ ridge(g,620,60,.006,'#0A1522',3);
+ const shot=snapshot(g.canvas);g.fillStyle='#07162A';g.fillRect(0,640,PW,360);g.save();g.globalAlpha=.55;g.translate(0,1280);g.scale(1,-1);g.drawImage(shot,0,0,PW,640,0,0,PW,640);g.restore();ripples(g,r,650,1000,120,'#9FE8D0');
+ const cabin=(x,y,s)=>{g.fillStyle='#9E2A2B';g.fillRect(x,y-60*s,110*s,60*s);g.fillStyle='#E9F2FA';g.beginPath();g.moveTo(x-12*s,y-58*s);g.lineTo(x+55*s,y-100*s);g.lineTo(x+122*s,y-58*s);g.fill();g.fillStyle='#FFD27A';g.fillRect(x+18*s,y-42*s,18*s,16*s);g.fillRect(x+70*s,y-42*s,18*s,16*s);};
+ g.fillStyle='#0C1A28';g.fillRect(0,630,520,30);cabin(120,632,1);cabin(300,632,.8);g.fillStyle='rgba(255,210,122,.35)';g.fillRect(138,650,18,60);g.fillRect(190,650,18,60);
+}},
+{name:'סן פרנסיסקו',sub:'גשר שער הזהב',draw(g,r){
+ g.fillStyle=vg(g,0,600,[[0,'#7FB3E0'],[.75,'#F3C9A4'],[1,'#F7DDBF']]);g.fillRect(0,0,PW,PH);
+ ridge(g,610,120,.004,'#6D8B5E',.3);ridge(g,640,70,.007,'#557248',2);
+ g.fillStyle=vg(g,620,1000,[[0,'#3C7FB0'],[1,'#173F66']]);g.fillRect(0,620,PW,380);ripples(g,r,630,1000,200,'#E3EEF7');
+ g.fillStyle='rgba(255,255,255,.55)';for(let i=0;i<5;i++)cloud(g,100+i*320,600,1.1,'rgba(255,255,255,.5)');
+ const R='#C0392B',t1=380,t2=1180,deck=640;g.strokeStyle=R;g.lineWidth=5;
+ const cab=(x0,y0,x1,y1,sag)=>{g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo((x0+x1)/2,y1+sag,x1,y1);g.stroke();};
+ g.lineWidth=6;cab(-100,deck-10,t1,230,40);cab(t1,230,t2,230,380);cab(t2,230,PW+100,deck-10,40);
+ g.lineWidth=2;for(let x=t1+25;x<t2;x+=25){const t=(x-t1)/(t2-t1),y=230+4*190*t*(1-t)*1.0;g.beginPath();g.moveTo(x,y*1);g.lineTo(x,deck);g.stroke();}
+ for(let x=0;x<t1;x+=25){const t=x/t1,y=deck-10-(deck-240)*t*t;g.beginPath();g.moveTo(x,y);g.lineTo(x,deck);g.stroke();}
+ for(let x=t2+25;x<PW;x+=25){const t=(PW-x)/(PW-t2),y=deck-10-(deck-240)*t*t;g.beginPath();g.moveTo(x,y);g.lineTo(x,deck);g.stroke();}
+ g.fillStyle=R;g.fillRect(-10,deck,PW+20,22);g.fillStyle='#8E2A20';g.fillRect(-10,deck+22,PW+20,8);
+ [t1,t2].forEach(x=>{g.fillStyle=R;g.fillRect(x-28,180,18,560);g.fillRect(x+10,180,18,560);[200,300,400,500].forEach(y=>g.fillRect(x-28,y,56,16));g.fillStyle='#9C2E23';g.fillRect(x-40,730,80,40);});
+ const boat=(x,y,s)=>{g.fillStyle='#fff';g.beginPath();g.moveTo(x,y);g.lineTo(x,y-80*s);g.lineTo(x+50*s,y);g.fill();g.fillStyle='#F4F4F4';g.beginPath();g.moveTo(x-4,y-5);g.lineTo(x-4,y-60*s);g.lineTo(x-35*s,y-5);g.fill();g.fillStyle='#2C3E50';g.fillRect(x-40*s,y,100*s,10*s);};
+ boat(700,880,1);boat(1100,820,.7);boat(250,930,.8);
+}},
+{name:'אגרה',sub:'הטאג׳ מהאל',draw(g,r){
+ g.fillStyle=vg(g,0,600,[[0,'#8FB8E8'],[.6,'#F1C9C9'],[1,'#FBE3C8']]);g.fillRect(0,0,PW,PH);
+ const W='#F8F4EC',S='#DCD3C3',cx=750;
+ g.fillStyle='#CBBFAF';g.fillRect(250,560,1000,40);
+ const minaret=x=>{g.fillStyle=W;g.beginPath();g.moveTo(x-16,560);g.lineTo(x-11,250);g.lineTo(x+11,250);g.lineTo(x+16,560);g.fill();g.fillStyle=S;[330,420,500].forEach(y=>g.fillRect(x-20,y,40,8));g.fillStyle=W;g.beginPath();g.arc(x,245,17,Math.PI,0);g.fill();g.fillRect(x-1,215,2,14);};
+ [300,1200].forEach(minaret);
+ g.fillStyle=W;g.fillRect(470,360,560,200);g.fillStyle=S;g.fillRect(470,360,70,200);g.fillRect(960,360,70,200);
+ const arch=(x,y,w,h,col)=>{g.fillStyle=col;g.beginPath();g.moveTo(x-w/2,y);g.lineTo(x-w/2,y-h*.6);g.quadraticCurveTo(x-w/2,y-h,x,y-h*1.05);g.quadraticCurveTo(x+w/2,y-h,x+w/2,y-h*.6);g.lineTo(x+w/2,y);g.fill();};
+ g.fillStyle=W;g.fillRect(cx-110,300,220,260);arch(cx,560,150,210,'#B8AE9E');arch(cx,560,110,170,'#6E6457');
+ [560,940].forEach(x=>{arch(x,470,60,80,'#BDB2A1');arch(x,555,60,70,'#BDB2A1');});
+ g.fillStyle=W;g.beginPath();g.moveTo(cx-150,300);g.bezierCurveTo(cx-190,160,cx-60,120,cx,60);g.bezierCurveTo(cx+60,120,cx+190,160,cx+150,300);g.fill();g.fillStyle=S;g.beginPath();g.moveTo(cx+40,300);g.bezierCurveTo(cx+90,210,cx+60,120,cx,60);g.bezierCurveTo(cx+80,120,cx+190,160,cx+150,300);g.fill();
+ g.fillStyle='#C9A64B';g.fillRect(cx-3,20,6,45);
+ [[560,330],[940,330]].forEach(([x,y])=>{g.fillStyle=W;g.fillRect(x-40,y,80,30);g.beginPath();g.arc(x,y,40,Math.PI,0);g.fill();});
+ const shot=snapshot(g.canvas);
+ g.fillStyle='#6E8B4F';g.fillRect(0,600,PW,400);
+ g.fillStyle=vg(g,600,1000,[[0,'#8DB7D6'],[1,'#4E83B0']]);g.beginPath();g.moveTo(640,600);g.lineTo(860,600);g.lineTo(1000,1000);g.lineTo(500,1000);g.fill();
+ g.save();g.beginPath();g.moveTo(640,600);g.lineTo(860,600);g.lineTo(1000,1000);g.lineTo(500,1000);g.clip();g.globalAlpha=.4;g.translate(0,1200);g.scale(1,-1);g.drawImage(shot,0,0,PW,600,0,0,PW,600);g.restore();
+ g.fillStyle='#E6DCC9';g.beginPath();g.moveTo(600,600);g.lineTo(640,600);g.lineTo(500,1000);g.lineTo(440,1000);g.fill();g.beginPath();g.moveTo(860,600);g.lineTo(900,600);g.lineTo(1060,1000);g.lineTo(1000,1000);g.fill();
+ for(let i=0;i<8;i++){[[590,-1],[910,1]].forEach(([x0,s])=>{const t=i/8,x=x0+s*(t*230+20),y=610+t*390,k=.5+t;g.fillStyle='#244A2C';g.beginPath();g.ellipse(x,y-40*k,14*k,48*k,0,0,7);g.fill();});}
+}},
+{name:'ניו יורק',sub:'קו הרקיע בלילה',draw(g,r){
+ g.fillStyle=vg(g,0,700,[[0,'#0B1030'],[.6,'#2D1E5A'],[1,'#7A3E78']]);g.fillRect(0,0,PW,PH);starsF(g,r,140,380,.7);
+ g.fillStyle='#FFF6D8';g.beginPath();g.arc(1250,150,55,0,7);g.fill();g.fillStyle='#2A1F52';g.beginPath();g.arc(1272,138,50,0,7);g.fill();
+ const bld=(x,w,h,col,spire)=>{const top=700-h;g.fillStyle=col;g.fillRect(x,top,w,h);if(spire){g.fillRect(x+w*.2,top-40,w*.6,40);g.fillRect(x+w*.35,top-90,w*.3,50);g.fillRect(x+w/2-3,top-170,6,80);}
+  for(let yy=top+10;yy<690;yy+=18)for(let xx=x+6;xx<x+w-8;xx+=14)if(r()<.42){g.fillStyle=r()<.8?'#FFD779':'#9EE7FF';g.fillRect(xx,yy,7,9);}};
+ for(let i=0;i<28;i++)bld(i*56-20+r()*20,50+r()*30,120+r()*160,'#241C45');
+ const hs=[[60,70,300],[150,80,380],[260,60,260],[340,90,420],[460,70,330],[560,60,300],[640,95,560,true],[760,70,350],[850,80,450],[950,60,300],[1030,90,400],[1140,70,330],[1230,80,470],[1330,60,290],[1400,90,360]];
+ hs.forEach(([x,w,h,sp])=>bld(x,w,h,'#161233',sp));
+ const shot=snapshot(g.canvas);g.fillStyle='#0B0F26';g.fillRect(0,700,PW,300);g.save();g.globalAlpha=.45;g.translate(0,1400);g.scale(1,-1);g.drawImage(shot,0,0,PW,700,0,0,PW,700);g.restore();
+ ripples(g,r,705,1000,260,'#FFD779');g.fillStyle='#0B0F26';g.globalAlpha=.25;for(let y=710;y<1000;y+=8)g.fillRect(0,y,PW,3);g.globalAlpha=1;
+}},
+{name:'ירושלים',sub:'העיר העתיקה',draw(g,r){
+ g.fillStyle=vg(g,0,560,[[0,'#6E9CCB'],[.65,'#F2C38E'],[1,'#F7DDB0']]);g.fillRect(0,0,PW,PH);
+ ridge(g,470,70,.003,'#A99A7E',.8);g.fillStyle='#8C8A5E';for(let i=0;i<40;i++){g.beginPath();g.arc(r()*PW,430+r()*60,10+r()*10,0,7);g.fill();}
+ const stone=['#E3C28A','#D8B377','#EACB94','#CFA96B'];
+ for(let row=0;row<5;row++)for(let i=0;i<22;i++){const x=i*72-20+r()*20+row*18,y=520+row*42+r()*10,w=60+r()*40,h=50+r()*40;g.fillStyle=stone[(i+row)%4];g.fillRect(x,y-h,w,h);g.fillStyle='rgba(120,80,40,.35)';g.fillRect(x+8,y-h+14,8,12);if(r()<.25){g.fillStyle='#D3AE72';g.beginPath();g.arc(x+w/2,y-h,w*.3,Math.PI,0);g.fill();}}
+ const cx=760,by=470;g.fillStyle='#2E6FA5';g.beginPath();g.moveTo(cx-170,by);g.lineTo(cx-150,by-110);g.lineTo(cx+150,by-110);g.lineTo(cx+170,by);g.fill();
+ g.fillStyle='#F4E7CF';g.fillRect(cx-170,by-20,340,20);g.fillStyle='#1E5584';for(let x=cx-140;x<cx+140;x+=28){g.beginPath();g.moveTo(x,by-30);g.lineTo(x,by-80);g.quadraticCurveTo(x+9,by-96,x+18,by-80);g.lineTo(x+18,by-30);g.fill();}
+ g.fillStyle='#3B7EB8';g.fillRect(cx-80,by-150,160,42);
+ const dg=g.createLinearGradient(cx-90,0,cx+90,0);dg.addColorStop(0,'#B8841F');dg.addColorStop(.45,'#FFE08A');dg.addColorStop(1,'#A86F12');g.fillStyle=dg;g.beginPath();g.moveTo(cx-92,by-150);g.bezierCurveTo(cx-100,by-250,cx-30,by-275,cx,by-278);g.bezierCurveTo(cx+30,by-275,cx+100,by-250,cx+92,by-150);g.fill();
+ g.fillStyle='#8C6A2C';g.fillRect(cx-2,by-310,4,34);
+ g.fillStyle='#D6B47A';g.fillRect(0,690,PW,40);for(let x=0;x<PW;x+=40)g.fillRect(x,672,24,20);g.fillStyle=vg(g,730,1000,[[0,'#D9B77D'],[1,'#B38B52']]);g.fillRect(0,730,PW,270);
+ g.strokeStyle='rgba(120,80,40,.3)';g.lineWidth=2;for(let y=760;y<1000;y+=34){g.beginPath();g.moveTo(0,y);g.lineTo(PW,y);g.stroke();for(let x=(y/34%2)*40;x<PW;x+=80){g.beginPath();g.moveTo(x,y);g.lineTo(x,y+34);g.stroke();}}
+ g.fillStyle='#8A5A2B';g.fillRect(700,800,100,200);g.fillStyle='#5E3B1C';g.beginPath();g.moveTo(690,800);g.lineTo(690,760);g.quadraticCurveTo(750,700,810,760);g.lineTo(810,800);g.fill();
+ [[160,720],[1330,720],[1420,730]].forEach(([x,y])=>{g.fillStyle='#2F4A2A';g.beginPath();g.ellipse(x,y-90,26,100,0,0,7);g.fill();});
+ [[330,740],[1150,745]].forEach(([x,y])=>{g.fillStyle='#6B7F55';for(let k=0;k<9;k++){g.beginPath();g.arc(x+(r()-.5)*110,y-60+(r()-.5)*50,30,0,7);g.fill();}g.fillStyle='#5A4330';g.fillRect(x-6,y-30,12,40);});
+}},
+{name:'ונציה',sub:'תעלה וגונדולה',draw(g,r){
+ g.fillStyle=vg(g,0,500,[[0,'#6FB1E3'],[1,'#D7EBF7']]);g.fillRect(0,0,PW,PH);cloud(g,700,120,1,'rgba(255,255,255,.85)');cloud(g,1050,180,.7,'rgba(255,255,255,.75)');
+ const cols=['#E3A857','#C8553D','#F2C6B4','#E9D8A6','#B85C38','#DDA15E','#F0E0C8'];
+ const side=(x0,dir)=>{let x=x0;for(let i=0;i<5;i++){const w=150-i*18,h=520-i*40,top=640-h,col=cols[(i+(dir>0?0:3))%cols.length];const xx=dir>0?x:x-w;
+  g.fillStyle=col;g.fillRect(xx,top,w,h);g.fillStyle='rgba(0,0,0,.12)';g.fillRect(xx,top,w,10);
+  for(let fy=top+40;fy<600;fy+=70)for(let fx=xx+14;fx<xx+w-24;fx+=38){g.fillStyle='#3E4A5A';g.beginPath();g.moveTo(fx,fy+34);g.lineTo(fx,fy+10);g.quadraticCurveTo(fx+9,fy-2,fx+18,fy+10);g.lineTo(fx+18,fy+34);g.fill();g.fillStyle='#5E7A4A';if(r()<.25)g.fillRect(fx-4,fy+34,26,6);}
+  x+=dir*w;}};
+ side(0,1);side(PW,-1);
+ g.fillStyle='#D9C7A6';g.beginPath();g.moveTo(560,560);g.quadraticCurveTo(750,470,940,560);g.lineTo(940,590);g.quadraticCurveTo(750,510,560,590);g.fill();
+ g.fillStyle='#F0E6D2';g.fillRect(560,440,380,30);
+ const shot=snapshot(g.canvas);g.fillStyle=vg(g,640,1000,[[0,'#3D8C8C'],[1,'#1C5560']]);g.fillRect(0,640,PW,360);g.save();g.globalAlpha=.4;g.translate(0,1280);g.scale(1,-1);g.drawImage(shot,0,0,PW,640,0,0,PW,640);g.restore();ripples(g,r,650,1000,220,'#CFEDEA');
+ [[120,610],[260,600],[1250,605],[1390,612]].forEach(([x,y])=>{g.fillStyle='#F4F4F4';g.fillRect(x-5,y-150,10,190);g.fillStyle='#2B4D8C';for(let k=0;k<4;k++)g.fillRect(x-5,y-140+k*40,10,14);});
+ g.fillStyle='#111';g.beginPath();g.moveTo(420,860);g.quadraticCurveTo(700,930,1000,850);g.quadraticCurveTo(1040,820,1060,780);g.quadraticCurveTo(1030,860,700,905);g.quadraticCurveTo(520,900,420,860);g.fill();
+ g.fillStyle='#C9A64B';g.fillRect(1050,760,8,40);g.fillStyle='#8B1E2D';g.fillRect(650,850,120,20);
+ g.fillStyle='#1B1B1B';g.fillRect(880,720,24,110);g.beginPath();g.arc(892,705,17,0,7);g.fill();g.fillStyle='#F2F2F2';for(let k=0;k<4;k++)g.fillRect(880,735+k*18,24,8);g.fillStyle='#E0C060';g.fillRect(872,688,40,6);
+ g.strokeStyle='#5A3B22';g.lineWidth=6;g.beginPath();g.moveTo(870,760);g.lineTo(800,950);g.stroke();
+}}
+];
+function drawPlace(i){const c=document.createElement('canvas');c.width=PW;c.height=PH;const g=c.getContext('2d');PLACES[i].draw(g,prng(9001+i*131));return c;}
+
+/* place gallery */
+function selectTile(el){document.querySelectorAll('.tile').forEach(t=>t.setAttribute('aria-pressed',String(t===el)));}
+function toTop(){$('setup').scrollTo({top:0,behavior:'smooth'});}
+(function buildPlaces(){const gal=$('placeGal');
+ PLACES.forEach((pl,i)=>{const b=document.createElement('button');b.className='tile';b.setAttribute('aria-pressed','false');b.innerHTML=`<img alt=""><span>${pl.name}<small>${pl.sub}</small></span>`;
+  b.onclick=()=>{selectTile(b);setSource(drawPlace(i));toTop();};gal.appendChild(b);});
+ let i=0;const next=()=>{if(i>=PLACES.length)return;const c=drawPlace(i),t=document.createElement('canvas');t.width=360;t.height=240;t.getContext('2d').drawImage(c,0,0,360,240);gal.children[i].querySelector('img').src=t.toDataURL('image/jpeg',.8);i++;setTimeout(next,0);};setTimeout(next,30);
+})();
+
+/* my collection: photos saved to this artifact (assets + db) */
+let assetsNS=null,dbNS=null,photos=[];
+const DEF_CAT='האוסף שלי',CAT_ORDER=['משפחה'];
+function catsOf(){const set=new Set(photos.map(p=>p.cat||DEF_CAT));CAT_ORDER.forEach(c=>set.add(c));set.add(DEF_CAT);return[...set].sort((a,b)=>{const ia=CAT_ORDER.indexOf(a),ib=CAT_ORDER.indexOf(b);if(a===DEF_CAT)return 1;if(b===DEF_CAT)return -1;return(ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b,'he');});}
+function renderCatSel(){const sel=$('catSel'),cur=sel.value||store2.get();sel.replaceChildren(...catsOf().map(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;return o;}));sel.value=catsOf().includes(cur)?cur:DEF_CAT;}
+const store2={get(){try{return localStorage.getItem('puzzle-cat')||''}catch(e){return''}},set(v){try{localStorage.setItem('puzzle-cat',v)}catch(e){}}};
+$('catSel').onchange=e=>store2.set(e.target.value);
+function tileFor(ph){const b=document.createElement('button');b.className='tile';b.setAttribute('aria-pressed','false');
+ const img=document.createElement('img');img.alt=ph.name||'';img.loading='lazy';img.src='/_blob/'+ph.asset;b.appendChild(img);
+ if(assetsNS){const d=document.createElement('button');d.className='del';d.textContent='×';d.setAttribute('aria-label','מחק מהאוסף');
+  d.onclick=async e=>{e.stopPropagation();if(!confirm('למחוק את התמונה מהאוסף?'))return;try{await assetsNS.delete(ph.asset);}catch(err){}try{await dbNS.collection('photos').doc(ph.id).delete();}catch(err){status('המחיקה נכשלה. נסה שוב.');}};b.appendChild(d);}
+ b.onclick=()=>{selectTile(b);const im=new Image();im.onload=()=>{setSource(fromImage(im));toTop();};im.onerror=()=>status('לא הצלחתי לטעון את התמונה הזו.');im.src='/_blob/'+ph.asset;};
+ return b;}
+function renderCollection(){const box=$('collections');box.replaceChildren();
+ catsOf().forEach(cat=>{const list=photos.filter(p=>(p.cat||DEF_CAT)===cat);if(!list.length&&cat!==DEF_CAT)return;
+  const h=document.createElement('div');h.className='gh';h.innerHTML='<h2></h2><small></small>';h.querySelector('h2').textContent=cat;h.querySelector('small').textContent=list.length?`${list.length} תמונות`:'';box.appendChild(h);
+  const gal=document.createElement('div');gal.className='gal';list.forEach(ph=>gal.appendChild(tileFor(ph)));
+  if(!list.length){const n=document.createElement('p');n.className='note';n.textContent='עדיין אין כאן תמונות.';box.appendChild(n);}else box.appendChild(gal);});
+ if(assetsNS){$('catPick').hidden=false;renderCatSel();}
+}
+function status(t){$('saveNote').textContent=t;$('saveNote').hidden=!t;}
+async function saveToCollection(canvas,name){
+ if(!assetsNS||!dbNS)return;
+ status('שומר לאוסף…');
+ try{
+  const blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',.88));
+  const up=await assetsNS.upload(blob,{type:'image/jpeg'});
+  const cat=$('catSel').value;await dbNS.collection('photos').add({asset:up.id,name:name||'',added:Date.now(),w:canvas.width,h:canvas.height,...(cat&&cat!==DEF_CAT?{cat}:{})});
+  status(`נשמר ב${$('catSel').value||DEF_CAT} ✓`);setTimeout(()=>status(''),2500);
+ }catch(e){const c=e&&e.code;
+  status(c==='too_large'?'התמונה גדולה מדי לשמירה.':c==='quota_or_state'?'נגמר המקום באוסף. מחק כמה תמונות ונסה שוב.':c==='rate_limited'?'יותר מדי שמירות ברצף. נסה שוב בעוד רגע.':c==='not_granted'?'אין הרשאה לשמור תמונות בתצוגה הזו.':'השמירה לאוסף נכשלה. אפשר עדיין לשחק עם התמונה.');}
+}
+(async()=>{
+ try{assetsNS=window.claude&&window.claude.use?await window.claude.use('assets'):null;}catch(e){assetsNS=null;}
+ try{dbNS=window.claude&&window.claude.use?await window.claude.use('db'):null;}catch(e){dbNS=null;}
+ if(!dbNS){$('colNote').textContent='באתר התמונות שלך לא נשמרות באוסף. בוחרים תמונה מהמכשיר או מקום מהרשימה, ומשחקים.';return;}
+ if(!assetsNS)$('colNote').textContent='אפשר לצפות באוסף, אבל הוספה ומחיקה זמינות רק לבעלים.';
+ dbNS.collection('photos').orderBy('added','desc').onSnapshot(snap=>{photos=snap.docs.map(d=>({id:d.id,...d.data()}));renderCollection();},()=>{$('colNote').textContent='לא הצלחתי לטעון את האוסף כרגע.';});
+})();
+
+/* ---------- puzzle build ---------- */
+function edgePath(p,x0,y0,x1,y1,d,m){
+ if(!d){p.lineTo(x1,y1);return;}
+ const dx=x1-x0,dy=y1-y0,len=Math.hypot(dx,dy),nx=dy/len*m*d,ny=-dx/len*m*d;
+ const Q=(u,v)=>[x0+dx*u+nx*v,y0+dy*u+ny*v];
+ p.lineTo(...Q(.35,0));
+ p.bezierCurveTo(...Q(.40,0),...Q(.43,.07),...Q(.38,.13));
+ p.bezierCurveTo(...Q(.33,.20),...Q(.41,.27),...Q(.50,.27));
+ p.bezierCurveTo(...Q(.59,.27),...Q(.67,.20),...Q(.62,.13));
+ p.bezierCurveTo(...Q(.57,.07),...Q(.60,0),...Q(.65,0));
+ p.lineTo(x1,y1);
+}
+function startPuzzle(n){
+ const g=gridFor(n,srcAspect),rows=g.r,cols=g.c;
+ const bw=srcAspect>=1?1000:1000*srcAspect,bh=srcAspect>=1?1000/srcAspect:1000;
+ const pw=bw/cols,ph=bh/rows,m=Math.min(pw,ph),t=m*.3;
+ const hv=[],vv=[];for(let r=0;r<rows;r++){hv.push([]);vv.push([]);for(let c=0;c<cols;c++){hv[r].push(Math.random()<.5?1:-1);vv[r].push(Math.random()<.5?1:-1);}}
+ const pieces=[];
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+  const top=r?-hv[r-1][c]:0,bot=r<rows-1?hv[r][c]:0,left=c?-vv[r][c-1]:0,right=c<cols-1?vv[r][c]:0;
+  const path=new Path2D();path.moveTo(0,0);edgePath(path,0,0,pw,0,top,m);edgePath(path,pw,0,pw,ph,right,m);edgePath(path,pw,ph,0,ph,bot,m);edgePath(path,0,ph,0,0,left,m);path.closePath();
+  pieces.push({r,c,hx:c*pw,hy:r*ph,x:0,y:0,g:pieces.length,flash:0,path,sprite:null});
+ }
+ P={n:rows*cols,rows,cols,bw,bh,pw,ph,m,t,pieces,grid:Array.from({length:rows},(_,r)=>pieces.slice(r*cols,(r+1)*cols)),start:0,elapsed:0,done:false,img:src,chosen:n};
+ $('setup').hidden=true;$('hdr').hidden=false;$('done').hidden=true;peek=false;$('peekBtn').setAttribute('aria-pressed','false');
+ resize(true);scatter(true);hud();
+ clearInterval(timer);timer=setInterval(()=>{if(P&&P.start&&!P.done){hud();}},1000);
+}
+
+/* ---------- layout & sprites ---------- */
+function world(){ // returns tray rect and world size
+ const portrait=W/H<1.15,g=P.m*.35;
+ if(portrait){const trayH=Math.min(P.bh*1.6,Math.max(P.bh*.75,P.ph*2.2,(H/W)*P.bw-P.bh-g));return{kind:'p',ww:P.bw,wh:P.bh+g+trayH,tray:{x:0,y:P.bh+g,w:P.bw,h:trayH}};}
+ const trayW=Math.min(P.bw*1.6,Math.max(P.bw*.75,P.pw*2.2,(W/H)*P.bh-P.bw-g));return{kind:'l',ww:P.bw+g+trayW,wh:P.bh,tray:{x:P.bw+g,y:0,w:trayW,h:P.bh}};
+}
+let WL=null;
+function resize(force){
+ const r=cv.getBoundingClientRect();W=r.width;H=r.height;dpr=Math.min(devicePixelRatio||1,2.5);
+ cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+ if(!P)return;
+ WL=world();const pad=Math.max(10,Math.min(W,H)*.03);
+ s=Math.min((W-pad*2)/(WL.ww+P.t*2),(H-pad*2)/(WL.wh+P.t*2));
+ ox=(W-WL.ww*s)/2;oy=(H-WL.wh*s)/2;
+ if(WL.kind==='l'){ox=W-(W-WL.ww*s)/2-P.bw*s;} // board on the right side in RTL, tray to its left
+ buildSprites();
+ if(layoutKind&&layoutKind!==WL.kind&&!force)scatter(false);
+ layoutKind=WL.kind;dirty=true;
+}
+function trayRect(){ // in world coords, accounting for RTL flip in landscape
+ if(WL.kind==='l')return{x:-(WL.tray.w+P.m*.35),y:0,w:WL.tray.w,h:WL.tray.h};
+ return WL.tray;
+}
+function buildSprites(){
+ const {pw,ph,t}=P,sw=Math.ceil((pw+2*t)*s*dpr),sh=Math.ceil((ph+2*t)*s*dpr),k=s*dpr;
+ P.pieces.forEach(pc=>{
+  const c=pc.sprite&&pc.sprite.width===sw&&pc.sprite.height===sh?pc.sprite:document.createElement('canvas');c.width=sw;c.height=sh;
+  const g=c.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,sw,sh);g.translate(t,t);
+  g.save();g.clip(pc.path);g.drawImage(P.img,0,0,P.img.width,P.img.height,-pc.hx,-pc.hy,P.bw,P.bh);
+  g.lineWidth=2.4/s;g.strokeStyle='rgba(255,255,255,.35)';g.translate(.8/s,.8/s);g.stroke(pc.path);g.restore();
+  g.lineWidth=1.2/s;g.strokeStyle='rgba(0,0,0,.45)';g.stroke(pc.path);
+  pc.sprite=c;});
+}
+function groupOf(p){return P.pieces.filter(q=>q.g===p.g);}
+function onBoard(p){const cx=p.x+P.pw/2,cy=p.y+P.ph/2;return cx>0&&cx<P.bw&&cy>0&&cy<P.bh;}
+function moveGroup(gr,dx,dy){gr.forEach(q=>{q.x+=dx;q.y+=dy;});}
+function scatter(all){
+ const tr=trayRect(),seen=new Set();
+ shuffleArr([...P.pieces]).forEach(p=>{if(seen.has(p.g))return;seen.add(p.g);const gr=groupOf(p);if(!all&&gr.some(onBoard))return;
+  const minx=Math.min(...gr.map(q=>q.x)),miny=Math.min(...gr.map(q=>q.y)),gw=Math.max(...gr.map(q=>q.x))+P.pw-minx,gh=Math.max(...gr.map(q=>q.y))+P.ph-miny;
+  moveGroup(gr,tr.x+Math.random()*Math.max(1,tr.w-gw)-minx,tr.y+Math.random()*Math.max(1,tr.h-gh)-miny);});
+ dirty=true;hud();
+}
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- sound ---------- */
+let AC=null,muted=(()=>{try{return localStorage.getItem('puzzle-muted')==='1'}catch(e){return false}})();
+function unlock(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
+function tone(f,d,type='triangle',v=.06,delay=0){if(muted||!AC)return;try{const n=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,n);g.gain.setValueAtTime(0.0001,n);g.gain.exponentialRampToValueAtTime(v,n+.008);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(AC.destination);o.start(n);o.stop(n+d+.02);}catch(e){}}
+const sndSnap=()=>tone(240,.06,'sine',.07);
+const sndJoin=()=>{tone(660,.12,'triangle',.08);tone(990,.18,'triangle',.07,.07);};
+const sndWin=()=>[523,659,784,1047].forEach((f,i)=>tone(f,.35,'triangle',.07,i*.11));
+function renderMute(){$('muteBtn').innerHTML=(muted?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/></svg>')+`<span>${muted?'מושתק':'צליל'}</span>`;
+ $('muteBtn').setAttribute('aria-label',muted?'הפעל צלילים':'השתק צלילים');$('muteBtn').setAttribute('aria-pressed',String(muted));}
+$('muteBtn').onclick=()=>{muted=!muted;try{localStorage.setItem('puzzle-muted',muted?'1':'0')}catch(e){}unlock();renderMute();};
+renderMute();
+
+/* ---------- draw ---------- */
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+const FLASH=700;
+function draw(){
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+ if(!P)return;
+ const bx=ox,by=oy,bw=P.bw*s,bh=P.bh*s;
+ ctx.fillStyle=css('--well');ctx.fillRect(bx,by,bw,bh);
+ if(P.done||peek){ctx.globalAlpha=P.done?1:.45;ctx.drawImage(P.img,bx,by,bw,bh);ctx.globalAlpha=1;}
+ if(P.done)return;
+ ctx.strokeStyle=css('--line');ctx.lineWidth=1;
+ ctx.beginPath();for(let c=1;c<P.cols;c++){const x=Math.round(bx+c*P.pw*s)+.5;ctx.moveTo(x,by);ctx.lineTo(x,by+bh);}for(let r=1;r<P.rows;r++){const y=Math.round(by+r*P.ph*s)+.5;ctx.moveTo(bx,y);ctx.lineTo(bx+bw,y);}ctx.stroke();
+ ctx.strokeRect(bx+.5,by+.5,bw-1,bh-1);
+ const tr=trayRect();ctx.setLineDash([6,6]);ctx.strokeRect(ox+tr.x*s,oy+tr.y*s,tr.w*s,tr.h*s);ctx.setLineDash([]);
+ const t=P.t,sw=(P.pw+2*t)*s,sh=(P.ph+2*t)*s,now=performance.now(),dg=drag?drag.p.g:null;
+ P.pieces.forEach(p=>{
+  const x=ox+(p.x-t)*s,y=oy+(p.y-t)*s;
+  if(p.g===dg){ctx.save();ctx.shadowColor='rgba(0,0,0,.28)';ctx.shadowBlur=10;ctx.shadowOffsetY=5;ctx.drawImage(p.sprite,x,y,sw,sh);ctx.restore();}
+  else ctx.drawImage(p.sprite,x,y,sw,sh);
+ });
+ let anim=false;const acc=css('--accent');
+ P.pieces.forEach(p=>{const age=now-p.flash;if(age>=FLASH)return;anim=true;const k=1-age/FLASH;
+  ctx.save();ctx.translate(ox+p.x*s,oy+p.y*s);ctx.scale(s,s);
+  ctx.globalAlpha=.28*k;ctx.fillStyle='#fff';ctx.fill(p.path);
+  ctx.globalAlpha=k;ctx.strokeStyle=acc;ctx.lineWidth=4/s;ctx.stroke(p.path);ctx.restore();});
+ if(anim)dirty=true;
+}
+function loop(){if(dirty){dirty=false;draw();}requestAnimationFrame(loop);}
+
+/* ---------- input ---------- */
+function toWorld(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left-ox)/s,y:(e.clientY-r.top-oy)/s};}
+cv.addEventListener('pointerdown',e=>{
+ if(!P||P.done||drag)return;unlock();const w=toWorld(e);
+ for(let i=P.pieces.length-1;i>=0;i--){const p=P.pieces[i];
+  if(hit.isPointInPath(p.path,w.x-p.x,w.y-p.y)||(w.x>p.x&&w.x<p.x+P.pw&&w.y>p.y&&w.y<p.y+P.ph)){
+   const gr=P.pieces.filter(q=>q.g===p.g);P.pieces=[...P.pieces.filter(q=>q.g!==p.g),...gr];
+   drag={p,dx:w.x-p.x,dy:w.y-p.y,id:e.pointerId};cv.setPointerCapture(e.pointerId);
+   if(!P.start)P.start=performance.now();dirty=true;e.preventDefault();return;}}
+});
+cv.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const w=toWorld(e),p=drag.p;
+ const minX=(-ox)/s-P.pw*.5,maxX=(W-ox)/s-P.pw*.5,minY=(-oy)/s-P.ph*.5,maxY=(H-oy)/s-P.ph*.5;
+ const nx=Math.max(minX,Math.min(maxX,w.x-drag.dx)),ny=Math.max(minY,Math.min(maxY,w.y-drag.dy));
+ moveGroup(groupOf(p),nx-p.x,ny-p.y);dirty=true;});
+function drop(e){
+ if(!drag||e.pointerId!==drag.id)return;const p=drag.p;drag=null;let gr=groupOf(p);
+ // 1) grid snap when the grabbed piece lands on the board (no check of correctness)
+ const cx=p.x+P.pw/2,cy=p.y+P.ph/2;let snapped=false;
+ if(cx>0&&cx<P.bw&&cy>0&&cy<P.bh){
+  const cs=gr.map(q=>q.c),rs=gr.map(q=>q.r);
+  let dc=Math.round(p.x/P.pw)-p.c,dr=Math.round(p.y/P.ph)-p.r;
+  dc=Math.max(-Math.min(...cs),Math.min(P.cols-1-Math.max(...cs),dc));
+  dr=Math.max(-Math.min(...rs),Math.min(P.rows-1-Math.max(...rs),dr));
+  gr.forEach(q=>{q.x=(q.c+dc)*P.pw;q.y=(q.r+dr)*P.ph;});snapped=true;
+ }
+ // 2) join matching neighbours (same relative offset as in the picture)
+ const joined=[];
+ for(let guard=0;guard<P.n;guard++){let found=false;
+  outer:for(const q of gr){for(const[r2,c2]of[[0,1],[0,-1],[1,0],[-1,0]]){
+   const row=P.grid[q.r+r2],nb=row&&row[q.c+c2];if(!nb||nb.g===q.g)continue;
+   const ex=(nb.x-nb.hx)-(q.x-q.hx),ey=(nb.y-nb.hy)-(q.y-q.hy);
+   if(Math.hypot(ex,ey)<P.m*.25){const other=groupOf(nb);moveGroup(gr,ex,ey);other.forEach(o=>o.g=q.g);joined.push(...other);gr=groupOf(q);found=true;break outer;}}}
+  if(!found)break;}
+ if(joined.length){const now=performance.now();gr.forEach(q=>q.flash=now);sndJoin();}
+ else if(snapped)sndSnap();
+ P.pieces=[...P.pieces.filter(q=>q.g!==p.g),...gr];
+ if(P.pieces.every(q=>Math.abs(q.x-q.hx)<.5&&Math.abs(q.y-q.hy)<.5))finish();
+ hud();dirty=true;}
+cv.addEventListener('pointerup',drop);cv.addEventListener('pointercancel',drop);
+document.addEventListener('touchmove',e=>{if(e.target===cv)e.preventDefault();},{passive:false});
+
+function fmt(ms){const sec=Math.floor(ms/1000);return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');}
+function elapsed(){return P.done?P.elapsed:P.start?performance.now()-P.start:0;}
+function hud(){if(!P)return;$('prog').textContent=`${P.pieces.filter(onBoard).length}/${P.n}`;$('time').textContent=fmt(elapsed());}
+function finish(){P.elapsed=performance.now()-P.start;P.done=true;hud();dirty=true;sndWin();
+ $('doneText').textContent=`${P.n} חלקים ב-${fmt(P.elapsed)} דקות.`;
+ const next=OPTIONS.find(o=>o.n>P.chosen);$('moreBtn').hidden=!next;if(next)$('moreBtn').textContent=`אותה תמונה, ${next.n} חלקים`;
+ $('done').hidden=false;}
+$('moreBtn').onclick=()=>{const next=OPTIONS.find(o=>o.n>P.chosen);if(next){chosen=next.n;startPuzzle(next.n);}};
+$('againBtn').onclick=()=>toSetup();
+$('newBtn').onclick=()=>{if(!P||P.done||!P.start||confirm('לעזוב את הפאזל הנוכחי?'))toSetup();};
+$('scatterBtn').onclick=()=>{if(P&&!P.done)scatter(false);};
+$('peekBtn').onclick=()=>{peek=!peek;$('peekBtn').setAttribute('aria-pressed',String(peek));dirty=true;};
+function toSetup(){P=null;clearInterval(timer);$('hdr').hidden=true;$('done').hidden=true;$('setup').hidden=false;renderCounts();dirty=true;}
+
+addEventListener('resize',()=>{resize(false);});
+renderCounts();resize(true);requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
+
+
+<style>
+#siteHome{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px);z-index:2147482000;
+ width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(16,18,24,.55);color:#fff;
+ display:grid;place-items:center;padding:0;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.8}
+#siteHome:hover,#siteHome:focus-visible{opacity:1}
+#siteHome svg{width:21px;height:21px}
+</style>
+<button id="siteHome" type="button" aria-label="מסך הבית" title="מסך הבית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></button>
+<script>
+(()=>{const b=document.getElementById('siteHome');
+ ['pointerdown','touchstart','mousedown'].forEach(t=>b.addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+ b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
+  location.href='/';});   // leaving the page fires the games' own save-on-exit handlers
+ if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
+})();
+</script>
+</body></html>

@@ -1,0 +1,1106 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="manifest" href="/architects/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/architects-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="7 Wonders Architects">
+<meta name="theme-color" content="#EBDDBF">
+</head><body>
+<title>7 Wonders Architects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Frank+Ruhl+Libre:wght@500;700&family=Rubik:wght@400;600;700&family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Layout: the physical table — a navy rulebook band with a gold meander, rival trays in their wonder colours, the shared table (conflict, progress, three decks) and your wonder tray. Single parchment theme, matching the printed game. */
+:root{
+  color-scheme:light;
+  --bg:#EBDDBF; --paper:#FBF5E6; --paper2:#F4EAD2; --ink:#2A2116; --muted:#76664B; --line:#D5C096;
+  --gold:#B8862A; --gold2:#E3C36C; --navy:#1E2C57; --navy2:#2B3E78; --glow:rgba(184,134,42,.45);
+  --k-grey:#8C8474; --k-yellow:#E0AE1E; --k-green:#3E9A4E; --k-blue:#2F6CC4; --k-red:#C8322B;
+  --display:"Cinzel","Trajan Pro","Palatino Linotype",Georgia,serif;
+  --body:"Open Sans","Segoe UI",system-ui,sans-serif;
+  --meander:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12'%3E%3Cpath d='M0 11h15V1H4v7h7V4H7' fill='none' stroke='%23E3C36C' stroke-width='1.4'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg) radial-gradient(ellipse at 50% 0%,#F6EBD0 0%,transparent 70%);color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.45;padding-inline:16px;padding-block:0 40px;-webkit-tap-highlight-color:transparent;min-height:100%}
+#app{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:.03em}
+
+/* navy band with meander, like the rulebook */
+.top{background:var(--navy);color:#F4E7C4;margin-inline:-16px;padding:12px 16px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;position:relative;border-radius:0 0 14px 14px;box-shadow:0 4px 14px rgba(30,44,87,.25)}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:6px;height:12px;background:var(--meander) repeat-x;opacity:.9}
+.brand{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:.06em;color:var(--gold2);line-height:1}
+.brand small{display:block;font-family:var(--body);font-size:10.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#C9BFA4;margin-top:4px}
+.status{flex:1 1 180px;min-width:0;font-size:14px;color:#D7CCAE}
+.status b{color:#fff}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--ink)}
+.top .btn{background:transparent;color:#F4E7C4;border-color:rgba(227,195,108,.5)}
+.top .btn:hover{border-color:var(--gold2)}
+.btn.primary,.top .btn.primary{background:linear-gradient(#E6C267,#B8862A);border-color:#8E6516;color:#2A1D05}
+.btn.on,.top .btn.on{background:rgba(227,195,108,.2);border-color:var(--gold2)}
+
+.label{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 4px var(--line),0 2px 8px rgba(80,60,20,.12)}
+
+/* rivals: each a small tray in its wonder colour */
+.opps{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:4px}
+@media (max-width:640px){.opps{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}.opp{flex:0 0 215px;scroll-snap-align:start}}
+.opp{padding:0 0 10px;display:flex;flex-direction:column;gap:7px;min-width:0;overflow:hidden}
+.opp.active{box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 4px var(--line),0 0 0 3px var(--gold),0 4px 16px var(--glow)}
+.opp-h{display:flex;align-items:center;gap:6px;background:var(--w);color:#fff;padding:6px 10px;font-family:var(--display);font-weight:700;letter-spacing:.04em}
+.opp-h .vp{margin-left:auto;font-family:var(--body);font-size:12px;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.25);border-radius:999px;padding:1px 8px}
+.opp-h svg{width:18px;height:18px}
+.opp-body{display:flex;gap:8px;align-items:flex-end;padding-inline:10px}
+.opp-body .wsvg{width:96px;flex:none}
+.opp .stats{display:flex;flex-direction:column;gap:3px;font-size:12px;font-variant-numeric:tabular-nums;flex:1;min-width:0}
+.stat{display:inline-flex;align-items:center;gap:4px}
+.stat svg{width:17px;height:17px}
+.opp .holdmini,.opp .chips,.opp .last{padding-inline:10px}
+.holdmini{display:flex;flex-wrap:wrap;gap:3px}
+.hm{display:inline-flex;align-items:center;gap:1px;font-size:11px;font-weight:700;background:var(--paper2);border:1px solid var(--line);border-radius:5px;padding:0 4px 0 1px;font-variant-numeric:tabular-nums}
+.hm svg{width:16px;height:16px}
+.opp .last{font-size:12px;color:var(--muted);font-style:italic;min-height:1.4em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px 1px 2px;background:var(--paper2);border:1px solid #9CC79E}
+.chip .mono{width:18px;height:18px;border-radius:50%;background:radial-gradient(#FBF5E6 55%,#3E9A4E 58%);display:grid;place-items:center;font-family:var(--display);font-size:8.5px;color:#2B5C33}
+
+/* shared table */
+.table{padding:14px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(var(--paper),var(--paper2))}
+.board-row{display:flex;flex-wrap:wrap;gap:12px 26px;align-items:flex-start}
+.conflict,.progress{display:flex;flex-direction:column;gap:7px;min-width:0}
+.progress{flex:1 1 300px}
+.ctoks{display:flex;gap:6px}
+.ct{width:34px;height:34px;display:grid;place-items:center;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:radial-gradient(#EAF4FB 45%,#8DB9DE 47%,#8DB9DE 60%,#5C8FC2 62%);transition:transform .4s}
+.ct svg{width:20px;height:20px}
+.ct.war{background:radial-gradient(#E0493F 50%,#9E1F19 52%);transform:rotateY(180deg)}
+.ptoks{display:flex;flex-wrap:wrap;gap:10px}
+.pt{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;padding:2px;width:74px;font-size:11px;font-weight:700;color:var(--ink);text-align:center;line-height:1.15}
+.pt .coin{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#FBF5E6 0 56%,#2F7F3D 57% 60%,#4FAE5C 61% 80%,#2F7F3D 81%);box-shadow:0 2px 5px rgba(0,0,0,.25);font-family:var(--display);font-size:15px;font-weight:700;color:#2B5C33;transition:transform .15s}
+.pt.stack .coin{background:radial-gradient(circle,#2F7F3D 0 58%,#4FAE5C 60% 80%,#2F7F3D 81%);color:#FBF5E6;font-size:22px}
+.pt.pick .coin{box-shadow:0 0 0 3px var(--gold),0 0 18px var(--glow);animation:pulse 1.4s ease-in-out infinite}
+.pt.pick:hover .coin{transform:scale(1.08)}
+@keyframes pulse{50%{box-shadow:0 0 0 6px transparent,0 0 18px var(--glow)}}
+
+.banner{border-radius:10px;padding:9px 12px;font-weight:700;background:linear-gradient(90deg,#F5E2A8,#FBF0CF);border:1px solid #D9B45A;color:#4A3508}
+.banner.wait{background:var(--paper2);border-color:var(--line);color:var(--muted);font-weight:400;font-style:italic}
+
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;justify-items:center}
+.slot{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:6px;border-radius:14px;min-width:0;width:100%}
+.slot .cap{font-size:12px;text-align:center;color:var(--muted);line-height:1.25}
+.slot .cap b{color:var(--ink);display:block;font-family:var(--display);font-size:13px}
+.slot.can{cursor:pointer}
+.slot.can .card{box-shadow:0 0 0 3px var(--gold),0 8px 20px var(--glow);transform:translateY(-3px)}
+.slot.can:hover .card{transform:translateY(-8px) rotate(-1deg)}
+.slot:disabled{cursor:default}
+
+/* cards: coloured frame, ribbon banner with icon medallion, tinted scene */
+.card{--cw:112px;width:var(--cw);max-width:100%;aspect-ratio:5/7;border-radius:calc(var(--cw)*.08);position:relative;overflow:hidden;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--kc) 30%,#FBF5E6) 0%,#FBF5E6 55%,color-mix(in srgb,var(--kc) 22%,#FBF5E6) 100%);
+  border:calc(var(--cw)*.045) solid var(--kc);box-shadow:0 3px 8px rgba(60,40,10,.3);transition:transform .15s ease,box-shadow .15s ease;color:#2A2116}
+.card .rib{position:absolute;left:0;right:0;top:0;height:30%;background:var(--kc);clip-path:polygon(0 0,100% 0,100% 72%,50% 100%,0 72%)}
+.card .medal{position:absolute;left:50%;top:5%;transform:translateX(-50%);width:36%;aspect-ratio:1;border-radius:50%;background:#FFFDF6;border:calc(var(--cw)*.018) solid color-mix(in srgb,var(--kc) 60%,#000);display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.card .medal svg{width:78%;height:78%}
+.card .scene{position:absolute;left:0;right:0;top:34%;bottom:18%;display:grid;place-items:center}
+.card .scene>svg,.card .scene>.big svg{width:calc(var(--cw)*.52);height:auto;opacity:.9;filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
+.card .scene .big{position:relative;display:grid;place-items:center}
+.card .catmark{position:absolute;right:-26%;bottom:-10%;width:48%}
+.card .catmark svg{width:100%}
+.card .horns{position:absolute;bottom:-4%;left:50%;transform:translateX(-50%);display:flex;gap:1px}
+.card .horns svg{width:calc(var(--cw)*.22)}
+.card .nm{position:absolute;left:0;right:0;bottom:4%;text-align:center;font-family:var(--display);font-weight:700;font-size:calc(var(--cw)*.105);letter-spacing:.03em}
+.card .cb{position:absolute;right:5%;bottom:3%;font-size:calc(var(--cw)*.1);color:var(--kc)}
+.card.k-grey{--kc:var(--k-grey)} .card.k-yellow{--kc:var(--k-yellow)} .card.k-green{--kc:var(--k-green)} .card.k-blue{--kc:var(--k-blue)} .card.k-red{--kc:var(--k-red)}
+.card.back{border-color:#C9A24A;background:radial-gradient(circle at 50% 50%,#2B3E78 0 30%,#1E2C57 31%),#1E2C57}
+.card.back::before{content:"";position:absolute;inset:6%;border:1px solid rgba(227,195,108,.7);border-radius:calc(var(--cw)*.05)}
+.card.back::after{content:"?";position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:700;color:var(--gold2);font-size:calc(var(--cw)*.46);text-shadow:0 2px 0 #0d1530}
+.card.empty{border:2px dashed var(--line);background:rgba(255,255,255,.25);box-shadow:none;display:grid;place-items:center;color:var(--muted);font-size:12px}
+.card.sm{--cw:46px}.card.sm .nm,.card.sm .cb,.card.sm .scene{display:none}.card.sm .rib{height:100%;clip-path:none;opacity:.25}.card.sm .medal{top:50%;transform:translate(-50%,-50%);width:70%}
+.card.md{--cw:80px}
+.card.lg{--cw:clamp(80px,25vw,124px)}
+.peek{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#1b1b1b;color:#F4E7C4;border-radius:999px;padding:1px 7px 1px 3px;white-space:nowrap}
+.peek svg{width:14px;height:14px}
+
+/* your tray */
+.me{padding:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr)}
+@media (max-width:720px){.me{grid-template-columns:minmax(0,1fr)}}
+.me.active{box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 4px var(--line),0 0 0 3px var(--gold),0 4px 18px var(--glow)}
+.tray{background:linear-gradient(180deg,color-mix(in srgb,var(--w) 16%,#FBF5E6),#FBF5E6);padding:0 14px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+@media (max-width:720px){.tray{border-right:0;border-bottom:1px solid var(--line)}}
+.tray-h{margin-inline:-14px;background:var(--w);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:8px}
+.tray-h h2{font-size:21px}
+.tray-h .vp{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.25);border-radius:999px;padding:2px 10px}
+.wsvg{width:100%;height:auto;display:block}
+.wsvg .pc{transition:fill .4s}
+.wsvg .avail{stroke:#B8862A;stroke-width:2.6;animation:glowpc 1.6s ease-in-out infinite}
+@keyframes glowpc{50%{stroke-opacity:.35}}
+.slist{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px 10px;font-size:12px}
+.slist div{display:flex;gap:5px;align-items:baseline}
+.slist .c{font-family:var(--display);font-weight:700;min-width:26px}
+.slist .ok{color:#2F7F3D;font-weight:700}
+.fx{font-size:12.5px;color:var(--muted);font-style:italic}
+.hold{padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.group{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px}
+.hb{display:flex;align-items:center;gap:4px;background:var(--paper2);border:1px solid var(--line);border-radius:8px;padding:3px 9px 3px 4px;font-weight:700;font-variant-numeric:tabular-nums;border-bottom:3px solid var(--kc)}
+.hb svg{width:24px;height:24px}
+.hb.k-grey{--kc:var(--k-grey)}.hb.k-yellow{--kc:var(--k-yellow)}.hb.k-green{--kc:var(--k-green)}.hb.k-blue{--kc:var(--k-blue)}.hb.k-red{--kc:var(--k-red)}
+.hb.zero{opacity:.35}
+.hb small{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:3px}
+.need{font-size:13px;color:var(--muted)}
+.need b{color:var(--ink)}
+.me .chip{font-size:12px;padding:2px 10px 2px 2px}
+.me .chip .mono{width:22px;height:22px;font-size:10px}
+
+/* chronicle */
+.log{padding:12px 14px;font-size:13px;color:var(--muted)}
+.log summary{cursor:pointer;font-family:var(--display);font-weight:700;color:var(--ink);letter-spacing:.05em}
+.log ol{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:3px;max-height:260px;overflow:auto}
+.log li b{color:var(--ink);font-weight:600}
+.log li.battle{color:var(--k-red)}
+
+/* dialogs */
+.modal{position:fixed;inset:0;background:rgba(20,26,50,.6);display:grid;place-items:center;padding:16px;z-index:10}
+.sheet{background:var(--paper);color:var(--ink);border-radius:16px;border:1px solid var(--line);padding:0 18px 18px;width:min(640px,100%);max-height:calc(100% - 20px);overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.sheet h2{margin-inline:-18px;background:var(--navy);color:var(--gold2);padding:14px 18px 22px;font-size:22px;position:relative}
+.sheet h2::after{content:"";position:absolute;left:0;right:0;bottom:5px;height:12px;background:var(--meander) repeat-x}
+.sheet p{margin:0}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:1px solid var(--line);background:var(--paper2);border-radius:8px;padding:7px 12px;font-weight:700}
+.opt.sel{border-color:var(--gold);background:#F5E2A8}
+.wopt{display:flex;align-items:center;gap:6px}
+.wdot{width:12px;height:12px;border-radius:3px;background:var(--w);flex:none;display:inline-block}
+.pickrow{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.pickrow button{background:none;border:0;padding:4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.pickrow button:hover .card{transform:translateY(-4px);box-shadow:0 0 0 3px var(--gold)}
+.scores{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+.scores th,.scores td{padding:6px;border-bottom:1px solid var(--line);text-align:right}
+.scores th{font-family:var(--display);font-size:11.5px;letter-spacing:.04em}
+.scores th:first-child,.scores td:first-child{text-align:left}
+.scores tr.mine td{font-weight:700;color:#4A3508;background:#F5E2A8}
+.scores tr.mine td:first-child{box-shadow:inset 4px 0 0 var(--gold)}
+:root[dir="rtl"] .scores tr.mine td:first-child{box-shadow:inset -4px 0 0 var(--gold)}
+.tblwrap{overflow-x:auto}
+.rules{font-size:14px;display:flex;flex-direction:column;gap:8px}
+.rules h3{font-size:16px;margin-top:6px}
+.rules ul{margin:0;padding-left:18px}
+.note{font-size:12.5px;color:var(--muted)}
+.wsvg .fxb{cursor:help}
+.wsvg .fxb.on .halo{animation:halo 2s ease-in-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes halo{50%{opacity:.1;transform:scale(1.25)}}
+.star{color:#C8901C;font-size:1.05em;text-shadow:0 0 1px #8E6516}
+.fxline{margin-inline:10px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px;border:1px dashed #C9A24A;background:#FBF3DC;color:#6B5320;cursor:help}
+.fxline.on{border-style:solid;background:linear-gradient(90deg,#F7DE8E,#FBF0CF);color:#4A3508;box-shadow:0 0 0 2px rgba(227,195,108,.35)}
+.fxline .cnt{margin-left:auto;font-variant-numeric:tabular-nums;background:rgba(142,101,22,.15);border-radius:999px;padding:0 7px}
+.fxbox{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:10px;background:linear-gradient(90deg,#F7DE8E,#FBF0CF);border:1px solid #C9A24A;font-size:13px;color:#4A3508;cursor:help}
+.fxbox .star{font-size:22px;line-height:1}
+.fxbox b{display:block;font-family:var(--display);font-size:13px}
+.ic{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.3em;margin-right:2px}
+.ic svg{width:100%;height:100%;display:block}
+#tip .ic{width:1.35em;height:1.35em}
+#tip.wide{max-width:300px;width:300px}
+#ann{position:fixed;inset:0;display:grid;place-items:center;z-index:28;pointer-events:none;padding:16px}
+#ann .ann-card{background:var(--paper);border:2px solid var(--w);border-radius:16px;box-shadow:0 18px 50px rgba(20,20,40,.4);min-width:220px;max-width:min(360px,100%);overflow:hidden;text-align:center;animation:annin .18s ease-out}
+#ann .ann-h{background:var(--w);color:#fff;font-family:var(--display);font-weight:700;letter-spacing:.05em;padding:7px 14px;font-size:16px}
+#ann .ann-v{display:flex;justify-content:center;padding:12px 12px 0}
+#ann .ann-t{padding:10px 16px 14px;font-size:15px;line-height:1.4}
+#ann .ann-cost{font-family:var(--display);font-weight:700;font-size:26px;background:#1E2C57;color:#fff;border:2px solid #E3C36C;border-radius:8px;padding:4px 14px}
+@keyframes annin{from{transform:scale(.85);opacity:0}}
+.bigic{display:inline-flex;gap:4px}.bigic svg{width:54px;height:54px}
+.claimv{display:flex;justify-content:center}
+.tokbig .pt{width:auto}.tokbig .coin{width:64px;height:64px;font-size:18px}
+.tokexp{text-align:center;font-size:14px}.tokexp b{font-family:var(--display);font-size:18px}.tokexp p{margin:6px 0}
+.tokexp .ti svg{width:20px;height:20px}.tokexp .when{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.scores.battle .bigic svg,.scores.battle svg{width:18px;height:18px;vertical-align:-4px}
+.btn.big{font-size:16px;padding:10px 22px}
+.ti{display:inline-flex;align-items:center;gap:1px;vertical-align:middle;margin-left:3px}
+.ti svg{width:15px;height:15px}
+.pt .ti{margin:1px 0 0;display:flex;justify-content:center}
+.ti .tx{font-size:10px;font-weight:800;color:#2F7F3D;line-height:1}
+#tip .ti svg{width:17px;height:17px}
+.tokgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px 14px}
+.tg{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.tg .coin{width:40px;height:40px;font-size:12px}
+.tg .ti svg{width:17px;height:17px}
+.buildopts{display:flex;flex-direction:column;gap:8px}
+.bopt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.bopt:hover{border-color:var(--gold);box-shadow:0 0 0 3px var(--glow)}
+.bopt .ann-cost{font-family:var(--display);font-weight:700;font-size:20px;background:#1E2C57;color:#fff;border:2px solid #E3C36C;border-radius:8px;padding:3px 10px;flex:none}
+.bo-main{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:13px}
+.bo-main b{font-family:var(--display);font-size:15px}
+.bo-pay{color:var(--muted);font-size:12px}
+.bo-pay .ic{width:1.5em;height:1.5em}
+
+/* ---- compact wide layout ---- */
+#app{max-width:1480px;gap:10px}
+.top{padding:8px 16px 18px}
+.brand{font-size:20px}
+.brand small{margin-top:2px}
+.board{display:flex;flex-direction:column;gap:10px}
+.opps{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:2px}
+.opp{gap:5px;padding-bottom:7px}
+.opp-h{padding:4px 9px;font-size:14px}
+.opp-body .wsvg{width:74px}
+.opp .stats{gap:1px;font-size:11.5px}
+.fxline{font-size:11px;padding:2px 7px;margin-inline:8px}
+.opp .holdmini,.opp .chips,.opp .last{padding-inline:8px}
+.opp .last{font-size:11px;min-height:1.2em}
+.card.sm{--cw:38px}
+.table{padding:10px 12px;gap:8px}
+.board-row{gap:8px 20px}
+.pt .coin{width:44px;height:44px;font-size:13px}
+.banner{padding:6px 10px;font-size:13.5px}
+.slot{padding:3px;gap:4px}
+.card.lg{--cw:clamp(76px,22vw,112px)}
+.me{grid-template-columns:minmax(0,250px) minmax(0,1fr)}
+.tray{padding:0 10px 10px;gap:6px}
+.tray-h{margin-inline:-10px;padding:6px 10px}
+.tray-h h2{font-size:18px}
+.tray .wsvg{max-width:250px;margin-inline:auto}
+.slist{font-size:11px;grid-template-columns:1fr;gap:1px}
+.fx,.fxbox{font-size:12px}
+.fxbox{padding:6px 9px}
+.hold{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 14px;padding:10px 12px;align-content:start}
+.hold .full{grid-column:1/-1}
+.group{margin-top:3px;gap:5px}
+.hb{padding:2px 7px 2px 3px}
+.hb svg{width:20px;height:20px}
+.log{padding:8px 12px}
+@media (min-width:900px){
+  .board{display:grid;grid-template-columns:minmax(380px,5fr) minmax(0,7fr);align-items:start}
+  .card.lg{--cw:clamp(84px,7.4vw,112px)}
+}
+@media (max-width:720px){.me{grid-template-columns:minmax(0,1fr)}.tray .wsvg{max-width:220px}}
+#tip{max-height:calc(100vh - 16px);overflow:auto}
+#tip.free::after{display:none}
+#tip .city{margin:2px 0 4px;font-size:12px;font-style:italic;color:var(--muted)}
+#tip .wprev{background:linear-gradient(#FBF3DC,#F1E4C4);border-radius:8px;padding:4px 10px;margin:4px 0 6px}
+#tip .wst{display:grid;grid-template-columns:1fr 1fr;gap:1px 10px;font-size:11.5px}
+#tip .wst b{font-family:var(--display)}
+#tip .wfx{margin-top:6px;font-size:12.5px}
+#tip .wdeck{display:flex;flex-direction:column;gap:2px;font-size:12px;margin-top:3px}
+#tip .wdeck em{color:var(--muted);font-style:normal}
+#tip .th .wdot{width:14px;height:14px}
+:root[lang="he"]{--display:"Frank Ruhl Libre","Cinzel",Georgia,serif;--body:"Rubik","Open Sans",system-ui,sans-serif}
+:root[lang="he"] .label,:root[lang="he"] #tip .when{letter-spacing:0}
+.wsvg{direction:ltr}.choices{direction:ltr}
+.choices{grid-template-columns:auto repeat(3,1fr) auto;align-items:stretch}
+.nbar{width:28px;border-radius:10px;background:var(--w);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.18);margin-block:4px 34px;cursor:help}
+.nbar span{writing-mode:vertical-rl;font-family:var(--display);font-weight:700;letter-spacing:.12em;font-size:13px;white-space:nowrap}
+.nbar.l span{transform:rotate(180deg)}
+:root[lang="he"] .nbar span{letter-spacing:.02em}.choices .cap{direction:var(--dir,ltr)}
+:root[lang="he"]{--dir:rtl}
+#tip{position:fixed;z-index:30;max-width:240px;background:var(--paper);color:var(--ink);border:1px solid #3E9A4E;border-radius:10px;padding:8px 10px 9px;font-size:13px;line-height:1.35;box-shadow:0 8px 22px rgba(40,30,10,.3);pointer-events:none}
+#tip .th{display:flex;align-items:center;gap:6px;font-family:var(--display);font-weight:700;font-size:14px;margin-bottom:3px}
+#tip .th .mono{width:22px;height:22px;border-radius:50%;background:radial-gradient(#FBF5E6 55%,#3E9A4E 58%);display:grid;place-items:center;font-size:9.5px;color:#2B5C33}
+#tip .when{display:block;margin-top:5px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#tip::after{content:"";position:absolute;left:var(--ax,50%);width:10px;height:10px;background:var(--paper);border:1px solid #3E9A4E;transform:translateX(-50%) rotate(45deg)}
+#tip.below::after{top:-6px;border-right:0;border-bottom:0}
+#tip:not(.below)::after{bottom:-6px;border-left:0;border-top:0}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#F4E7C4;border:1px solid var(--gold);padding:8px 14px;border-radius:10px;font-size:14px;font-weight:600;max-width:calc(100% - 32px);z-index:20;transition:opacity .3s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="brand" id="brand">7 Wonders Architects<small>Build your wonder · 2–7 players</small></div>
+    <div class="status" id="status"></div>
+    <div class="actions">
+      <button class="btn" id="btnLang" data-act="lang">עברית</button>
+      <button class="btn" id="btnRules" data-act="rules">Rules</button>
+      <button class="btn primary" id="btnNew" data-act="new">New game</button>
+    </div>
+  </header>
+  <section id="opps" class="opps" aria-label="Opponents"></section>
+  <div class="board">
+  <section class="table panel" aria-label="Shared table">
+    <div class="board-row">
+      <div class="conflict"><span class="label" id="clabel">Conflict</span><div class="ctoks" id="ctoks"></div></div>
+      <div class="progress"><span class="label" id="plabel">Progress tokens</span><div class="ptoks" id="ptoks"></div></div>
+    </div>
+    <div id="banner" class="banner"></div>
+    <div class="choices" id="choices"></div>
+  </section>
+  <section class="me" id="me" aria-label="Your wonder"></section>
+  </div>
+  <details class="log panel" id="logbox"><summary id="logsum">Chronicle</summary><ol id="log"></ol></details>
+</div>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" hidden></div>
+<div id="ann" hidden aria-live="polite"></div>
+<div id="tip" role="tooltip" hidden></div>
+
+<script>
+// ---------- data ----------
+const RES=['stone','brick','wood','glass','papyrus'];
+const SCI=['gear','compass','tablet'];
+const TYPES={
+  gold:{col:'yellow',label:'Gold'},
+  stone:{col:'grey',label:'Stone'}, brick:{col:'grey',label:'Brick'}, wood:{col:'grey',label:'Wood'},
+  glass:{col:'grey',label:'Glass'}, papyrus:{col:'grey',label:'Papyrus'},
+  gear:{col:'green',label:'Gear'}, compass:{col:'green',label:'Compass'}, tablet:{col:'green',label:'Tablet'},
+  blue3:{col:'blue',label:'3 VP',vp:3}, blue2:{col:'blue',label:'2 VP + Cat',vp:2,cat:true},
+  red0:{col:'red',label:'Shield',horns:0}, red2:{col:'red',label:'2 Horns',horns:2}, red1:{col:'red',label:'1 Horn',horns:1}
+};
+const ORDER=['gold','stone','brick','wood','glass','papyrus','gear','compass','tablet','blue3','blue2','red0','red2','red1'];
+// counts per deck, straight from the card-distribution table
+const COMP={
+  rhodes:[2,2,2,2,2,2,2,1,1,2,2,2,1,2],
+  halicarnassus:[3,2,2,2,2,1,1,1,2,2,2,2,1,2],
+  giza:[3,2,1,2,2,2,1,2,1,2,3,2,0,2],
+  ephesus:[3,2,2,2,2,2,1,2,2,1,2,2,1,1],
+  olympia:[3,2,2,1,2,2,1,1,2,1,3,2,1,2],
+  babylon:[3,1,2,2,2,2,2,2,1,2,2,2,1,1],
+  alexandria:[4,2,2,2,1,2,2,1,1,2,2,2,1,1],
+  center:[6,4,4,4,4,4,4,4,4,4,8,4,2,4]
+};
+const W={
+  alexandria:{name:'Alexandria',color:'#2F5DB8',fx:'Take the top card of any deck on the table.'},
+  halicarnassus:{name:'Halicarnassus',color:'#5B3FA0',fx:'Look at the top 5 cards of your left or right deck, keep 1, shuffle the rest back.'},
+  ephesus:{name:'Ephesus',color:'#C8513F',fx:'Take the top card of the central deck.'},
+  olympia:{name:'Olympia',color:'#B98A10',fx:'Take the top card of your left and your right deck.'},
+  babylon:{name:'Babylon',color:'#2F8F46',fx:'Choose 1 of the 4 available Progress tokens.'},
+  rhodes:{name:'Rhodes',color:'#A8302A',fx:'Add 1 Shield to your total.'},
+  giza:{name:'Giza',color:'#D9731A',fx:'No effect, but more Victory points.'}
+};
+// real wonder layouts: [n, kind, VP, effect?, required stages]
+const WDATA={
+  alexandria:{s:[[2,'diff',4,0,[]],[2,'same',3,1,[0]],[3,'diff',6,0,[1]],[3,'same',5,1,[2]],[4,'diff',7,0,[3]]],n:['Base','Lower tower','Middle tower','Upper tower','Lantern']},
+  halicarnassus:{s:[[2,'diff',3,0,[]],[2,'same',3,1,[0]],[3,'diff',6,0,[1]],[3,'same',5,1,[1]],[4,'diff',7,0,[2,3]]],n:['Podium','Terrace','Left colonnade','Right colonnade','Roof']},
+  ephesus:{s:[[2,'diff',3,0,[]],[2,'same',3,1,[0]],[3,'diff',4,1,[0]],[3,'same',5,1,[0]],[4,'diff',7,0,[1,2,3]]],n:['Steps','Left column','Middle column','Right column','Pediment']},
+  olympia:{s:[[2,'diff',3,0,[]],[2,'same',2,1,[0]],[3,'diff',5,0,[0]],[3,'same',5,1,[1,2]],[4,'diff',7,0,[3]]],n:['Plinth','Left side','Right side','Torso','Head']},
+  babylon:{s:[[2,'diff',3,0,[]],[2,'same',0,1,[0]],[3,'diff',5,0,[1]],[3,'same',5,1,[2]],[4,'diff',7,0,[2]]],n:['Lower terrace','Middle terrace','Upper terrace','Garden tower','Dome']},
+  rhodes:{s:[[2,'same',4,1,[]],[2,'diff',4,0,[]],[3,'diff',5,0,[0,1]],[3,'same',6,1,[2]],[4,'diff',7,0,[3]]],n:['Left pedestal','Right pedestal','Legs','Torso','Head']},
+  giza:{s:[[2,'diff',4,0,[]],[2,'same',5,0,[0]],[3,'diff',6,0,[1]],[3,'same',7,0,[2]],[4,'diff',8,0,[3]]],n:['Base course','Second course','Third course','Fourth course','Apex']}
+};
+const CITY={
+  alexandria:'Egyptian port founded by Alexander the Great. Its lighthouse on the island of Pharos guided ships for centuries with a fire burning at the top.',
+  halicarnassus:'City in Caria, today Bodrum in Turkey. The tomb of King Mausolus stood on a high podium, ringed by columns and crowned by a stepped roof and a chariot.',
+  ephesus:'Rich Greek city on the Ionian coast. Its great marble temple to Artemis was lined with more than a hundred columns.',
+  olympia:'Sanctuary in Greece and birthplace of the Olympic Games. Inside the temple sat a giant statue of Zeus, made of ivory and gold, on a cedar throne.',
+  babylon:'Capital of Mesopotamia on the Euphrates. The Hanging Gardens were said to rise in green terraces watered by clever irrigation.',
+  rhodes:'Island city in the Aegean. A bronze statue of the sun god Helios, over 30 m tall, stood at its harbour until an earthquake toppled it.',
+  giza:'Plateau beside Cairo in Egypt. The Great Pyramid, tomb of Pharaoh Khufu, is the oldest wonder and the only one still standing.'
+};
+const STG={};
+function stagesOf(w){return STG[w]||(STG[w]=WDATA[w].s.map(([n,k,vp,fx,req])=>({cost:[n,k],vp,fx,req})))}
+const stageNames=w=>WDATA[w].n;
+const TOK={
+  urbanism:{n:'Urbanism',d:'When you take a Wood or Brick card, take 1 extra card from the 3 available.'},
+  crafts:{n:'Crafts',d:'When you take a Papyrus or Glass card, take 1 extra card from the 3 available.'},
+  jewellery:{n:'Jewellery',d:'When you take a Stone or Gold card, take 1 extra card from the 3 available.'},
+  science:{n:'Science',d:'When you take a Green card, take 1 extra card from the 3 available.'},
+  propaganda:{n:'Propaganda',d:'When you take a Red card with horns, take 1 extra card from the 3 available.'},
+  architecture:{n:'Architecture',d:'When you construct a Stage, take 1 extra card from the 3 available.'},
+  economy:{n:'Economy',d:'Each of your Gold cards is worth 2 coins.'},
+  engineering:{n:'Engineering',d:'Once per turn, construct a Stage with any Resources, ignoring the identical / different rule.'},
+  tactics:{n:'Tactics',d:'Add 2 Shields to your total.'},
+  decor:{n:'Decor',d:'End of game: 4 VP, or 6 VP if your Wonder is complete.'},
+  politics:{n:'Politics',d:'End of game: 1 VP per Cat icon on your Blue cards.'},
+  strategy:{n:'Strategy',d:'End of game: 1 VP per Military token you have.'},
+  education:{n:'Education',d:'End of game: 2 VP per Progress token you have (this one included).'},
+  culture:{n:'Culture',d:'End of game: 4 VP with one Culture token, 12 VP with both.'}
+};
+let LANG='en';try{LANG=localStorage.getItem('wa-lang')||'en'}catch(_){}
+const tr=(en,he)=>LANG==='he'?he:en;
+function bi(o,f,he){const en=o[f];Object.defineProperty(o,f,{get(){return LANG==='he'?he:en},configurable:true,enumerable:true})}
+const VP=()=>tr('VP','נק׳');
+const TOKEN_POOL=['urbanism','crafts','jewellery','science','propaganda','architecture','economy','engineering','tactics','decor','politics','strategy','education','culture','culture'];
+const TRIG={wood:'urbanism',brick:'urbanism',papyrus:'crafts',glass:'crafts',stone:'jewellery',gold:'jewellery',gear:'science',compass:'science',tablet:'science'};
+const CB={grey:'◆',yellow:'●',green:'▲',blue:'▮',red:'✖'};
+const CONFLICTS=n=>n<=3?3:n===4?4:n===5?5:6;
+
+// ---------- icons ----------
+const I={
+ stone:'<svg viewBox="0 0 24 24"><path d="M4 9l3-3h13v10l-3 3H4z" fill="#d9d3c5" stroke="#5f594d" stroke-width="1.2" stroke-linejoin="round"/><path d="M4 9h13v10M17 9l3-3" fill="none" stroke="#5f594d" stroke-width="1.2"/></svg>',
+ brick:'<svg viewBox="0 0 24 24"><g fill="#c8643a" stroke="#6e2f18" stroke-width="1"><rect x="2.5" y="5" width="9" height="5" rx=".6"/><rect x="12.5" y="5" width="9" height="5" rx=".6"/><rect x="2.5" y="11" width="5" height="5" rx=".6"/><rect x="8.5" y="11" width="13" height="5" rx=".6"/><rect x="2.5" y="17" width="12" height="4" rx=".6"/><rect x="15.5" y="17" width="6" height="4" rx=".6"/></g></svg>',
+ wood:'<svg viewBox="0 0 24 24"><g stroke="#5b3a1e" stroke-width="1.1"><rect x="2" y="5" width="16" height="6" rx="3" fill="#a8723f"/><rect x="4" y="12" width="16" height="6" rx="3" fill="#b8814a"/></g><g fill="#e8c393" stroke="#5b3a1e" stroke-width="1.1"><circle cx="17.5" cy="8" r="3"/><circle cx="19.5" cy="15" r="3"/></g><circle cx="17.5" cy="8" r="1" fill="none" stroke="#5b3a1e" stroke-width=".8"/><circle cx="19.5" cy="15" r="1" fill="none" stroke="#5b3a1e" stroke-width=".8"/></svg>',
+ glass:'<svg viewBox="0 0 24 24"><path d="M9.5 3h5v5.2l5 8.6a3 3 0 0 1-2.6 4.4H7.1a3 3 0 0 1-2.6-4.4l5-8.6z" fill="#a9d6ec" stroke="#2b5d78" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.8 14.5h10.4l1.4 2.4a2 2 0 0 1-1.7 3H7.1a2 2 0 0 1-1.7-3z" fill="#3f8fbd"/></svg>',
+ papyrus:'<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="1" fill="#efd9a0" stroke="#7a5a22" stroke-width="1.1"/><rect x="3.5" y="3" width="17" height="3" rx="1.5" fill="#d7b86d" stroke="#7a5a22" stroke-width="1.1"/><rect x="3.5" y="18" width="17" height="3" rx="1.5" fill="#d7b86d" stroke="#7a5a22" stroke-width="1.1"/><path d="M8 9.5h8M8 12h8M8 14.5h5" stroke="#7a5a22" stroke-width="1"/></svg>',
+ gold:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f2c94c" stroke="#8a6412" stroke-width="1.4"/><circle cx="12" cy="12" r="5.8" fill="none" stroke="#8a6412" stroke-width="1.1"/><path d="M10 10.5h4M10 13.5h4" stroke="#8a6412" stroke-width="1.1"/></svg>',
+ gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.6" fill="none" stroke="#2d5a3a" stroke-width="4" stroke-dasharray="2.7 3.27"/><circle cx="12" cy="12" r="6" fill="#cfe3c6" stroke="#2d5a3a" stroke-width="1.2"/><circle cx="12" cy="12" r="2" fill="#2d5a3a"/></svg>',
+ compass:'<svg viewBox="0 0 24 24"><g stroke="#2d5a3a" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 5L6 21M12 5l6 16"/><path d="M7.8 15.5q4.2 2.6 8.4 0"/></g><circle cx="12" cy="4" r="2.2" fill="#c9a23a" stroke="#2d5a3a"/></svg>',
+ tablet:'<svg viewBox="0 0 24 24"><rect x="5.5" y="3" width="13" height="18" rx="2.2" fill="#c89a6a" stroke="#5e3f1f" stroke-width="1.2"/><path d="M8.5 7.5h7M8.5 10.5h7M8.5 13.5h7M8.5 16.5h4.5" stroke="#5e3f1f" stroke-width="1.1" stroke-dasharray="1.6 .8"/></svg>',
+ cat:'<svg viewBox="0 0 24 24"><path d="M16.3 21.6c2.6.1 4.3-1.2 4.2-3.4-.1-1.4-1.1-2.2-2.2-2" stroke="#1b1b1b" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="M8.1 1.8l2.2 3.8h3.4l2.2-3.8.7 5.4c.7 1 1.1 2.1 1.1 3.3 0 1.6-.8 3-2 3.9l1.4 6.2c.2 1-.5 2-1.6 2H8.5c-1.1 0-1.8-1-1.6-2l1.4-6.2c-1.2-.9-2-2.3-2-3.9 0-1.2.4-2.3 1.1-3.3z" fill="#1b1b1b"/><path d="M8.8 3.8l.9 2.2-.9.9zM15.2 3.8l-.9 2.2.9.9z" fill="#4a3a2a"/><ellipse cx="10.3" cy="9.7" rx="1" ry=".6" fill="#8ED16F"/><ellipse cx="13.7" cy="9.7" rx="1" ry=".6" fill="#8ED16F"/><path d="M10.3 9.2v1M13.7 9.2v1" stroke="#1b1b1b" stroke-width=".45"/><path d="M11.5 11.4h1l-.5.6z" fill="#c98b8b"/><path d="M8.9 13.5q3.1 1.6 6.2 0" stroke="#E3B341" stroke-width="1.3" fill="none" stroke-linecap="round"/><circle cx="12" cy="14.9" r=".85" fill="#E3B341"/><circle cx="15.9" cy="6.6" r=".6" fill="#E3B341"/><path d="M10.6 18.5v3.1M13.4 18.5v3.1" stroke="#333" stroke-width=".5"/></svg>',
+ shield:'<svg viewBox="0 0 24 24"><path d="M12 2.5l7.5 3v6.2c0 4.8-3.2 8-7.5 9.8-4.3-1.8-7.5-5-7.5-9.8V5.5z" fill="#efe6d8" stroke="#7a1f1a" stroke-width="1.5"/><path d="M8.3 7.8l7.4 7.4M15.7 7.8l-7.4 7.4" stroke="#7a1f1a" stroke-width="2" stroke-linecap="round"/></svg>',
+ horn:'<svg viewBox="0 0 24 24"><path d="M3 15c6 .5 11-3 15-10l2.5 1.3C17.5 14 12 19 4.5 19.5z" fill="#e6a23c" stroke="#7a4a10" stroke-width="1.1" stroke-linejoin="round"/><ellipse cx="19.3" cy="5.6" rx="1.8" ry="1.1" transform="rotate(28 19.3 5.6)" fill="#7a4a10"/></svg>',
+ dove:'<svg viewBox="0 0 24 24"><path d="M7.5 19q-4.5-6.5 1-13M16.5 19q4.5-6.5-1-13" stroke="#4E7FB0" stroke-width="2.4" fill="none" stroke-dasharray="2.2 1.4" stroke-linecap="round"/></svg>',
+ swords:'<svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>',
+ mil:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" transform="rotate(45 12 12)" fill="#C4413A" stroke="#8E1F19" stroke-width=".8"/><circle cx="12" cy="12" r="6" fill="#FBF5E6"/><text x="12" y="15.6" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="10" fill="#2F8F46">3</text></svg>',
+ laurel:v=>`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#e9f0fb" stroke="#2b4f8a" stroke-width="1.3"/><path d="M6.2 16.5q-2-4.5 1-9.5M17.8 16.5q2-4.5-1-9.5" stroke="#3d7a3f" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-dasharray="1.8 1.2"/><text x="12" y="16.2" text-anchor="middle" font-family="Marcellus,Georgia,serif" font-size="11" fill="#1d3766">${v}</text></svg>`
+};
+
+// ---------- helpers ----------
+const $=id=>document.getElementById(id);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const ABORT={};
+let S=null, fast=false, uiModal=null, setupSel={opp:3,wonder:'random'}, toastT=null, cid=0;
+async function pause(ms){const g=S.gid;await sleep(fast?ms/4:ms);if(!S||S.gid!==g)throw ABORT}
+const has=(p,t)=>p.tokens.includes(t);
+const count=(p,t)=>p.cards.filter(c=>c.t===t).length;
+const topCard=src=>{const d=deckOf(src);return d.length?d[d.length-1]:null};
+const deckOf=src=>src==='C'?S.center:S.decks[src];
+const N=()=>S.players.length;
+const L=p=>p.id, R=p=>(p.id+1)%N();
+
+function buildDeck(key){const d=[];ORDER.forEach((t,i)=>{for(let k=0;k<COMP[key][i];k++)d.push({id:++cid,t})});return shuffle(d)}
+function shields(p){let s=p.cards.filter(c=>TYPES[c.t].col==='red').length; if(has(p,'tactics'))s+=2; if(p.wonder==='rhodes')s+=stagesOf('rhodes').filter((st,i)=>st.fx&&p.built[i]).length; return s}
+function availStages(p){return stagesOf(p.wonder).map((s,i)=>i).filter(i=>!p.built[i]&&stagesOf(p.wonder)[i].req.every(r=>p.built[r]))}
+const costLabel=c=>'\u2066'+c[0]+(c[1]==='same'?'=':'≠')+'\u2069';
+const costWord=c=>`${c[0]} ${c[1]==='same'?tr('identical','זהים'):tr('different','שונים')}`;
+
+function resMap(p){const m={};RES.forEach(r=>m[r]=p.cards.filter(c=>c.t===r));return m}
+function payPlan(p,cost){
+  const [n,kind]=cost, res=resMap(p), golds=p.cards.filter(c=>c.t==='gold'), cv=has(p,'economy')?2:1;
+  let best=null;
+  const consider=(cards,need,eng)=>{const k=need>0?Math.ceil(need/cv):0;if(k>golds.length)return;const plan={cards:[...cards,...golds.slice(0,k)],coins:k,eng};if(!best||plan.coins<best.coins)best=plan};
+  if(kind==='same'){RES.forEach(r=>{const u=res[r].slice(0,n);consider(u,n-u.length,false)})}
+  else{const types=RES.filter(r=>res[r].length).sort((a,b)=>res[b].length-res[a].length).slice(0,n);consider(types.map(r=>res[r][0]),n-types.length,false)}
+  if(!best&&has(p,'engineering')&&!S.used.engineering){
+    const all=RES.slice().sort((a,b)=>res[b].length-res[a].length).flatMap(r=>res[r]);const u=all.slice(0,n);consider(u,n-u.length,true)}
+  return best;
+}
+function missing(p,cost){
+  const [n,kind]=cost,res=resMap(p),coins=count(p,'gold')*(has(p,'economy')?2:1);
+  let need=kind==='same'?n-Math.min(n,Math.max(...RES.map(r=>res[r].length))):n-Math.min(n,RES.filter(r=>res[r].length).length);
+  if(has(p,'engineering')&&!S.used.engineering){const tot=RES.reduce((a,r)=>a+res[r].length,0);need=Math.min(need,n-Math.min(n,tot))}
+  return Math.max(0,need-coins);
+}
+function sciUse(p){
+  const by={};p.cards.filter(c=>SCI.includes(c.t)).forEach(c=>(by[c.t]=by[c.t]||[]).push(c));
+  for(const s of SCI)if(by[s]&&by[s].length>=2)return by[s].slice(0,2);
+  if(SCI.every(s=>by[s]&&by[s].length))return SCI.map(s=>by[s][0]);
+  return null;
+}
+function discard(p,cards){const ids=new Set(cards.map(c=>c.id));p.cards=p.cards.filter(c=>!ids.has(c.id));S.discard.push(...cards)}
+function log(msg,cls){S.log.unshift({msg,cls});if(S.log.length>80)S.log.pop()}
+const who=p=>p.human?tr('You','אתה'):p.name;
+const vb=(p,youEn,otherEn,youHe,otherHe)=>p.human?tr(youEn,youHe):tr(otherEn,otherHe);
+function srcName(p,src){if(src==='C')return tr('the central deck','החפיסה המרכזית');const o=S.players[src];return o.human?tr('your deck','החפיסה שלך'):tr(`${o.name}’s deck`,`החפיסה של ${o.name}`)}
+
+// ---------- scoring ----------
+function score(p){
+  const st=stagesOf(p.wonder);
+  const stages=st.reduce((a,s,i)=>a+(p.built[i]?s.vp:0),0);
+  const blue=p.cards.reduce((a,c)=>a+(TYPES[c.t].vp||0),0);
+  const cat=S.cat===p.id?2:0;
+  const mil=p.military*3;
+  let prog=0;const cats=count(p,'blue2');
+  if(has(p,'decor'))prog+=p.built.every(Boolean)?6:4;
+  if(has(p,'politics'))prog+=cats;
+  if(has(p,'strategy'))prog+=p.military;
+  if(has(p,'education'))prog+=2*p.tokens.length;
+  const cu=p.tokens.filter(t=>t==='culture').length;prog+=cu===1?4:cu===2?12:0;
+  return {stages,blue,cat,mil,prog,total:stages+blue+cat+mil+prog};
+}
+
+// ---------- game setup ----------
+function newGame(nOpp,myW){
+  const keys=shuffle(Object.keys(W));
+  let ws=myW==='random'?keys:[myW,...keys.filter(k=>k!==myW)];
+  const players=[];
+  for(let i=0;i<=nOpp;i++)players.push({id:i,human:i===0,get name(){return W[this.wonder].name},wonder:ws[i],cards:[],built:[0,0,0,0,0],tokens:[],military:0,last:''});
+  const pool=shuffle(TOKEN_POOL.slice());
+  S={gid:Math.random(),players,decks:players.map(p=>buildDeck(p.wonder)),center:buildDeck('center'),discard:[],
+     conflict:Array(CONFLICTS(players.length)).fill(false),face:pool.splice(0,3),stack:pool,cat:null,turn:0,current:0,
+     log:[],pending:null,over:false,battle:false,used:{}};
+  log(tr(`New game: you build <b>${W[players[0].wonder].name}</b> against ${nOpp} rival${nOpp>1?'s':''}.`,`משחק חדש: אתה בונה את <b>${W[players[0].wonder].name}</b> מול ${nOpp} ${nOpp>1?'יריבים':'יריב'}.`));
+  uiModal=null;render();loop();
+}
+async function loop(){
+  try{
+    while(!S.over){
+      const p=S.players[S.turn];
+      await playTurn(p);
+      if(S.over)break;
+      S.turn=(S.turn+1)%N();
+    }
+  }catch(e){if(e!==ABORT)console.error(e)}
+}
+async function hold(ms){const g=S.gid;await sleep(ms);if(!S||S.gid!==g)throw ABORT}
+async function announce(p,text,visual=''){S.ann={p:p.id,text,visual};renderAnn();await hold(1000);S.ann=null;renderAnn()}
+async function claim(p,title,visual,text,btn){if(!p.human)return;await ask({type:'claim',title,visual,text,btn})}
+function renderAnn(){const a=$('ann');if(!S||!S.ann){a.hidden=true;a.innerHTML='';return}
+  const p=S.players[S.ann.p];a.style.setProperty('--w',W[p.wonder].color);
+  a.innerHTML=`<div class="ann-card"><div class="ann-h">${p.human?tr('You','אתה'):p.name}</div>${S.ann.visual?`<div class="ann-v">${S.ann.visual}</div>`:''}<div class="ann-t">${S.ann.text}</div></div>`;a.hidden=false}
+const coinHTML=t=>`<span class="pt" style="pointer-events:none"><span class="coin">${TOK[t].n.slice(0,2).toUpperCase()}</span></span>`;
+function ask(spec){return new Promise(res=>{S.pending={...spec,resolve:res};render()})}
+function answer(v){const pd=S.pending;if(!pd)return;S.pending=null;pd.resolve(v)}
+
+// ---------- turn engine ----------
+async function playTurn(p){
+  S.used={};S.battle=false;S.current=p.id;render();
+  if(!p.human)await pause(700);
+  const src=await chooseSource(p,null);
+  if(src===null){log(tr(`${who(p)} had no card to take.`,`ל${p.human?'ך':p.name} לא היה קלף לקחת.`));if(allEmpty())return endGame();return}
+  await takeFrom(p,src);
+  await resolveBoard(p);
+  if(S.battle)await battle();
+  if(p.built.every(Boolean)){log(tr(`<b>${who(p)} completed ${W[p.wonder].name}!</b> The game ends.`,`<b>${who(p)} ${p.human?'השלמת':'השלימה'} את ${W[p.wonder].name}!</b> המשחק נגמר.`));return endGame()}
+  if(allEmpty())return endGame();
+  render();
+}
+const allEmpty=()=>!S.center.length&&S.decks.every(d=>!d.length);
+function sourceOpts(p){return [...new Set([L(p),'C',R(p)])].filter(s=>deckOf(s).length)}
+async function chooseSource(p,reason){
+  const opts=sourceOpts(p);if(!opts.length)return null;
+  if(p.human)return ask({type:'source',options:opts,reason});
+  return botBest(p,opts);
+}
+async function takeFrom(p,src){
+  const c=deckOf(src).pop();if(!c)return;
+  const lb=TYPES[c.t].label,sn=srcName(p,src);
+  p.last=tr(`took ${lb} from ${src==='C'?'center':sn}`,`לקחה ${lb} מ${src==='C'?'המרכז':sn}`);
+  log(tr(`${who(p)} took <b>${lb}</b> from ${sn}.`,`${who(p)} ${vb(p,'','','לקחת','לקחה')} <b>${lb}</b> מ${sn}.`));
+  render();
+  await announce(p,`${vb(p,'You took','took','לקחת','לקחה')} <b>${lb}</b> ${tr('from','מ')}${tr(' ','')}${sn}`,cardHTML(c,'md'));
+  await gainCard(p,c);render();
+}
+async function gainCard(p,c){
+  p.cards.push(c);const T=TYPES[c.t];
+  if(T.cat&&S.cat!==p.id){await claim(p,tr('The Cat is yours','החתול שלך'),`<span class="bigic">${I.cat}</span>`,tr('You took a Blue card with a Cat icon. The Cat is worth 2 VP at the end and lets you peek at the central deck.','לקחת קלף כחול עם סמל חתול. החתול שווה 2 נקודות בסוף המשחק ומאפשר להציץ בקלף העליון של החפיסה המרכזית.'),tr('Take the Cat','קח את החתול'));S.cat=p.id;log(tr(`${who(p)} took the Cat.`,`${who(p)} ${vb(p,'','','לקחת','לקחה')} את החתול.`));render();await announce(p,`${vb(p,'You took','took','לקחת','לקחה')} ${tr('the <b>Cat</b>','את <b>החתול</b>')}`,`<span class="bigic">${I.cat}</span>`)}
+  let trig=TRIG[c.t];
+  if(T.col==='red'&&T.horns){flip(T.horns);trig='propaganda'}
+  if(trig&&has(p,trig)&&!S.used[trig]){S.used[trig]=1;log(tr(`${TOK[trig].n}: ${who(p)} take${p.human?'':'s'} an extra card.`,`${TOK[trig].n}: ${who(p)} ${vb(p,'','','לוקח','לוקחת')} קלף נוסף.`));await extraCard(p,tr(`${TOK[trig].n}: take 1 extra card.`,`${TOK[trig].n}: קח קלף נוסף אחד.`))}
+}
+async function extraCard(p,reason){const src=await chooseSource(p,reason);if(src===null)return;await takeFrom(p,src)}
+function flip(k){for(let j=0;j<k;j++){const i=S.conflict.indexOf(false);if(i<0)break;S.conflict[i]=true}if(!S.conflict.includes(false))S.battle=true}
+async function resolveBoard(p){
+  for(let guard=0;guard<40;guard++){
+    if(await checkScience(p))continue;
+    if(await checkBuild(p))continue;
+    break;
+  }
+}
+async function checkScience(p){
+  if(!S.face.length&&!S.stack.length)return false;
+  const use=sciUse(p);if(!use)return false;
+  discard(p,use);
+  log(tr(`${who(p)} used ${use.map(c=>TYPES[c.t].label).join(' + ')} to gain a Progress token.`,`${who(p)} ${vb(p,'','','השתמשת','השתמשה')} ב-${use.map(c=>TYPES[c.t].label).join(' + ')} לקבלת אסימון התקדמות.`));
+  await takeProgress(p,tr('Science: choose a Progress token.','מדע: בחר אסימון התקדמות.'));
+  return true;
+}
+async function takeProgress(p,reason){
+  const opts=S.face.map((_,i)=>i);if(S.stack.length)opts.push('stack');if(!opts.length)return;
+  let v;
+  if(p.human)v=await ask({type:'progress',options:opts,reason});
+  else{await pause(350);v=botToken(p,opts)}
+  let t;
+  if(v==='stack')t=S.stack.pop();
+  else{t=S.face.splice(v,1)[0];if(S.stack.length)S.face.splice(v,0,S.stack.pop())}
+  p.tokens.push(t);p.last=tr(`gained ${TOK[t].n}`,`קיבלה ${TOK[t].n}`);
+  log(tr(`${who(p)} gained the <b>${TOK[t].n}</b> token.`,`${who(p)} ${vb(p,'','','קיבלת','קיבלה')} את אסימון <b>${TOK[t].n}</b>.`));
+  render();
+  if(p.human)await announce(p,tr(`You took the <b>${TOK[t].n}</b> token`,`לקחת את אסימון <b>${TOK[t].n}</b>`),coinHTML(t));
+  else await ask({type:'claim',title:tr(`${p.name} gained a Progress token`,`${p.name} קיבלה אסימון התקדמות`),visual:`<span class="tokbig" style="--w:${W[p.wonder].color}">${coinHTML(t)}</span>`,
+    text:`<div class="tokexp"><b>${TOK[t].n}</b> ${tokIcons(t)}<p>${iconize(TOK[t].d)}</p><span class="when">${timing(t)}</span></div>`,btn:tr('OK','אישור')});
+}
+async function checkBuild(p){
+  const st=stagesOf(p.wonder);let best=null;const ok=[];
+  for(const i of availStages(p)){const plan=payPlan(p,st[i].cost);if(plan){ok.push({i,plan});if(!best||st[i].vp+(st[i].fx?2:0)>st[best.i].vp+(st[best.i].fx?2:0))best={i,plan}}}
+  if(!best)return false;
+  if(p.human&&ok.length>1){const k=await ask({type:'build',options:ok});best=ok[k]}
+  discard(p,best.plan.cards);if(best.plan.eng)S.used.engineering=1;
+  p.built[best.i]=1;S.flashStage={p:p.id,i:best.i};
+  const done=p.built.filter(Boolean).length;
+  p.last=tr(`built stage ${done} of 5`,`בנתה שלב ${done} מתוך 5`);
+  log(tr(`${who(p)} built a stage of <b>${W[p.wonder].name}</b> (${costWord(st[best.i].cost)}${best.plan.eng?', Engineering':''}) — ${done}/5.`,`${who(p)} ${vb(p,'','','בנית','בנתה')} שלב ב<b>${W[p.wonder].name}</b> (${costWord(st[best.i].cost)}${best.plan.eng?', הנדסה':''}) — ${done}/5.`));
+  render();
+  await announce(p,tr(`${p.human?'You built':'built'} the <b>${stageNames(p.wonder)[best.i]}</b> · +${st[best.i].vp} VP (${done}/5)`,`${vb(p,'','','בנית','בנתה')} את <b>${stageNames(p.wonder)[best.i]}</b> · +${st[best.i].vp} נק׳ (${done}/5)`),`<span class="ann-cost">${costLabel(st[best.i].cost)}</span>`);
+  if(st[best.i].fx)await stageEffect(p);
+  if(has(p,'architecture')&&!S.used.architecture&&!p.built.every(Boolean)){S.used.architecture=1;log(tr(`Architecture: ${who(p)} take${p.human?'':'s'} an extra card.`,`ארכיטקטורה: ${who(p)} ${vb(p,'','','לוקח','לוקחת')} קלף נוסף.`));await extraCard(p,tr('Architecture: take 1 extra card.','ארכיטקטורה: קח קלף נוסף אחד.'))}
+  return true;
+}
+async function stageEffect(p){
+  const w=p.wonder;S.fxPop={p:p.id,t:Date.now()};render();
+  if(!p.human)await announce(p,`★ ${tr('Wonder bonus','בונוס פלא')}: <b>${FXSHORT[w]}</b>`);
+  if(w==='rhodes'){await claim(p,tr('★ Rhodes bonus','★ בונוס רודוס'),`<span class="bigic">${I.shield}</span>`,tr('Your Wonder adds 1 Shield to your military strength for the rest of the game.','הפלא שלך מוסיף מגן אחד לכוח הצבאי שלך עד סוף המשחק.'),tr('Take +1 Shield','קח מגן +1'));log(tr(`Rhodes: ${who(p)} gain${p.human?'':'s'} 1 Shield.`,`רודוס: ${who(p)} ${vb(p,'','','קיבלת','קיבלה')} מגן אחד.`));render();await announce(p,tr(`${p.human?'You gained':'gained'} <b>+1 Shield</b>`,`${vb(p,'','','קיבלת','קיבלה')} <b>מגן +1</b>`),`<span class="bigic">${I.shield}</span>`);return}
+  if(w==='ephesus'){if(S.center.length){log(tr('Ephesus effect: top card of the central deck.','אפקט אפסוס: הקלף העליון של החפיסה המרכזית.'));if(p.human)await ask({type:'source',options:['C'],reason:tr('★ Ephesus bonus: tap the central deck to take its top card.','★ בונוס אפסוס: לחץ על החפיסה המרכזית כדי לקחת את הקלף העליון.')});await takeFrom(p,'C')}return}
+  if(w==='olympia'){log(tr('Olympia effect: top card of the left and right decks.','אפקט אולימפיה: הקלף העליון מהחפיסה השמאלית ומהימנית.'));let left=[...new Set([L(p),R(p)])].filter(s=>deckOf(s).length);
+    while(left.length){const s=p.human?await ask({type:'source',options:left,reason:tr(`★ Olympia bonus: tap ${left.length>1?'your left and right decks, one at a time':'the remaining deck'} to take the top card.`,`★ בונוס אולימפיה: לחץ על ${left.length>1?'החפיסה השמאלית והימנית, אחת אחרי השנייה,':'החפיסה שנשארה'} כדי לקחת את הקלף העליון.`)}):left[0];left=left.filter(x=>x!==s);await takeFrom(p,s)}return}
+  if(w==='babylon'){log(tr('Babylon effect: choose a Progress token.','אפקט בבל: בחירת אסימון התקדמות.'));await takeProgress(p,tr('Babylon: choose 1 of the 4 available Progress tokens.','בבל: בחר אחד מ-4 אסימוני ההתקדמות הזמינים.'));return}
+  if(w==='alexandria'){
+    const opts=[...S.decks.map((d,i)=>i),'C'].filter(s=>deckOf(s).length);if(!opts.length)return;
+    log(tr('Alexandria effect: top card of any deck.','אפקט אלכסנדריה: הקלף העליון מכל חפיסה.'));
+    const src=p.human?await ask({type:'any',options:opts}):botBest(p,opts);
+    await takeFrom(p,src);return;
+  }
+  if(w==='halicarnassus'){
+    const sides=[...new Set([L(p),R(p)])].filter(s=>deckOf(s).length);if(!sides.length)return;
+    const side=p.human?await ask({type:'side',options:sides}):botBest(p,sides);
+    const d=deckOf(side);const five=d.splice(-5).reverse();
+    const k=p.human?await ask({type:'pick5',cards:five,side}):five.map((c,i)=>[cardValue(p,c),i]).sort((a,b)=>b[0]-a[0])[0][1];
+    const c=five.splice(k,1)[0];d.push(...five);shuffle(d);
+    log(tr(`Halicarnassus effect: ${who(p)} searched ${srcName(p,side)} and kept <b>${TYPES[c.t].label}</b>.`,`אפקט הליקרנסוס: ${who(p)} ${vb(p,'','','חיפשת','חיפשה')} ב${srcName(p,side)} ו${vb(p,'','','שמרת','שמרה')} <b>${TYPES[c.t].label}</b>.`));
+    p.last=tr(`kept ${TYPES[c.t].label}`,`שמרה ${TYPES[c.t].label}`);render();
+    await announce(p,tr(`${p.human?'You kept':'kept'} <b>${TYPES[c.t].label}</b> from ${srcName(p,side)}`,`${vb(p,'','','שמרת','שמרה')} <b>${TYPES[c.t].label}</b> מ${srcName(p,side)}`),cardHTML(c,'md'));
+    await gainCard(p,c);render();
+  }
+}
+async function battle(){
+  const n=N(),sh=S.players.map(shields),g=S.players.map(()=>0);
+  if(n===2){for(let i=0;i<2;i++){const j=1-i;if(sh[i]>sh[j])g[i]=sh[i]>=2*sh[j]?2:1}}
+  else S.players.forEach((p,i)=>[(i-1+n)%n,(i+1)%n].forEach(j=>{if(sh[i]>sh[j])g[i]++}));
+  S.players.forEach((p,i)=>p.military+=g[i]);
+  const res=S.players.map((p,i)=>`${who(p)} ${sh[i]}⛨${g[i]?` +${g[i]}`:''}`).join(', ');
+  log(`<b>${tr('Battle!','קרב!')}</b> ${res}.`,'battle');
+
+  S.players.forEach(p=>{const h=p.cards.filter(c=>TYPES[c.t].horns);if(h.length)discard(p,h)});
+  S.conflict=S.conflict.map(()=>false);S.battle=false;render();
+  const rows=S.players.map((p,j)=>`<tr class="${p.human?'mine':''}"><td>${p.human?tr('You · ','אתה · '):''}${p.name}</td><td>${sh[j]}</td><td>${g[j]?'+'+g[j]+' '+I.mil:'–'}</td></tr>`).join('');
+  await ask({type:'claim',title:tr('Battle!','קרב!'),visual:`<span class="bigic">${I.shield}${I.horn}</span>`,
+    text:`<div class="tblwrap"><table class="scores battle"><thead><tr><th>${tr('Wonder','פלא')}</th><th>${tr('Shields','מגנים')}</th><th>${tr('Military tokens','אסימוני צבא')}</th></tr></thead><tbody>${rows}</tbody></table></div><p class="note" style="margin-top:6px">${g[0]?tr(`You won ${g[0]} Military token${g[0]>1?'s':''} (3 VP each).`,`זכית ב-${g[0]} ${g[0]>1?'אסימוני':'אסימון'} צבא (3 נקודות כל אחד).`):tr('You did not win a Military token this time.','הפעם לא זכית באסימון צבא.')} ${tr('Red cards with horns were discarded.','הקלפים האדומים עם הקרניים נזרקו.')}</p>`,
+    btn:tr('OK','אישור')});
+}
+function endGame(){
+  S.over=true;S.pending=null;
+  const sc=S.players.map(p=>({p,s:score(p),st:p.built.filter(Boolean).length}));
+  sc.sort((a,b)=>b.s.total-a.s.total||b.st-a.st);
+  S.final=sc;uiModal='end';render();
+}
+
+// ---------- bots ----------
+function cardValue(p,c){
+  if(!c)return -99;
+  const T=TYPES[c.t];let v=Math.random()*1.2;
+  const trig=T.col==='red'&&T.horns?'propaganda':TRIG[c.t];
+  if(trig&&has(p,trig)&&!S.used[trig])v+=2.5;
+  if(T.col==='grey'||T.col==='yellow'){
+    const st=stagesOf(p.wonder),av=availStages(p);
+    const before=av.map(i=>missing(p,st[i].cost));p.cards.push(c);const after=av.map(i=>missing(p,st[i].cost));p.cards.pop();
+    let gain=0,done=0;av.forEach((i,k)=>{gain+=before[k]-after[k];if(after[k]===0&&before[k]>0)done=Math.max(done,st[i].vp+(st[i].fx?3:0))});
+    v+=done?8+done:1+gain*2;
+  }else if(T.col==='green'){p.cards.push(c);const ok=sciUse(p);p.cards.pop();v+=ok&&(S.face.length||S.stack.length)?7:2.5}
+  else if(T.col==='blue'){v+=T.vp+(T.cat?(S.cat!==p.id?1.5:.3):0)+(T.cat&&has(p,'politics')?1:0)}
+  else{
+    v+=1.8;const peace=S.conflict.filter(x=>!x).length;
+    if(T.horns&&peace<=T.horns){const n=N(),me=shields(p)+1;const nb=n===2?[S.players[1-p.id]]:[S.players[(p.id-1+n)%n],S.players[(p.id+1)%n]];v+=nb.filter(o=>me>shields(o)).length*2.5-1}
+    else v+=T.horns*.3;
+  }
+  return v;
+}
+function botBest(p,opts){
+  let best=null,bv=-1e9;
+  for(const s of opts){const c=topCard(s);const v=s==='C'&&S.cat!==p.id?3+Math.random():cardValue(p,c);if(v>bv){bv=v;best=s}}
+  return best;
+}
+function botToken(p,opts){
+  const base={engineering:6,economy:4.5,architecture:5,decor:5,tactics:4,urbanism:4,crafts:4,jewellery:4,science:4,propaganda:3,politics:2,strategy:2,education:3,culture:4};
+  let best=opts[0],bv=-1e9;
+  for(const o of opts){let v;
+    if(o==='stack')v=4;else{const t=S.face[o];v=base[t];
+      if(t==='economy')v+=count(p,'gold')*.8;if(t==='culture'&&has(p,'culture'))v+=6;if(t==='education')v+=p.tokens.length*1.5;
+      if(t==='strategy')v+=p.military;if(t==='politics')v+=count(p,'blue2');}
+    v+=Math.random()*1.5;if(v>bv){bv=v;best=o}}
+  return best;
+}
+
+// ---------- rendering ----------
+function cardArt(c){
+  const T=TYPES[c.t];
+  if(T.col==='blue')return {medal:T.cat?I.cat:I.laurel(T.vp),scene:`<div class="big">${I.laurel(T.vp)}${T.cat?`<span class="catmark">${I.cat}</span>`:''}</div>`};
+  if(T.col==='red')return {medal:I.shield,scene:`<div class="big">${I.shield}${T.horns?`<span class="horns">${I.horn.repeat(T.horns)}</span>`:''}</div>`};
+  return {medal:I[c.t],scene:I[c.t]};
+}
+function cardHTML(c,size=''){
+  if(!c)return `<div class="card empty ${size}">${tr('Empty','ריק')}</div>`;
+  const T=TYPES[c.t],a=cardArt(c);
+  return `<div class="card k-${T.col} ${size}" title="${T.label}"><div class="rib"></div><div class="medal">${a.medal}</div><div class="scene">${a.scene}</div><div class="nm">${T.label}</div><span class="cb">${CB[T.col]}</span></div>`;
+}
+const backHTML=(size='')=>`<div class="card back ${size}"></div>`;
+function holdCounts(p){const out=[];ORDER.forEach(t=>{if(t==='red1')return;const n=t==='red2'?count(p,'red1')+count(p,'red2'):count(p,t);if(n)out.push([t,n])});return out}
+function miniIcon(t){const T=TYPES[t];if(T.col==='blue')return T.cat?I.cat:I.laurel(3);if(T.col==='red')return T.horns?I.horn:I.shield;return I[t]}
+
+// wonder silhouettes (drawn in wonderSVG below)
+const miniCard=c=>`<svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2.2" fill="#FBF5E6" stroke="${c}" stroke-width="2.4"/><path d="M5 3h14v5l-7 3-7-3z" fill="${c}"/></svg>`;
+const XI={
+  card:miniCard('#8C8474'), green:miniCard('#3E9A4E'), red:miniCard('#C8322B'), blue:miniCard('#2F6CC4'), grey:miniCard('#8C8474'),
+  token:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#4FAE5C" stroke="#2F7F3D" stroke-width="1.2"/><circle cx="12" cy="12" r="5.6" fill="#FBF5E6"/></svg>',
+  stage:'<svg viewBox="0 0 24 24"><path d="M3 21h18v-3H3zM5 18h4v-8H5zM15 18h4v-8h-4zM3 10h18L12 3z" fill="#B8862A" stroke="#6B4A0E" stroke-width="1"/></svg>',
+  vp:I.laurel('')
+};
+const ICONWORDS=[
+  [/\b(Green cards?|Green)\b/g,'green'],[/\b(Red cards?)\b/g,'red'],[/\b(Blue cards?)\b/g,'blue'],
+  [/\b(Progress tokens?)\b/g,'token'],[/\b(Military (?:Victory )?tokens?)\b/g,'mil'],[/\b(Victory points|VP)\b/g,'vp'],
+  [/\b(Shields?)\b/g,'shield'],[/\b(horns?)\b/g,'horn'],[/\b(Cat)\b/g,'cat'],[/\b(Stages?)\b/g,'stage'],
+  [/\b(Wood)\b/g,'wood'],[/\b(Brick)\b/g,'brick'],[/\b(Papyrus)\b/g,'papyrus'],[/\b(Glass)\b/g,'glass'],[/\b(Stone)\b/g,'stone'],
+  [/\b(Gold|coins?)\b/g,'gold'],[/\b(Resources?)\b/g,'grey'],[/\b(extra card|top card|cards?)\b/g,'card']
+];
+const ICONWORDS_HE=[
+  [/(קלפים ירוקים|קלף ירוק)/g,'green'],[/(קלפים אדומים|קלף אדום)/g,'red'],[/(קלפים כחולים|קלף כחול)/g,'blue'],
+  [/(אסימוני התקדמות|אסימון התקדמות)/g,'token'],[/(אסימוני צבא|אסימון צבא)/g,'mil'],[/(נקודות ניצחון|נקודות|נקודה|נק׳)/g,'vp'],
+  [/(מגנים|מגן)/g,'shield'],[/(קרניים|קרן)/g,'horn'],[/(חתול)/g,'cat'],[/(שלבים|שלב)/g,'stage'],
+  [/(עץ)/g,'wood'],[/(לבנים)/g,'brick'],[/(פפירוס)/g,'papyrus'],[/(זכוכית)/g,'glass'],[/(אבן)/g,'stone'],
+  [/(זהב|מטבעות)/g,'gold'],[/(משאבים)/g,'grey'],[/(קלף נוסף|הקלף העליון|קלף עליון)/g,'card']
+];
+function iconize(txt){
+  const IW=LANG==='he'?ICONWORDS_HE:ICONWORDS;
+  const re=new RegExp(IW.map(([r])=>r.source).join('|'),'g');
+  return txt.replace(re,(m,...g)=>{const k=g.slice(0,IW.length).findIndex(x=>x!==undefined);const key=IW[k][1];const svg=XI[key]||I[key];return `<span class="ic">${svg}</span>${m}`});
+}
+const FXSHORT={alexandria:'Top card of any deck',halicarnassus:'Search 5 cards, keep 1',ephesus:'Top card of the central deck',olympia:'Top card of left + right deck',babylon:'Pick a Progress token',rhodes:'+1 Shield',giza:'No bonus, more VP'};
+function fxGlyph(w,col){
+  const card=(x,y,t)=>`<rect x="${x-3.2}" y="${y-4.3}" width="6.4" height="8.6" rx="1" fill="#FBF5E6" stroke="${col}" stroke-width="1.1"/>${t?`<text x="${x}" y="${y+2.6}" text-anchor="middle" font-size="6.5" font-weight="700" font-family="Open Sans,sans-serif" fill="${col}">${t}</text>`:''}`;
+  if(w==='rhodes')return `<path d="M0 -6l5 2v3.5c0 3-2 5-5 6.3-3-1.3-5-3.3-5-6.3V-4z" fill="#FBF5E6" stroke="#7a1f1a" stroke-width="1.2"/><path d="M-2.3 -2.5l4.6 4.6M2.3 -2.5l-4.6 4.6" stroke="#7a1f1a" stroke-width="1.3"/>`;
+  if(w==='babylon')return `<circle r="5.6" fill="#FBF5E6" stroke="#2F7F3D" stroke-width="2"/><path d="M-2.8 0h5.6M0 -2.8v5.6" stroke="#2F7F3D" stroke-width="1.6"/>`;
+  if(w==='olympia')return card(-3.2,0,'')+card(3.2,0,'');
+  if(w==='ephesus')return card(0,0,'?');
+  if(w==='halicarnassus')return card(0,0,'5');
+  return card(0,0,'★');
+}
+const WSHAPE={alexandria:'tower',halicarnassus:'mausoleum',ephesus:'temple',olympia:'temple',babylon:'ziggurat',rhodes:'colossus',giza:'pyramid'};
+const Rc=(x1,y1,x2,y2)=>[x1,y1,x2,y1,x2,y2,x1,y2];
+function hl(x1,x2,y1,y2,st){let s='';for(let y=y1+st;y<y2;y+=st)s+=`M${x1} ${y.toFixed(1)}H${x2}`;return s}
+function bricks(x1,x2,y1,y2,rh,bw){let s='',r=0;for(let y=y1;y<y2;y+=rh,r++){s+=`M${x1} ${y}H${x2}`;for(let x=x1+(r%2?bw/2:0);x<x2;x+=bw)s+=`M${x} ${y}V${Math.min(y+rh,y2)}`}return s}
+function cols(x1,x2,y1,y2,n){const w=(x2-x1)/n;let hi='',sh='';
+  for(let k=0;k<n;k++){const cx=x1+w*(k+.5),sw=w*.44;
+    hi+=`<rect x="${cx-sw/2}" y="${y1+6}" width="${sw}" height="${y2-y1-12}"/><rect x="${cx-sw/2-3}" y="${y1+1}" width="${sw+6}" height="5" rx="1.5"/><rect x="${cx-sw/2-3}" y="${y2-6}" width="${sw+6}" height="5" rx="1"/>`;
+    sh+=`M${cx-sw/4} ${y1+8}V${y2-8}M${cx} ${y1+8}V${y2-8}M${cx+sw/4} ${y1+8}V${y2-8}`}
+  return {hi,sh}}
+function trig(x1,x2,y1,y2){let s=`M${x1} ${(y1+y2)/2}H${x2}`;for(let x=x1+6;x<x2-4;x+=12)s+=`M${x} ${y1}V${(y1+y2)/2}M${x+3} ${y1}V${(y1+y2)/2}`;return s}
+const bush=(x1,x2,y,step=9)=>{let s='';for(let x=x1+4;x<x2-2;x+=step)s+=`<circle cx="${x}" cy="${y}" r="4.6" fill="#4E9A43"/><circle cx="${x+2}" cy="${y-2}" r="2.6" fill="#7DC06A"/>`;for(let x=x1+8;x<x2-6;x+=step*2)s+=`<path d="M${x} ${y+2}q-2 5 0 9q2 4 0 8" stroke="#3E7F35" stroke-width="1.6" fill="none"/>`;return s};
+const win=(x,y,w=6,h=10)=>`<path d="M${x} ${y+h}V${y+w/2}a${w/2} ${w/2} 0 0 1 ${w} 0V${y+h}z" fill="#2A2116" opacity=".55"/>`;
+const flame=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 8C-7 4-5-4 0-12C1-6 7-4 5 3C4 6 2 8 0 8z" fill="#F08A24"/><path d="M0 7C-3 4-2 0 0-5C2-1 4 2 2 5z" fill="#FFD76A"/></g>`;
+
+const c1=cols(22,58,80,152,1),c2=cols(82,118,80,152,1),c3=cols(142,178,80,152,1),m1=cols(22,96,76,118,3),m2=cols(104,178,76,118,3);
+const pyr=(y1,y2)=>{const hw=y=>96*(y-20)/148;return y1<=20?[100-hw(y2),y2,100+hw(y2),y2,100,20]:[100-hw(y2),y2,100+hw(y2),y2,100+hw(y1),y1,100-hw(y1),y1]};
+const dome=(cx,cy,rx,ry)=>{const p=[];for(let a=0;a<=180;a+=15){const r=a*Math.PI/180;p.push(+(cx+rx*Math.cos(r)).toFixed(1),+(cy-ry*Math.sin(r)).toFixed(1))}return p};
+const SHAPES={
+  alexandria:{tex:bricks(0,200,24,170,8,20),pieces:[
+    {p:[[8,168,192,168,192,150,172,150,172,144,28,144,28,150,8,150]],x:'<path d="M92 168v-12a8 8 0 0 1 16 0v12z" fill="#2A2116" opacity=".5"/>',lab:[52,157]},
+    {p:[[46,144,154,144,150,112,50,112]],x:win(62,118)+win(132,118),lab:[100,129],b:[146,116]},
+    {p:[[50,112,150,112,144,82,56,82]],x:win(68,88)+win(126,88),lab:[100,98]},
+    {p:[[56,82,144,82,136,56,64,56]],sh:'M60 69H140',lab:[100,70],b:[132,60]},
+    {p:[[64,56,136,56,122,34,78,34],[86,34,114,34,110,26,90,26]],x:flame(100,17,1.3)+win(95,40,10,12),lab:[100,47]}]},
+  halicarnassus:{pieces:[
+    {p:[Rc(10,142,190,168)],sh:bricks(10,190,142,168,9,22),lab:[100,156]},
+    {p:[Rc(16,118,184,142)],x:'<rect x="12" y="118" width="176" height="5" fill="rgba(255,255,255,.35)"/>',sh:bricks(16,184,123,142,9,22),lab:[100,132],b:[176,124]},
+    {p:[Rc(22,76,96,118)],cella:1,hi:m1.hi,sh:m1.sh,lab:[59,98]},
+    {p:[Rc(104,76,178,118)],cella:1,hi:m2.hi,sh:m2.sh,lab:[141,98],b:[172,80]},
+    {p:[[14,76,186,76,176,68,164,68,154,60,142,60,132,52,120,52,112,44,88,44,80,52,68,52,58,60,46,60,36,68,24,68]],
+     x:'<path d="M88 44V35h24v9z" fill="#F2C94C" stroke="#8E6516" stroke-width=".8"/><path d="M91 35l4-7h4l2 3 2-3h4l4 7z" fill="#E0B24A" stroke="#8E6516" stroke-width=".8"/>',sh:'M24 68H176M46 60H154M68 52H132',lab:[100,63]}]},
+  ephesus:{pieces:[
+    {p:[[6,168,194,168,194,160,188,160,188,152,12,152,12,160,6,160]],sh:bricks(6,194,152,168,8,24),lab:[100,161]},
+    {p:[Rc(22,80,58,152)],hi:c1.hi,sh:c1.sh,lab:[40,128],b:[40,100]},
+    {p:[Rc(82,80,118,152)],hi:c2.hi,sh:c2.sh,lab:[100,128],b:[100,100]},
+    {p:[Rc(142,80,178,152)],hi:c3.hi,sh:c3.sh,lab:[160,128],b:[160,100]},
+    {p:[[4,80,196,80,196,66,100,22,4,66]],sh:'M4 73H196M28 62L100 32L172 62Z',x:'<circle cx="100" cy="21" r="3.5" fill="#F2C94C"/>',lab:[100,54]}]},
+  olympia:{pieces:[
+    {p:[[10,168,190,168,184,150,16,150]],x:'<path d="M30 160q6-6 12 0q6-6 12 0M146 160q6-6 12 0q6-6 12 0" stroke="rgba(255,255,255,.6)" stroke-width="1.6" fill="none"/>',lab:[100,160]},
+    {p:[Rc(30,96,98,150)],sh:'M40 96V150M60 104Q70 130 64 150',lab:[64,136],b:[64,110]},
+    {p:[Rc(102,96,170,150)],sh:'M160 96V150M140 104Q130 130 136 150',lab:[136,136]},
+    {p:[[40,96,160,96,152,52,48,52]],sh:'M70 60Q100 80 130 60M100 70V96',x:'<path d="M150 96V40" stroke="#E0B24A" stroke-width="3"/>',lab:[92,78],b:[136,62]},
+    {p:[[70,52,130,52,128,28,114,16,86,16,72,28],[146,42,156,42,158,16,144,16]],sh:'M84 40Q100 50 116 40M88 30h8M104 30h8',x:'<path d="M151 16l-8-6h16z" fill="#E0B24A"/>',lab:[100,38]}]},
+  babylon:{tex:bricks(0,200,40,170,7,14),pieces:[
+    {p:[Rc(4,140,196,168)],x:bush(4,196,140),lab:[52,156]},
+    {p:[Rc(14,112,186,140)],x:'<path d="M30 140L110 112h12L42 140z" fill="rgba(0,0,0,.14)"/>'+bush(14,186,112),lab:[140,127],b:[176,118]},
+    {p:[Rc(22,84,180,112)],x:'<path d="M150 112L90 84h10l62 28z" fill="rgba(0,0,0,.14)"/>'+bush(22,180,84),lab:[60,99]},
+    {p:[Rc(28,50,78,84)],x:bush(28,78,50,8)+'<path d="M48 84V70a5 5 0 0 1 10 0v14z" fill="#2A2116" opacity=".45"/>',lab:[53,64],b:[74,52]},
+    {p:[dome(136,84,42,40)],sh:'M94 84H178M136 44V84M112 50Q124 66 116 84M160 50Q148 66 156 84',lab:[136,70]}]},
+  rhodes:{pieces:[
+    {p:[[26,168,92,168,92,142,26,142]],sh:bricks(26,92,142,168,7,16),lab:[59,156],b:[32,142]},
+    {p:[[108,168,174,168,174,142,108,142]],sh:bricks(108,174,142,168,7,16),lab:[141,156]},
+    {p:[[70,142,90,142,96,100,78,100],[110,142,130,142,122,100,104,100],[76,100,124,100,122,86,78,86]],sh:'M84 108V138M116 108V138',lab:[100,120]},
+    {p:[[78,86,122,86,130,54,70,54],[70,56,58,90,65,92,78,62]],sh:'M86 64Q100 72 114 64M100 68V86',lab:[100,72],b:[126,88]},
+    {p:[[92,54,108,54,110,38,100,28,90,38],[124,58,140,24,147,27,132,62]],x:flame(144,18,1.1)+'<path d="M90 36l-4-6M95 31l-2-7M100 29v-7M105 31l2-7M110 36l4-6" stroke="#F2C94C" stroke-width="2" stroke-linecap="round"/>',lab:[100,44]}]},
+  giza:{face:'100,20 200,170 100,170',tex:bricks(0,200,20,170,7,16),pieces:[
+    {p:[pyr(140,168)],lab:[100,156]},
+    {p:[pyr(112,140)],lab:[100,128]},
+    {p:[pyr(84,112)],lab:[100,100]},
+    {p:[pyr(56,84)],lab:[100,72]},
+    {p:[pyr(20,56)],x:'<polygon points="92,31 108,31 100,20" fill="#F2C94C" stroke="#8E6516" stroke-width=".8"/>',lab:[100,46]}]}
+};
+function wonderSVG(p,withText){
+  const w=W[p.wonder],S5=SHAPES[p.wonder],st=stagesOf(p.wonder),av=availStages(p),u='w'+p.id;
+  let s=`<svg class="wsvg" viewBox="0 0 200 172" role="img" aria-label="${w.name}: ${p.built.filter(Boolean).length} of 5 stages built"><defs>
+   <linearGradient id="${u}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".0"/><stop offset="0" stop-color="${w.color}"/><stop offset="1" stop-color="${w.color}"/></linearGradient>
+   <linearGradient id="${u}l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".55" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>
+   <linearGradient id="${u}sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F9EFD3"/><stop offset="1" stop-color="#EAD7A8"/></linearGradient>
+   <pattern id="${u}s" width="16" height="14" patternUnits="userSpaceOnUse"><path d="M1 0V14M0 7H16M1 0L16 14" stroke="#8B6B3E" stroke-width="1.3" fill="none" opacity=".75"/></pattern>
+   <radialGradient id="gb"><stop offset="0" stop-color="#FFE9A6"/><stop offset="1" stop-color="#D9A53A"/></radialGradient>
+   ${S5.pieces.map((pc,i)=>`<clipPath id="${u}c${i}">${pc.p.map(q=>`<polygon points="${q.join(' ')}"/>`).join('')}</clipPath>`).join('')}</defs>`;
+  if(withText)s+=`<rect x="0" y="0" width="200" height="172" rx="10" fill="url(#${u}sky)"/><circle cx="168" cy="30" r="14" fill="#FFF3C8" opacity=".8"/><path d="M0 164Q100 156 200 164V172H0z" fill="#D8BF86"/>`;
+  s+=`<ellipse cx="100" cy="169" rx="96" ry="4" fill="rgba(60,40,10,.25)"/>`;
+  S5.pieces.forEach((pc,i)=>{
+    const b=p.built[i],a=av.includes(i);
+    const poly=pc.p.map(q=>`<polygon points="${q.join(' ')}"/>`).join('');
+    s+=`<g clip-path="url(#${u}c${i})" opacity="${b?1:a?.95:.8}">`;
+    s+=`<g fill="${b?w.color:'#EFE3C6'}">${poly}</g>`;
+    if(pc.cella)s+=`<rect x="0" y="0" width="200" height="172" fill="rgba(0,0,0,${b?.3:.1})"/>`;
+    if(S5.tex)s+=`<path d="${S5.tex}" stroke="${b?'rgba(0,0,0,.22)':'rgba(120,95,50,.25)'}" stroke-width=".8" fill="none"/>`;
+    if(pc.hi)s+=`<g fill="${b?w.color:'#F6ECD4'}" stroke="${b?'rgba(0,0,0,.3)':'rgba(120,95,50,.4)'}" stroke-width=".8">${pc.hi}</g><g fill="rgba(255,255,255,${b?.25:.2})">${pc.hi}</g>`;
+    if(pc.sh)s+=`<path d="${pc.sh}" stroke="${b?'rgba(0,0,0,.28)':'rgba(120,95,50,.35)'}" stroke-width="1" fill="none"/>`;
+    if(S5.face)s+=`<polygon points="${S5.face}" fill="rgba(0,0,0,${b?.16:.06})"/>`;
+    s+=`<g fill="url(#${u}l)">${poly}</g>`;
+    if(!b)s+=`<rect x="0" y="0" width="200" height="172" fill="url(#${u}s)"/>`;
+    s+=`</g>`;
+    if(pc.x)s+=`<g opacity="${b?1:.35}" clip-path="${pc.x.includes('flame')||i===4?'':''}">${pc.x}</g>`;
+    s+=`<g fill="none" stroke="${b?'rgba(0,0,0,.45)':a?'#B8862A':'#9A865C'}" stroke-width="${a&&!b?2.4:1}" stroke-dasharray="${b||a?'':'3 2.5'}" class="${a&&!b?'avail':''}">${poly}</g>`;
+  });
+  if(withText)S5.pieces.forEach((pc,i)=>{
+    const [x,y]=pc.lab,c=st[i].cost,b=p.built[i];
+    s+=`<g transform="translate(${x} ${y})"><rect x="-21" y="-7.5" width="25" height="15" rx="3" fill="${b?'#F2D27A':'#1E2C57'}" stroke="${b?'#8E6516':'#E3C36C'}" stroke-width=".8"/>
+      <text x="-8.5" y="4" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="10" fill="${b?'#3A2A06':'#fff'}">${costLabel(c)}</text>
+      <circle cx="12" cy="0" r="8" fill="#FBF5E6" stroke="#3d7a3f" stroke-width="1.4" stroke-dasharray="2 1"/><text x="12" y="3.4" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="9.5" fill="#1d3766">${st[i].vp}</text></g>`;
+  });
+  S5.pieces.forEach((pc,i)=>{
+    if(!st[i].fx||!pc.b)return;
+    const b=p.built[i],[cx,cy]=pc.b,r=withText?10:15;
+    s+=`<g class="fxb ${b?'on':''}" data-tip="fx:${p.id}:${i}" transform="translate(${cx} ${cy})">
+      ${b?`<circle r="${r+4}" fill="#F2C94C" opacity=".35" class="halo"/>`:''}
+      <circle r="${r}" fill="${b?'url(#gb)':'#FBF5E6'}" stroke="${b?'#8E6516':'#B8862A'}" stroke-width="${b?2:1.6}" stroke-dasharray="${b?'':'3 2'}"/>
+      <g transform="scale(${r/11})">${fxGlyph(p.wonder,b?'#5A3D08':'#8E6516')}</g></g>`;
+  });
+  return s+'</svg>';
+}
+
+const TOKIC={urbanism:['wood','brick'],crafts:['papyrus','glass'],jewellery:['stone','gold'],science:['gear','compass','tablet'],propaganda:['horn'],architecture:['stage'],economy:['gold','x2'],engineering:['stage','any'],tactics:['shield','shield'],decor:['stage','vp'],politics:['cat','vp'],strategy:['mil','vp'],education:['token','vp'],culture:['vp']};
+const tokIcon=k=>k==='x2'?'<b class="tx">×2</b>':k==='any'?'<b class="tx">≠=</b>':(XI[k]||I[k]);
+const tokIcons=t=>`<span class="ti">${TOKIC[t].map(tokIcon).join('')}</span>`;
+const mono=t=>`<span class="mono">${TOK[t].n.slice(0,2).toUpperCase()}</span>`;
+function renderOpps(){
+  $('opps').innerHTML=S.players.slice(1).map(p=>{
+    const sc=score(p);
+    const hold=holdCounts(p).map(([t,n])=>`<span class="hm" title="${t==='red2'?tr('Red cards with horns','קלפים אדומים עם קרניים'):t==='red0'?tr('Red cards without horns','קלפים אדומים בלי קרניים'):TYPES[t].label}">${miniIcon(t)}${n}</span>`).join('');
+    return `<article class="opp panel ${S.current===p.id&&!S.over?'active':''}" style="--w:${W[p.wonder].color}">
+      <div class="opp-h"><span>${p.name}</span>${S.cat===p.id?`<span title="${tr('Has the Cat','מחזיק בחתול')}">${I.cat}</span>`:''}<span class="vp">${sc.total} ${VP()}</span></div>
+      <div class="opp-body">${wonderSVG(p,false)}
+        <div class="stats"><span class="stat" title="${tr('Shields','מגנים')}">${I.shield}${shields(p)}</span><span class="stat" title="${tr('Military tokens','אסימוני צבא')}">${I.mil}${p.military}</span><span class="stat">${p.built.filter(Boolean).length}/5</span></div>
+        <div>${S.decks[p.id].length?cardHTML(topCard(p.id),'sm'):cardHTML(null,'sm')}</div></div>
+      ${p.wonder!=='giza'?`<div class="fxline ${stagesOf(p.wonder).some((s,i)=>s.fx&&p.built[i])?'on':''}" data-tip="fx:${p.id}:-1"><span class="star">★</span><span>${iconize(FXSHORT[p.wonder])}</span><span class="cnt">${stagesOf(p.wonder).filter((s,i)=>s.fx&&p.built[i]).length}/${stagesOf(p.wonder).filter(s=>s.fx).length}</span></div>`:`<div class="fxline"><span>${FXSHORT.giza}</span></div>`}
+      <div class="holdmini">${hold||`<span class="note">${tr('No cards yet','אין עדיין קלפים')}</span>`}</div>
+      ${p.tokens.length?`<div class="chips">${p.tokens.map(t=>`<button class="chip" data-act="tokinfo" data-v="${t}" data-tip="${t}">${mono(t)}${TOK[t].n}${tokIcons(t)}</button>`).join('')}</div>`:''}
+      <div class="last">${p.last||'&nbsp;'}</div></article>`;
+  }).join('');
+}
+function renderTable(){
+  const peace=S.conflict.filter(x=>!x).length;
+  $('clabel').textContent=tr(`Conflict · ${peace} to battle`,`סכסוך · ${peace} עד קרב`);
+  $('ctoks').innerHTML=S.conflict.map(w=>`<span class="ct ${w?'war':''}" title="${w?tr('Battle side','צד הקרב'):tr('Peace side','צד השלום')}">${w?I.swords:I.dove}</span>`).join('');
+  const pd=S.pending,picking=pd&&pd.type==='progress';
+  $('plabel').textContent=tr(`Progress · ${S.stack.length} in stack`,`התקדמות · ${S.stack.length} בערימה`);
+  let h=S.face.map((t,i)=>`<button class="pt ${picking?'pick':''}" data-act="tok" data-v="${i}" data-tip="${t}"><span class="coin">${TOK[t].n.slice(0,2).toUpperCase()}</span>${TOK[t].n}${tokIcons(t)}</button>`).join('');
+  if(S.stack.length)h+=`<button class="pt stack ${picking?'pick':''}" data-act="tok" data-v="stack" data-tip="stack"><span class="coin">?</span>${tr('Stack','ערימה')}</button>`;
+  $('ptoks').innerHTML=h;
+  const me=S.players[0],b=$('banner');
+  if(S.over){b.className='banner';b.textContent=tr('Game over. Start a new game to play again.','המשחק נגמר. התחל משחק חדש כדי לשחק שוב.')}
+  else if(pd&&pd.type==='source'){b.className='banner';b.textContent=pd.reason||tr('Your turn: take the top card of one of these three decks.','תורך: קח את הקלף העליון מאחת משלוש החפיסות.')}
+  else if(picking){b.className='banner';b.textContent=(pd.reason||tr('Choose a Progress token.','בחר אסימון התקדמות.'))+tr(' Tap a token above (Stack takes the hidden top one).',' לחץ על אסימון למעלה (ערימה = האסימון המוסתר העליון).')}
+  else if(pd){b.className='banner';b.textContent=tr('Make your choice in the window.','בחר בחלון שנפתח.')}
+  else{b.className='banner wait';b.textContent=S.current===0?tr('Resolving your turn…','התור שלך מתבצע…'):tr(`${S.players[S.current].name} is choosing…`,`${S.players[S.current].name} בוחרת…`)}
+  const can=s=>pd&&pd.type==='source'&&pd.options.includes(s);
+  const slot=(s,cap)=>{const d=deckOf(s);let face;
+    if(!d.length)face=cardHTML(null,'lg');
+    else if(s==='C')face=S.cat===0?`<div style="position:relative">${cardHTML(topCard('C'),'lg')}<span class="peek">${I.cat}${tr('Cat peek','הצצת חתול')}</span></div>`:backHTML('lg');
+    else face=cardHTML(topCard(s),'lg');
+    return `<button class="slot ${can(s)?'can':''}" data-act="src" data-v="${s}" ${can(s)?'':'disabled'}>${face}<span class="cap">${cap}</span></button>`};
+  const rOwner=S.players[R(me)];
+  const lN=S.players[(me.id-1+N())%N()],rN=S.players[R(me)];
+  const bar=(p,side)=>`<div class="nbar ${side}" style="--w:${W[p.wonder].color}" title="${tr(side==='l'?'Left neighbour':'Right neighbour',side==='l'?'השכן משמאל':'השכן מימין')}" data-tip="w:${p.wonder}"><span>${p.name}</span></div>`;
+  $('choices').innerHTML=bar(lN,'l')+slot(L(me),`<b>${tr('Left · your deck','שמאל · החפיסה שלך')}</b>${S.decks[0].length} ${tr('cards','קלפים')}`)+slot('C',`<b>${tr('Central deck','חפיסה מרכזית')}</b>${S.center.length} ${tr('cards','קלפים')}`)+slot(R(me),`<b>${tr('Right','ימין')} · ${rOwner.name}</b>${S.decks[R(me)].length} ${tr('cards','קלפים')}`)+bar(rN,'r');
+}
+function renderMe(){
+  const p=S.players[0],w=W[p.wonder],sc=score(p),st=stagesOf(p.wonder),av=availStages(p);
+  const sec=$('me');
+  sec.className='me panel'+(S.current===0&&!S.over?' active':'');
+  sec.style.setProperty('--w',w.color);
+  const hb=t=>{const n=count(p,t);return `<span class="hb k-${TYPES[t].col} ${n?'':'zero'}" title="${TYPES[t].label}">${miniIcon(t)}${n}</span>`};
+  const cv=has(p,'economy')?2:1;
+  const names=stageNames(p.wonder);
+  const slist=st.map((s,i)=>{const b=p.built[i],a=av.includes(i),m=a&&!b?missing(p,s.cost):null;
+    return `<div><span class="c">${costLabel(s.cost)}</span><span>${names[i]}${s.fx?' <span class="star">★</span>':''}: ${b?`<span class="ok">${tr('built','נבנה')}</span>`:a?(m?tr(`${m} missing`,`חסרים ${m}`):`<span class="ok">${tr('ready','מוכן')}</span>`):tr('locked','נעול')}</span></div>`}).join('');
+  sec.innerHTML=`<div class="tray">
+      <div class="tray-h"><h2>${w.name}</h2>${S.cat===0?`<span title="${tr('You have the Cat','החתול אצלך')}" style="width:22px">${I.cat}</span>`:''}<span class="vp">${sc.total} ${VP()}</span></div>
+      ${wonderSVG(p,true)}
+    </div>
+    <div class="hold">
+      <div class="full"><span class="label">${tr(`Resources · Gold worth ${cv} each`,`משאבים · זהב שווה ${cv}`)}</span><div class="group">${['stone','brick','wood','glass','papyrus','gold'].map(hb).join('')}</div></div>
+      <div><span class="label">${tr('Science','מדע')}</span><div class="group">${SCI.map(hb).join('')}<span class="need">${tr('2 = or 3 ≠ → token','2 = או 3 ≠ → אסימון')}</span></div></div>
+      <div><span class="label">${tr('Victory','ניצחון')}</span><div class="group">${hb('blue3')}${hb('blue2')}</div></div>
+      <div><span class="label">${tr(`Military · ${shields(p)} shields total`,`צבא · ${shields(p)} מגנים בסך הכול`)}</span><div class="group">
+        <span class="hb k-red ${count(p,'red0')?'':'zero'}" title="${tr('Red cards without horns: they stay after battles','קלפים אדומים בלי קרניים: נשארים אחרי קרבות')}">${I.shield}${count(p,'red0')}</span>
+        <span class="hb k-red ${count(p,'red1')+count(p,'red2')?'':'zero'}" title="${tr('Red cards with horns: discarded after the next battle','קלפים אדומים עם קרניים: נזרקים אחרי הקרב הבא')}">${I.shield}${I.horn}${count(p,'red1')+count(p,'red2')}</span>
+        <span class="hb k-red" title="${tr('Military tokens, 3 VP each','אסימוני צבא, 3 נקודות כל אחד')}">${I.mil}${p.military}</span></div></div>
+      <div><span class="label">${tr('Progress tokens','אסימוני התקדמות')}</span><div class="chips" style="margin-top:6px">${p.tokens.length?p.tokens.map(t=>`<button class="chip" data-act="tokinfo" data-v="${t}" data-tip="${t}">${mono(t)}${TOK[t].n}${tokIcons(t)}</button>`).join(''):`<span class="note">${tr('None yet','עדיין אין')}</span>`}</div></div>
+      <div class="need full">${tr('Score now','ניקוד כרגע')}: ${tr('stages','שלבים')} <b>${sc.stages}</b> · ${tr('blue','כחול')} <b>${sc.blue}</b> · ${tr('cat','חתול')} <b>${sc.cat}</b> · ${tr('military','צבא')} <b>${sc.mil}</b> · ${tr('progress','התקדמות')} <b>${sc.prog}</b></div>
+    </div>`;
+}
+function renderStatus(){
+  const p=S.players[S.current??0];
+  $('status').innerHTML=S.over?`<b>${tr('Game over','המשחק נגמר')}</b>`:p.human?`<b>${tr('Your turn','תורך')}</b>`:tr(`<b>${p.name}</b> is playing`,`<b>${p.name}</b> משחקת`);
+  $('btnRules').textContent=tr('Rules','חוקים');$('btnNew').textContent=tr('New game','משחק חדש');
+  $('btnLang').textContent=LANG==='he'?'English':'עברית';$('logsum').textContent=tr('Chronicle','יומן המשחק');
+  $('brand').innerHTML=`7 Wonders Architects<small>${tr('Build your wonder · 2–7 players','בנה את הפלא שלך · 2–7 שחקנים')}</small>`;
+}
+function renderLog(){$('log').innerHTML=S.log.slice(0,60).map(l=>`<li class="${l.cls||''}">${l.msg}</li>`).join('')}
+function EN_RULES(){return `<h2>How to play</h2><div class="rules">
+      <p>Be the first to finish your Wonder, or score the most Victory points when someone does.</p>
+      <h3>Your turn</h3><ul>
+        <li>Take the top card of your left deck, the central deck (face down), or your right deck.</li>
+        <li>Grey cards are resources. Yellow Gold replaces any missing resource.</li>
+        <li>When you can pay for an available Stage you must build it; the game does this for you. Each Wonder has its own shape: a Stage can be built once the pieces under it are built, and pieces side by side can be built in any order.</li>
+        <li>Green: 2 identical or 3 different symbols are spent for a Progress token.</li>
+        <li>Blue cards score VP. Taking a Cat card gives you the Cat: 2 VP at the end, and you see the central deck’s top card.</li>
+        <li>Red cards give Shields. Horns flip Conflict tokens; when the last one flips, a Battle happens at the end of the turn. Beat each neighbour in Shields for a Military token (3 VP). In a 2-player game you get 2 tokens with at least twice your rival’s Shields. Afterwards, red cards with horns are discarded.</li>
+      </ul>
+      <h3>Progress tokens</h3><div class="tokgal">${Object.keys(TOK).map(t=>`<div class="tg"><span class="pt" style="pointer-events:none;width:auto"><span class="coin">${TOK[t].n.slice(0,2).toUpperCase()}</span></span><div><b>${TOK[t].n}</b> ${tokIcons(t)}<br><span class="note">${iconize(TOK[t].d)}</span></div></div>`).join('')}</div>
+      <h3>End of game</h3><p>The game ends at the end of the turn in which a Wonder is completed. Ties go to the player with more Stages built.</p>
+      <p class="note">Card counts per deck follow the official distribution table. Wonder shapes, costs and VP follow the printed trays.</p>
+      <button class="btn" data-act="close">Close</button></div>`}
+function renderModal(){
+  const m=$('modal'),pd=S.pending;let h='';
+  if(uiModal==='setup'){
+    h=`<h2>${tr('New game','משחק חדש')}</h2>
+      <div><span class="label">${tr('Opponents','יריבים')}</span><div class="opts" style="margin-top:6px">${[1,2,3,4,5,6].map(n=>`<button class="opt ${setupSel.opp===n?'sel':''}" data-act="sopp" data-v="${n}">${n}</button>`).join('')}</div></div>
+      <div><span class="label">${tr('Your Wonder','הפלא שלך')}</span><div class="opts" style="margin-top:6px"><button class="opt ${setupSel.wonder==='random'?'sel':''}" data-act="sw" data-v="random">${tr('Random','אקראי')}</button>${Object.keys(W).map(k=>`<button class="opt wopt ${setupSel.wonder===k?'sel':''}" data-act="sw" data-v="${k}" data-tip="w:${k}"><span class="wdot" style="--w:${W[k].color}"></span>${W[k].name}</button>`).join('')}</div>
+      ${setupSel.wonder!=='random'?`<p class="note" style="margin-top:6px">${W[setupSel.wonder].fx}</p>`:''}</div>
+      <div class="opts"><button class="btn primary" data-act="start">${tr('Start game','התחל משחק')}</button><button class="btn" data-act="close">${tr('Cancel','ביטול')}</button></div>`;
+  }else if(uiModal==='rules'){
+    h=LANG!=='he'?EN_RULES():`<h2>איך משחקים</h2><div class="rules">
+      <p>היה הראשון להשלים את הפלא שלך, או צבור הכי הרבה נקודות ניצחון כשמישהו משלים.</p>
+      <h3>התור שלך</h3><ul>
+        <li>קח את הקלף העליון מהחפיסה השמאלית שלך, מהחפיסה המרכזית (הפוכה) או מהחפיסה הימנית שלך.</li>
+        <li>קלפים אפורים הם משאבים. זהב צהוב מחליף כל משאב חסר.</li>
+        <li>כשאפשר לשלם על שלב זמין חייבים לבנות אותו. לכל פלא צורה משלו: שלב נבנה אחרי שהחלקים שמתחתיו בנויים, וחלקים זה לצד זה נבנים בכל סדר.</li>
+        <li>ירוק: 2 סמלים זהים או 3 שונים מוחלפים באסימון התקדמות.</li>
+        <li>קלפים כחולים נותנים נקודות. קלף עם חתול נותן לך את החתול: 2 נקודות בסוף, והצצה בקלף העליון של החפיסה המרכזית.</li>
+        <li>קלפים אדומים נותנים מגנים. קרניים הופכות אסימוני סכסוך; כשהאחרון מתהפך מתרחש קרב בסוף התור. מי שיש לו יותר מגנים משכן מקבל אסימון צבא (3 נקודות). במשחק של 2 מקבלים 2 אסימונים עם פי 2 מגנים לפחות. אחרי הקרב נזרקים הקלפים האדומים עם הקרניים.</li>
+      </ul>
+      <h3>אסימוני התקדמות</h3><div class="tokgal">${Object.keys(TOK).map(t=>`<div class="tg"><span class="pt" style="pointer-events:none;width:auto"><span class="coin">${TOK[t].n.slice(0,2).toUpperCase()}</span></span><div><b>${TOK[t].n}</b> ${tokIcons(t)}<br><span class="note">${iconize(TOK[t].d)}</span></div></div>`).join('')}</div>
+      <h3>סוף המשחק</h3><p>המשחק נגמר בסוף התור שבו פלא הושלם. בשוויון מנצח מי שבנה יותר שלבים.</p>
+      <p class="note">כמות הקלפים בכל חפיסה לפי טבלת החלוקה הרשמית. צורת הפלאים, העלויות והנקודות לפי המגשים המודפסים.</p>
+      <button class="btn" data-act="close">סגור</button></div>`;
+  }else if(uiModal==='end'&&S.final){
+    const win=S.final[0].p;
+    h=`<h2>${win.human?tr('You win!','ניצחת!'):tr(win.name+' wins',win.name+' ניצחה')}</h2>
+      <div class="tblwrap"><table class="scores"><thead><tr><th>${tr('Wonder','פלא')}</th><th>${tr('Stages','שלבים')}</th><th>${tr('Blue','כחול')}</th><th>${tr('Cat','חתול')}</th><th>${tr('Military','צבא')}</th><th>${tr('Progress','התקדמות')}</th><th>${tr('Total','סה״כ')}</th></tr></thead><tbody>
+      ${S.final.map((r,i)=>`<tr class="${r.p.human?'mine':''}"><td>${r.p.human?tr('You · ','אתה · '):''}${r.p.name}</td><td>${r.s.stages} <span class="note">(${r.st}/5)</span></td><td>${r.s.blue}</td><td>${r.s.cat}</td><td>${r.s.mil}</td><td>${r.s.prog}</td><td>${r.s.total}</td></tr>`).join('')}
+      </tbody></table></div>
+      <div class="opts"><button class="btn primary" data-act="new">${tr('Play again','שחק שוב')}</button><button class="btn" data-act="close">${tr('View table','הצג שולחן')}</button></div>`;
+  }else if(pd&&pd.type==='build'){
+    const p=S.players[0],st=stagesOf(p.wonder),nm=stageNames(p.wonder);
+    h=`<h2>${tr('Choose a stage to build','בחר שלב לבנייה')}</h2><p>${tr('You can pay for more than one stage. Pick which one to build first; if enough resources remain, the game will offer the next one.','יש לך משאבים ליותר משלב אחד. בחר איזה לבנות קודם; אם יישארו מספיק משאבים, המשחק יציע את הבא.')}</p>
+      <div class="buildopts">${pd.options.map((o,k)=>{const s=st[o.i];return `<button class="bopt" data-act="build" data-v="${k}">
+        <span class="ann-cost">${costLabel(s.cost)}</span>
+        <span class="bo-main"><b>${nm[o.i]}</b><span>${s.vp} ${VP()}${s.fx?` · <span class="star">★</span> ${iconize(FXSHORT[p.wonder])}`:''}</span>
+        <span class="bo-pay">${tr('Pays with','תשלום')}: ${o.plan.cards.map(c=>`<span class="ic">${miniIcon(c.t)}</span>`).join('')}${o.plan.eng?` <em>(${tr('Engineering','הנדסה')})</em>`:''}</span></span></button>`}).join('')}</div>`;
+  }else if(pd&&pd.type==='claim'){
+    h=`<h2>${pd.title}</h2><div class="claimv">${pd.visual}</div><div>${pd.text}</div><div class="opts" style="justify-content:center"><button class="btn primary big" data-act="claim">${pd.btn}</button></div>`;
+  }else if(pd&&pd.type==='any'){
+    h=`<h2>${W.alexandria.name}</h2><p>${W.alexandria.fx}</p><div class="pickrow">${pd.options.map(s=>`<button data-act="any" data-v="${s}">${s==='C'?(S.cat===0?cardHTML(topCard('C'),'md'):backHTML('md')):cardHTML(topCard(s),'md')}<span>${s==='C'?tr('Central','מרכזית'):S.players[s].human?tr('Your deck','החפיסה שלך'):S.players[s].name}</span></button>`).join('')}</div>`;
+  }else if(pd&&pd.type==='side'){
+    h=`<h2>${W.halicarnassus.name}</h2><p>${tr('Which deck do you want to search? You will see its top 5 cards and keep 1.','באיזו חפיסה לחפש? תראה את 5 הקלפים העליונים ותשמור אחד.')}</p><div class="pickrow">${pd.options.map(s=>`<button data-act="side" data-v="${s}">${cardHTML(topCard(s),'md')}<span>${S.players[s].human?tr('Left · your deck','שמאל · החפיסה שלך'):tr('Right · ','ימין · ')+S.players[s].name}</span></button>`).join('')}</div>`;
+  }else if(pd&&pd.type==='pick5'){
+    h=`<h2>${W.halicarnassus.name}</h2><p>${tr('Keep one card. The rest are shuffled back into the deck.','שמור קלף אחד. השאר יעורבבו בחזרה לחפיסה.')}</p><div class="pickrow">${pd.cards.map((c,i)=>`<button data-act="pick5" data-v="${i}">${cardHTML(c,'md')}</button>`).join('')}</div>`;
+  }
+  if(uiModal==='rules')h=h.replace(/<li>([^]*?)<\/li>/g,(m,x)=>`<li>${iconize(x)}</li>`);
+  if(h){m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true">${h}</div>`;m.hidden=false}else{m.hidden=true;m.innerHTML=''}
+}
+function render(){if(!S)return;renderStatus();renderOpps();renderTable();renderMe();renderLog();renderModal();renderAnn();if(tipEl&&!document.body.contains(tipEl))hideTip()}
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},1800)}
+
+
+// ---------- token tooltip ----------
+const TIMING_K={economy:'on',tactics:'on',engineering:'turn',decor:'end',politics:'end',strategy:'end',education:'end',culture:'end'};
+const timing=k=>({on:tr('Always on','פעיל תמיד'),turn:tr('Once per turn','פעם בתור'),end:tr('End of game','סוף המשחק')})[TIMING_K[k]]||tr('Once per turn, when triggered','פעם בתור, כשמופעל');
+let tipEl=null;
+function showTip(el){
+  const k=el.dataset.tip,t=$('tip');
+  t.classList.remove('wide');
+  if(k.startsWith('w:')){const key=k.slice(2),w=W[key],st=stagesOf(key),keys=Object.keys(W);
+    const fake={id:'pv'+key,wonder:key,built:[0,0,0,0,0]};
+    const typical=ORDER.map((_,i)=>{const v=keys.map(x=>COMP[x][i]),c={};v.forEach(n=>c[n]=(c[n]||0)+1);return +Object.keys(c).sort((a,b)=>c[b]-c[a])[0]});
+    const odd=ORDER.map((ty,i)=>[ty,COMP[key][i],typical[i]]).filter(([,n,tv])=>n!==tv);
+    const names=stageNames(key);
+    t.classList.add('wide');
+    t.innerHTML=`<div class="th"><span class="wdot" style="--w:${w.color}"></span>${w.name}</div>
+      <p class="city">${CITY[key]}</p>
+      <div class="wprev">${wonderSVG(fake,true)}</div>
+      <div class="wst">${st.map((s,i)=>`<span><b>${costLabel(s.cost)}</b> ${names[i]} · ${s.vp} ${VP()}${s.fx?' <span class="star">★</span>':''}</span>`).join('')}</div>
+      <div class="wfx">${key==='giza'?iconize(w.fx):`<span class="star">★</span> ${iconize(w.fx)}`}</div>
+      <span class="when">${tr(`Deck highlights (${COMP[key].reduce((a,b)=>a+b,0)} cards)`,`מיוחד בחפיסה (${COMP[key].reduce((a,b)=>a+b,0)} קלפים)`)}</span>
+      <div class="wdeck">${odd.map(([ty,n,tv])=>`<span><span class="ic">${miniIcon(ty)}</span>${n}× ${TYPES[ty].label} <em>(${tr('usual','בדרך כלל')} ${tv})</em></span>`).join('')}</div>`;
+  }else if(k.startsWith('fx:')){const [,pid,si]=k.split(':'),p=S.players[+pid],w=W[p.wonder],st=stagesOf(p.wonder),fxs=st.map((s,i)=>s.fx?i:-1).filter(i=>i>=0);
+    const nm=stageNames(p.wonder).map(x=>x.toLowerCase());
+    const state=+si>=0?(p.built[+si]?tr('Earned','התקבל'):tr(`Not built yet · costs ${costWord(st[+si].cost)}`,`עוד לא נבנה · עלות ${costWord(st[+si].cost)}`)):tr(`${fxs.filter(i=>p.built[i]).length} of ${fxs.length} earned (${fxs.map(i=>nm[i]).join(' and ')})`,`${fxs.filter(i=>p.built[i]).length} מתוך ${fxs.length} התקבלו (${fxs.map(i=>nm[i]).join(', ')})`);
+    t.innerHTML=`<div class="th"><span class="mono" style="background:#F2C94C;color:#5A3D08">★</span>${p.human?tr('Your bonus','הבונוס שלך'):tr(w.name+' bonus','בונוס '+w.name)}</div>${iconize(w.fx)}<span class="when">${state}</span>`;
+  }else if(k==='stack')t.innerHTML=(LANG==='he'?`<div class="th"><span class="mono">?</span>ערימה הפוכה</div>${S.stack.length} אסימוני התקדמות מוסתרים. לוקחים את העליון בלי לראות אותו קודם.`:`<div class="th"><span class="mono">?</span>Face-down stack</div>${S.stack.length} hidden Progress token${S.stack.length===1?'':'s'}. Take the top one without seeing it first.`).replace(/Progress tokens?|אסימוני התקדמות/,m=>`<span class="ic">${XI.token}</span>${m}`);
+  else t.innerHTML=`<div class="th"><span class="mono">${TOK[k].n.slice(0,2).toUpperCase()}</span>${TOK[k].n}${tokIcons(k)}</div>${iconize(TOK[k].d)}<span class="when">${timing(k)}</span>`;
+  t.hidden=false;tipEl=el;
+  const r=el.getBoundingClientRect(),tw=t.offsetWidth,th=t.offsetHeight,vw=document.documentElement.clientWidth;
+  let x=r.left+r.width/2-tw/2;x=Math.max(8,Math.min(x,vw-tw-8));
+  const vh=document.documentElement.clientHeight;let y=r.top-th-10,below=false,free=false;if(y<8){y=r.bottom+10;below=true;if(y+th>vh-8){y=Math.max(8,vh-th-8);free=true}}t.classList.toggle('free',free);if(free){x=r.right+10+tw<=vw-8?r.right+10:Math.max(8,r.left-tw-10)}
+  t.classList.toggle('below',below);t.style.left=x+'px';t.style.top=y+'px';
+  t.style.setProperty('--ax',(r.left+r.width/2-x)+'px');
+}
+function hideTip(){$('tip').hidden=true;tipEl=null}
+document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const el=e.target.closest('[data-tip]');if(el&&el!==tipEl)showTip(el);else if(!el&&tipEl)hideTip()});
+document.addEventListener('pointerleave',hideTip);
+window.addEventListener('scroll',hideTip,{passive:true});
+document.addEventListener('focusin',e=>{const el=e.target.closest('[data-tip]');if(el)showTip(el)});
+document.addEventListener('focusout',hideTip);
+
+// ---------- input ----------
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act,raw=el.dataset.v,v=raw==='C'||raw==='stack'||raw===undefined?raw:(isNaN(+raw)?raw:+raw);
+  const pd=S&&S.pending;
+  switch(a){
+    case 'src': if(pd&&pd.type==='source'&&pd.options.includes(v))answer(v);break;
+    case 'tok': if(pd&&pd.type==='progress'&&pd.options.includes(v))answer(v);else{showTip(el);setTimeout(()=>{if(tipEl===el)hideTip()},2600)}break;
+    case 'tokinfo': showTip(el);if(e.pointerType!=='mouse')setTimeout(()=>{if(tipEl===el)hideTip()},2600);break;
+    case 'any': if(pd&&pd.type==='any')answer(v);break;
+    case 'claim': if(pd&&pd.type==='claim')answer(1);break;
+    case 'build': if(pd&&pd.type==='build')answer(v);break;
+    case 'side': if(pd&&pd.type==='side')answer(v);break;
+    case 'pick5': if(pd&&pd.type==='pick5')answer(v);break;
+    case 'new': uiModal='setup';renderModal();break;
+    case 'rules': uiModal='rules';renderModal();break;
+    case 'close': uiModal=null;renderModal();break;
+    case 'sopp': setupSel.opp=v;renderModal();break;
+    case 'sw': setupSel.wonder=v;renderModal();if(v!=='random'){const n=document.querySelector(`[data-tip="w:${v}"]`);if(n){showTip(n);if(e.pointerType!=='mouse')setTimeout(()=>{if(tipEl===n)hideTip()},3500)}}break;
+    case 'start': hideTip(); try{localStorage.setItem('wa-setup',JSON.stringify(setupSel))}catch(_){} newGame(setupSel.opp,setupSel.wonder);break;
+    case 'lang': setLang(LANG==='he'?'en':'he');break;
+  }
+});
+function setLang(l){LANG=l;try{localStorage.setItem('wa-lang',l)}catch(_){}document.documentElement.lang=l;document.documentElement.dir=l==='he'?'rtl':'ltr';hideTip();render();if(!S)renderModal()}
+(function applyHe(){
+  const TL={gold:'זהב',stone:'אבן',brick:'לבנים',wood:'עץ',glass:'זכוכית',papyrus:'פפירוס',gear:'גלגל',compass:'מחוגה',tablet:'לוח',blue3:'3 נק׳',blue2:'2 נק׳ + חתול',red0:'מגן',red2:'2 קרניים',red1:'קרן'};
+  for(const k in TL)bi(TYPES[k],'label',TL[k]);
+  const WN={alexandria:['אלכסנדריה','קח את הקלף העליון מכל חפיסה שעל השולחן.'],halicarnassus:['הליקרנסוס','הסתכל ב-5 הקלפים העליונים של החפיסה השמאלית או הימנית, שמור אחד וערבב את השאר בחזרה.'],ephesus:['אפסוס','קח את הקלף העליון של החפיסה המרכזית.'],olympia:['אולימפיה','קח את הקלף העליון מהחפיסה השמאלית ומהחפיסה הימנית.'],babylon:['בבל','בחר אסימון התקדמות אחד מתוך 4 הזמינים.'],rhodes:['רודוס','הוסף מגן אחד לסך המגנים שלך.'],giza:['גיזה','אין אפקט, אבל יותר נקודות ניצחון.']};
+  for(const k in WN){bi(W[k],'name',WN[k][0]);bi(W[k],'fx',WN[k][1])}
+  const TK={urbanism:['אורבניזם','כשאתה לוקח קלף עץ או לבנים, קח קלף נוסף מתוך 3 הזמינים.'],crafts:['מלאכה','כשאתה לוקח קלף פפירוס או זכוכית, קח קלף נוסף מתוך 3 הזמינים.'],jewellery:['תכשיטים','כשאתה לוקח קלף אבן או זהב, קח קלף נוסף מתוך 3 הזמינים.'],science:['מדע','כשאתה לוקח קלף ירוק, קח קלף נוסף מתוך 3 הזמינים.'],propaganda:['תעמולה','כשאתה לוקח קלף אדום עם קרניים, קח קלף נוסף מתוך 3 הזמינים.'],architecture:['ארכיטקטורה','כשאתה בונה שלב, קח קלף נוסף מתוך 3 הזמינים.'],economy:['כלכלה','כל קלף זהב שלך שווה 2 מטבעות.'],engineering:['הנדסה','פעם בתור, בנה שלב עם משאבים כלשהם, בלי חוק הזהים / השונים.'],tactics:['טקטיקה','הוסף 2 מגנים לסך המגנים שלך.'],decor:['עיטור','סוף המשחק: 4 נקודות, או 6 נקודות אם הפלא שלך הושלם.'],politics:['פוליטיקה','סוף המשחק: נקודה אחת לכל סמל חתול על הקלפים הכחולים שלך.'],strategy:['אסטרטגיה','סוף המשחק: נקודה אחת לכל אסימון צבא שלך.'],education:['חינוך','סוף המשחק: 2 נקודות לכל אסימון התקדמות שלך (כולל זה).'],culture:['תרבות','סוף המשחק: 4 נקודות עם אסימון תרבות אחד, 12 נקודות עם שניים.']};
+  for(const k in TK){bi(TOK[k],'n',TK[k][0]);bi(TOK[k],'d',TK[k][1])}
+  const FS={alexandria:'קלף עליון מכל חפיסה',halicarnassus:'חיפוש ב-5 קלפים, שמירת 1',ephesus:'קלף עליון מהחפיסה המרכזית',olympia:'קלף עליון משמאל + מימין',babylon:'בחירת אסימון התקדמות',rhodes:'מגן +1',giza:'אין בונוס, יותר נקודות'};
+  for(const k in FS)bi(FXSHORT,k,FS[k]);
+  const CT={alexandria:'נמל מצרי שייסד אלכסנדר הגדול. המגדלור שעל האי פארוס הנחה ספינות במשך מאות שנים, עם אש שבערה בראשו.',halicarnassus:'עיר בקאריה, היום בודרום שבטורקיה. קברו של המלך מאוסולוס ניצב על בסיס גבוה, מוקף עמודים ומוכתר בגג מדורג ובמרכבה.',ephesus:'עיר יוונית עשירה בחוף איוניה. מקדש השיש הגדול לארטמיס היה מוקף ביותר ממאה עמודים.',olympia:'מקדש ביוון ומקום הולדתם של המשחקים האולימפיים. בתוך המקדש ישב פסל ענק של זאוס, משנהב וזהב, על כס מעץ ארז.',babylon:'בירת מסופוטמיה על נהר הפרת. לפי המסופר, הגנים התלויים התנשאו במדרגות ירוקות שהושקו בשיטות השקיה מתוחכמות.',rhodes:'עיר אי בים האגאי. פסל ברונזה של אל השמש הליוס, בגובה של יותר מ-30 מטר, עמד בנמל עד שרעידת אדמה הפילה אותו.',giza:'רמה ליד קהיר שבמצרים. הפירמידה הגדולה, קברו של פרעה ח׳ופו, היא הפלא הקדום ביותר והיחיד שעדיין עומד.'};
+  for(const k in CT)bi(CITY,k,CT[k]);
+  const SN={alexandria:['בסיס','מגדל תחתון','מגדל אמצעי','מגדל עליון','פנס'],halicarnassus:['במה','טרסה','שורת עמודים שמאלית','שורת עמודים ימנית','גג'],ephesus:['מדרגות','עמוד שמאלי','עמוד אמצעי','עמוד ימני','גמלון'],olympia:['בסיס','צד שמאל','צד ימין','גוף','ראש'],babylon:['טרסה תחתונה','טרסה אמצעית','טרסה עליונה','מגדל הגן','כיפה'],rhodes:['כן שמאלי','כן ימני','רגליים','גוף','ראש'],giza:['שכבת בסיס','שכבה שנייה','שכבה שלישית','שכבה רביעית','פסגה']};
+  for(const k in SN)bi(WDATA[k],'n',SN[k]);
+})();
+document.documentElement.lang=LANG;document.documentElement.dir=LANG==='he'?'rtl':'ltr';
+try{const s=JSON.parse(localStorage.getItem('wa-setup')||'null');if(s&&s.opp)setupSel=s}catch(_){}
+newGame(setupSel.opp,setupSel.wonder);
+</script>
+
+
+<style>
+#siteHome{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);z-index:2147482000;
+ width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(16,18,24,.55);color:#fff;
+ display:grid;place-items:center;padding:0;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.8}
+#siteHome:hover,#siteHome:focus-visible{opacity:1}
+#siteHome svg{width:21px;height:21px}
+</style>
+<button id="siteHome" type="button" aria-label="מסך הבית" title="מסך הבית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></button>
+<script>
+(()=>{const b=document.getElementById('siteHome');
+ ['pointerdown','touchstart','mousedown'].forEach(t=>b.addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+ b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
+  location.href='/';});   // leaving the page fires the games' own save-on-exit handlers
+ if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
+})();
+</script>
+</body></html>

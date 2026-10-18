@@ -50,7 +50,8 @@ canvas#board{display:block;touch-action:none;border-radius:10px;background:#0E10
 .pad button{background:var(--panel);border:1px solid var(--line);border-radius:14px;height:56px;display:grid;place-items:center;font-size:13px;color:var(--muted)}
 .pad button svg{width:26px;height:26px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pad button:active{background:#262B36}
-@media (hover:hover) and (pointer:fine){.pad{display:none}}
+.pad{display:none!important}   /* no on-screen buttons: touch uses gestures, the hold box, and the keyboard covers the rest */
+#sideRight{touch-action:manipulation}
 .overlay{position:absolute;inset:0;display:grid;place-items:center;padding:18px;background:var(--glass);z-index:5;overflow:auto}
 .overlay[hidden]{display:none}
 .card{text-align:center;max-width:330px}
@@ -694,7 +695,6 @@ function endG(e){
  const dt=performance.now()-g.t,dx=e.clientX-g.x0,dy=e.clientY-g.y0;
  if(state==='play'&&cur&&cur===g.piece){
   if(g.moved<12&&dt<260)tryRotate(1);                      // tap = rotate
-  else if(g.axis==='v'&&dy<-Math.max(40,cell*2))holdPiece();   // swipe up = hold
   else if(g.axis==='v'&&dy>Math.max(60,cell*3)&&dt<260)hardDrop(); // flick down = hard drop
  }
  g=null;
@@ -768,7 +768,7 @@ $('startBtn').onclick=()=>{unlock();startOrPick();};
 $('againBtn').onclick=()=>{unlock();newGame();};
 const touch=matchMedia('(hover:none)').matches;
 $('howto').innerHTML=touch
- ?'<b>הזזה:</b> גררו את האצבע ימינה או שמאלה, בכל מקום במסך<br><b>סיבוב:</b> הקשה על המסך<br><b>הפלת האבן:</b> החלקה מהירה למטה<br><b>שמירת צורה:</b> החלקה למעלה או הקשה על תיבת "שמור"<br>אפשר גם להשתמש בכפתורים שמתחת ללוח'
+ ?'<b>הזזה:</b> גררו את האצבע ימינה או שמאלה, בכל מקום במסך<br><b>סיבוב:</b> הקשה על המסך<br><b>הורדה איטית:</b> גרירה למטה<br><b>הפלת האבן:</b> החלקה מהירה למטה<br><b>שמירת צורה:</b> הקשה על תיבת "שמור"'
  :'<b>חצים ימינה ושמאלה:</b> הזזה<br><b>חץ למעלה:</b> סיבוב<br><b>חץ למטה:</b> הפלת האבן<br><b>רווח:</b> נפילה מהירה<br><b>Z / X:</b> סיבוב, <b>C או Shift:</b> שמירת צורה<br><b>P:</b> השהיה';
 
 /* loop */

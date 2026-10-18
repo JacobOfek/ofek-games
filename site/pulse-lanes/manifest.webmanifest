@@ -1,0 +1,33 @@
+{
+ "name": "Pulse Lanes",
+ "short_name": "Pulse Lanes",
+ "lang": "he",
+ "dir": "rtl",
+ "start_url": "/pulse-lanes/",
+ "scope": "/pulse-lanes/",
+ "display": "fullscreen",
+ "display_override": [
+  "fullscreen",
+  "standalone"
+ ],
+ "background_color": "#140f22",
+ "theme_color": "#140f22",
+ "icons": [
+  {
+   "src": "/icons/pulse-lanes-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "/icons/pulse-lanes-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "/icons/pulse-lanes-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

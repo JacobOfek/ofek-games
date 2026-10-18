@@ -1,0 +1,33 @@
+{
+ "name": "Wonders Dice",
+ "short_name": "Wonders Dice",
+ "lang": "he",
+ "dir": "rtl",
+ "start_url": "/wonders-dice/",
+ "scope": "/wonders-dice/",
+ "display": "fullscreen",
+ "display_override": [
+  "fullscreen",
+  "standalone"
+ ],
+ "background_color": "#EBDDBF",
+ "theme_color": "#EBDDBF",
+ "icons": [
+  {
+   "src": "/icons/wonders-dice-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "/icons/wonders-dice-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "/icons/wonders-dice-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

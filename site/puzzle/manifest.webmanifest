@@ -1,0 +1,33 @@
+{
+ "name": "פאזל",
+ "short_name": "פאזל",
+ "lang": "he",
+ "dir": "rtl",
+ "start_url": "/puzzle/",
+ "scope": "/puzzle/",
+ "display": "fullscreen",
+ "display_override": [
+  "fullscreen",
+  "standalone"
+ ],
+ "background_color": "#1E1B29",
+ "theme_color": "#1E1B29",
+ "icons": [
+  {
+   "src": "/icons/puzzle-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "/icons/puzzle-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "/icons/puzzle-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

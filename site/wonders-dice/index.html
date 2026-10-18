@@ -1,0 +1,1106 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="manifest" href="/wonders-dice/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/wonders-dice-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wonders Dice">
+<meta name="theme-color" content="#EBDDBF">
+</head><body>
+<title>Wonders Dice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Open+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: the printed player board. Navy rulebook band on top, then the wooden Forum box beside the action panel,
+   then your city laid out like the real board: Wonder + Guild Court + Gallery on top, Barracks on both sides,
+   Agora / Market / University in the middle, Warehouse, Gold reserve and Bonuses along the bottom.
+   Single parchment theme to match the printed game (same family as Wonder Architects). */
+:root{
+  color-scheme:light;
+  --bg:#EBDDBF; --paper:#FBF5E6; --paper2:#F4EAD2; --ink:#2A2116; --muted:#76664B; --line:#D5C096;
+  --plaza:#EFE6D3; --tile:#E4D8BE; --grass:#8DBE5A; --grass2:#6FA746;
+  --gold:#B8862A; --gold2:#E3C36C; --navy:#1E2C57; --glow:rgba(232,180,40,.75);
+  --c-grey:#8E8E8A; --c-blue:#2F6CC4; --c-red:#C8322B; --c-yellow:#E8B321; --c-green:#3E9A4E;
+  --c-black:#26262A; --c-white:#F3F0E6; --c-purple:#7D44B5; --c-wonder:#E0A526;
+  --card:#F3F1EC; --cardline:#B9B2A2;
+  --display:"Cinzel","Trajan Pro","Palatino Linotype",Georgia,serif;
+  --body:"Open Sans","Segoe UI",system-ui,sans-serif;
+  --meander:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12'%3E%3Cpath d='M0 11h15V1H4v7h7V4H7' fill='none' stroke='%23E3C36C' stroke-width='1.4'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.4;padding-inline:16px;padding-block:0 40px;-webkit-tap-highlight-color:transparent}
+#app{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;letter-spacing:.03em;text-wrap:balance}
+svg{display:block}
+.top{background:var(--navy);color:#F4E7C4;margin-inline:-16px;padding:10px 16px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;position:relative;border-radius:0 0 14px 14px;box-shadow:0 4px 14px rgba(30,44,87,.25)}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:6px;height:12px;background:var(--meander) repeat-x}
+.brand{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:.06em;color:var(--gold2);line-height:1}
+.brand small{display:block;font-family:var(--body);font-size:10.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#C9BFA4;margin-top:4px}
+.hstats{flex:1 1 260px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:#D7CCAE}
+.hstats b{color:#fff;font-variant-numeric:tabular-nums}
+.hs{display:inline-flex;align-items:center;gap:5px}
+.hs svg{width:22px;height:22px}
+.btn{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:7px 13px;font-size:13px;font-weight:700;color:var(--ink)}
+.top .btn{background:transparent;color:#F4E7C4;border-color:rgba(227,195,108,.5)}
+.btn.primary,.top .btn.primary{background:linear-gradient(#E6C267,#B8862A);border-color:#8E6516;color:#2A1D05}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.big{font-size:15px;padding:10px 20px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 4px var(--line),0 2px 8px rgba(80,60,20,.12)}
+.label{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.note{font-size:12px;color:var(--muted)}
+
+/* ---------- Forum + actions ---------- */
+.play{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media(min-width:820px){.play{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}}
+.forum{border-radius:10px;padding:14px;background:#F7F3EA;box-shadow:inset 0 0 0 2px #DDD6C6,inset 0 0 0 8px #EFE9DC,0 4px 10px rgba(60,40,10,.25);display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative}
+.forum::before,.forum::after{content:"";position:absolute;background:#E4DED1;box-shadow:0 1px 2px rgba(0,0,0,.2);border-radius:4px}
+.forum::before{left:calc(50% - 3px);top:14px;bottom:14px;width:6px}.forum::after{top:calc(50% - 3px);left:14px;right:14px;height:6px}
+.quad{position:relative;border-radius:4px;min-height:132px;padding:26px 14px;display:flex;flex-direction:column;justify-content:center;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%23F3EFE6'/%3E%3Cg fill='%23D6D3DC'%3E%3Crect x='6' y='6' width='108' height='14'/%3E%3Crect x='6' y='100' width='108' height='14'/%3E%3Crect x='6' y='6' width='14' height='108'/%3E%3Crect x='100' y='6' width='14' height='108'/%3E%3C/g%3E%3Cg fill='%23F3EFE6'%3E%3Crect x='6' y='6' width='14' height='14'/%3E%3Crect x='100' y='6' width='14' height='14'/%3E%3Crect x='6' y='100' width='14' height='14'/%3E%3Crect x='100' y='100' width='14' height='14'/%3E%3C/g%3E%3Cg transform='translate(60 60)'%3E%3Cg id='p'%3E%3Cpath d='M0 0L10 -24L0 -34L-10 -24Z' fill='%23D6D3DC'/%3E%3Cpath d='M0 0L24 -10L34 0L24 10Z' fill='%23E9E2D6'/%3E%3C/g%3E%3Cuse href='%23p' transform='rotate(90)'/%3E%3Cuse href='%23p' transform='rotate(180)'/%3E%3Cuse href='%23p' transform='rotate(270)'/%3E%3C/g%3E%3C/svg%3E") center/cover;box-shadow:inset 0 0 0 1px #D9D2C2}
+.quad .cc{position:absolute;width:34px;height:34px}
+.quad .cc svg{width:100%;height:100%}
+.q0 .cc{left:-4px;top:-4px}.q1 .cc{right:-4px;top:-4px}.q2 .cc{right:-4px;bottom:-4px}.q3 .cc{left:-4px;bottom:-4px}
+.quad .dice{justify-content:center}
+.quad .dice{display:flex;flex-wrap:wrap;gap:8px}
+
+.die{--sz:58px;width:var(--sz);height:var(--sz);border-radius:calc(var(--sz)*.2);border:0;padding:0;position:relative;transform:rotate(var(--rot,0deg));transition:transform .15s,filter .15s;
+  background:radial-gradient(120% 120% at 28% 22%,color-mix(in srgb,var(--dc) 55%,#fff) 0%,var(--dc) 45%,color-mix(in srgb,var(--dc) 72%,#000) 100%);
+  box-shadow:inset 2px 2px 1px rgba(255,255,255,.45),inset -3px -4px 2px rgba(0,0,0,.25),3px 4px 0 color-mix(in srgb,var(--dc) 55%,#000),0 9px 12px rgba(40,25,5,.35)}
+.die::before{content:"";position:absolute;inset:7%;border-radius:calc(var(--sz)*.15);background:radial-gradient(100% 100% at 30% 25%,rgba(255,255,255,.22),transparent 60%);pointer-events:none}
+.die .face{position:absolute;inset:12%;display:grid;place-items:center;filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.die .face svg{width:100%;height:100%}
+.die.d-black .face,.die.d-purple .face{inset:14%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+.die.d-black .face svg>rect:first-child,.die.d-purple .face svg>rect:first-child{fill:transparent;stroke:#fff;stroke-width:1.6}
+.die.d-grey .face,.die.d-white .face{filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+.die.usable{cursor:pointer}
+.die.usable:hover{transform:rotate(0deg) translateY(-4px) scale(1.05)}
+.die.dim{filter:grayscale(.65) brightness(.92);opacity:.6;cursor:pointer}
+.die.sel{transform:rotate(0) translateY(-4px) scale(1.06);box-shadow:0 0 0 3px #FFE07A,0 0 20px var(--glow),3px 4px 0 color-mix(in srgb,var(--dc) 55%,#000)}
+.die .lock{position:absolute;right:-7px;top:-7px;width:22px;height:22px;border-radius:50%;background:var(--paper);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.die .lock svg{width:13px;height:13px}
+.die.big{--sz:88px;cursor:default;transform:rotate(-4deg)}
+.dhead{display:flex;gap:16px;align-items:center}
+.dhead h3{font-size:18px}
+.dhead .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.dexp{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.dexp .why{background:#FBE3DF;border:1px solid #E7A49F;color:#7A1F1A;border-radius:8px;padding:8px 10px;font-weight:600}
+.dopts{display:flex;flex-direction:column;gap:8px}
+.dopt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--paper2);border:2px solid var(--line);border-radius:12px;padding:8px 10px}
+.dopt:hover{border-color:var(--gold)}
+.dopt.on{border-color:var(--gold);background:#FFF3C9;box-shadow:0 0 0 3px var(--glow)}
+.dopt .sp{flex:none;pointer-events:none}
+.dopt b{font-family:var(--display);display:block}
+.dopt .pd{font-size:12.5px;color:var(--muted)}
+.dopt .pv{margin-left:auto;display:flex;align-items:center;gap:4px;font-weight:800;flex:none}
+.dopt .pv svg{width:26px;height:26px}
+.rolling .die{animation:shake .55s ease-in-out}
+@keyframes shake{0%{transform:rotate(0)}20%{transform:rotate(-18deg) translate(-4px,3px)}45%{transform:rotate(12deg) translate(4px,-3px)}70%{transform:rotate(-6deg)}100%{transform:none}}
+.actions{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.banner{border-radius:10px;padding:8px 12px;font-weight:700;background:linear-gradient(90deg,#F5E2A8,#FBF0CF);border:1px solid #D9B45A;color:#4A3508}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.confirm{background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.confirm .what{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700}
+.confirm .what svg{width:26px;height:26px}
+.hint{color:var(--muted);font-size:13px}
+.last{display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+.last div{display:flex;gap:6px;align-items:center}
+.last .dot{width:10px;height:10px;border-radius:3px;background:var(--w);flex:none}
+
+/* ---------- board ---------- */
+.board{border-radius:16px;padding:12px;background:
+  repeating-linear-gradient(0deg,transparent 0 23px,rgba(160,140,100,.18) 23px 24px),
+  repeating-linear-gradient(90deg,transparent 0 23px,rgba(160,140,100,.18) 23px 24px),var(--plaza);
+  border:1px solid var(--line);box-shadow:0 2px 10px rgba(80,60,20,.15);display:grid;gap:12px;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"wonder" "warehouse" "market" "agora" "west" "east" "univ" "gallery" "guild" "gold" "bonus"}
+.board.mini{padding:8px;gap:8px;font-size:12px}
+@media(min-width:640px){.board{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"wonder guild" "gallery gallery" "west east" "agora market" "univ warehouse" "gold bonus"}}
+@media(min-width:1180px){.board{grid-template-columns:150px minmax(250px,1fr) minmax(340px,1.15fr) minmax(250px,1fr) 150px;
+  grid-template-areas:"wonder wonder guild gallery gallery" "west agora market univ east" "warehouse warehouse gold gold bonus"}}
+.ar-wonder{grid-area:wonder}.ar-guild{grid-area:guild}.ar-gallery{grid-area:gallery}.ar-west{grid-area:west}.ar-east{grid-area:east}
+.ar-agora{grid-area:agora}.ar-market{grid-area:market}.ar-univ{grid-area:univ}.ar-warehouse{grid-area:warehouse}.ar-gold{grid-area:gold}.ar-bonus{grid-area:bonus}
+.bld{border-radius:12px;padding:8px 10px 10px;display:flex;overflow-wrap:anywhere;flex-direction:column;gap:6px;min-width:0;position:relative;--bc:#999}
+.bld .bh{display:flex;align-items:center;gap:7px;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.04em;color:#fff}
+.bld .bh .cnt{margin-left:auto;font-family:var(--body);font-size:11px;background:rgba(0,0,0,.25);border-radius:999px;padding:0 7px}
+.flag{width:20px;height:24px;flex:none;background:var(--bc);clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%);display:grid;place-items:start center;padding-top:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+.flag svg{width:13px;height:13px}
+.bld.done::after{content:"";position:absolute;inset:-3px;border-radius:14px;border:3px solid var(--gold2);pointer-events:none;box-shadow:0 0 12px var(--glow)}
+.b-blue{--bc:var(--c-blue);background:linear-gradient(#3B7BD6,#2758A8);box-shadow:inset 0 0 0 3px #6CA3EC,0 3px 0 #1C427F}
+.b-green{--bc:var(--c-green);background:linear-gradient(#4FAE5C,#2E7F3B);box-shadow:inset 0 0 0 3px #8BD08F,0 3px 0 #22622D}
+.b-purple{--bc:var(--c-purple);background:linear-gradient(#8E55C6,#6A35A0);box-shadow:inset 0 0 0 3px #B88DE3,0 3px 0 #4E2479}
+.b-red{--bc:var(--c-red);background:repeating-linear-gradient(90deg,#B32A24 0 10px,#A8241F 10px 12px);box-shadow:inset 0 0 0 3px #DD5A52,0 3px 0 #7E1A15}
+.b-yellow{--bc:var(--c-yellow);background:linear-gradient(#F3DFA0,#E9CB79);box-shadow:inset 0 0 0 3px #F8E9B8,0 3px 0 #B88F2A}
+.b-yellow .bh{color:#5A4106}
+.b-white{--bc:#E9E4D6;background:linear-gradient(var(--grass),var(--grass2));box-shadow:inset 0 0 0 3px #B3D98B,0 3px 0 #4F7F2F}
+.b-white .flag svg{filter:none}
+.b-grey{--bc:var(--c-grey);background:linear-gradient(#D9CFC0,#C6B9A5);box-shadow:inset 0 0 0 3px #E7DECF,0 3px 0 #9A8C77}
+.b-grey .bh,.b-gold .bh,.b-wonder .bh{color:#3A2E1C}
+.b-gold{--bc:var(--gold);background:#FFFDF7;box-shadow:inset 0 0 0 3px #EFE5CC,0 3px 0 #CDBE9C}
+.b-wonder{--bc:var(--c-wonder);background:linear-gradient(90deg,var(--sky1),var(--sky2));box-shadow:inset 0 0 0 3px rgba(255,255,255,.5),0 3px 0 rgba(0,0,0,.2)}
+
+/* spaces: the pale cards printed on the board */
+.sp{background:var(--card);border:1px solid var(--cardline);border-radius:7px;min-width:50px;min-height:62px;padding:4px 3px 3px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:2px;position:relative;font-size:11px;line-height:1.1;color:var(--ink)}
+.sp .st{display:flex;align-items:center;justify-content:center;gap:1px;min-height:30px;flex-wrap:wrap}
+.sp .st svg{width:30px;height:30px}
+.sp .st .sm svg{width:22px;height:22px}
+.sp .dred{position:absolute;top:2px;left:2px;font-size:9px;font-weight:800;line-height:1;color:#fff;background:rgba(179,38,30,.5);border-radius:5px;padding:2px 3px;pointer-events:none}
+#app.compact .sp .dred{font-size:8px;padding:1px 2px}
+.sp .cost{min-width:20px;height:19px;padding:0 4px;border-radius:4px;background:#fff;border:1.5px solid #4a4438;font-weight:800;font-size:11.5px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.sp.x,.strip .sp.x,.bar .col .sp.x{background:linear-gradient(170deg,#FFFBEA,#F5E3AE);box-shadow:inset 0 0 0 2px #C08A1E,inset 0 0 0 4px #FFF6D6,inset 0 0 0 5px rgba(192,138,30,.55)}
+.sp.x::before{content:"";position:absolute;inset:1px;pointer-events:none;border-radius:inherit;background:
+  conic-gradient(from 135deg at 7px 7px,#C08A1E 0 90deg,transparent 0) 0 0/50% 50% no-repeat,
+  conic-gradient(from 225deg at calc(100% - 7px) 7px,#C08A1E 0 90deg,transparent 0) 100% 0/50% 50% no-repeat,
+  conic-gradient(from 45deg at 7px calc(100% - 7px),#C08A1E 0 90deg,transparent 0) 0 100%/50% 50% no-repeat,
+  conic-gradient(from 315deg at calc(100% - 7px) calc(100% - 7px),#C08A1E 0 90deg,transparent 0) 100% 100%/50% 50% no-repeat;
+  -webkit-mask:radial-gradient(circle at 7px 7px,#000 3px,transparent 3.5px),radial-gradient(circle at calc(100% - 7px) 7px,#000 3px,transparent 3.5px),radial-gradient(circle at 7px calc(100% - 7px),#000 3px,transparent 3.5px),radial-gradient(circle at calc(100% - 7px) calc(100% - 7px),#000 3px,transparent 3.5px);
+  mask:radial-gradient(circle at 7px 7px,#000 3px,transparent 3.5px),radial-gradient(circle at calc(100% - 7px) 7px,#000 3px,transparent 3.5px),radial-gradient(circle at 7px calc(100% - 7px),#000 3px,transparent 3.5px),radial-gradient(circle at calc(100% - 7px) calc(100% - 7px),#000 3px,transparent 3.5px)}
+.sp.x .cost{position:relative;color:#8a8070;border-color:#8a8070}
+.sp.x .cost::after{content:"";position:absolute;inset:-4px -3px;pointer-events:none;background:
+  linear-gradient(45deg,transparent 43%,#2b2622 44%,#2b2622 56%,transparent 57%),
+  linear-gradient(-45deg,transparent 43%,#2b2622 44%,#2b2622 56%,transparent 57%)}
+.sp.av{cursor:pointer;background:#FFF6CF;border-color:#D9A520;box-shadow:0 0 0 3px #FFE07A,0 0 14px var(--glow);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 2px #FFE07A,0 0 4px var(--glow)}}
+.sp.hint{cursor:pointer;z-index:1;background:linear-gradient(rgba(255,206,60,.55),rgba(255,206,60,.55)),var(--card)!important;box-shadow:inset 0 0 0 3px #D99A10,0 0 0 2px #FFE07A,0 0 16px 2px rgba(240,180,20,.75);animation:hintglow 1.8s ease-in-out infinite}
+@keyframes hintglow{50%{box-shadow:inset 0 0 0 3px #D99A10,0 0 0 2px #FFE07A,0 0 6px 1px rgba(240,180,20,.4)}}
+.sp.hint:hover{background:#FFF0B8!important;transform:translateY(-1px)}
+.sp .hb{position:absolute;top:-13px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:1px;background:rgba(255,255,255,.6);backdrop-filter:blur(1px);border:1px solid rgba(160,110,10,.45);border-radius:9px;padding:1px 3px;z-index:3;pointer-events:none;opacity:.8;box-shadow:0 2px 4px rgba(0,0,0,.18);white-space:nowrap}
+.sp .hb svg{width:15px;height:15px}
+.sp.hint:hover .hb{opacity:.35}
+.bld.hintsec{cursor:pointer;box-shadow:inset 0 0 0 3px #D99A10,0 0 0 3px #FFE07A,0 0 18px 3px rgba(240,180,20,.7)!important;animation:secglow 1.8s ease-in-out infinite}
+@keyframes secglow{50%{box-shadow:inset 0 0 0 3px #D99A10,0 0 0 2px #FFE07A,0 0 6px rgba(240,180,20,.4)!important}}
+.bld.hintsec:hover{background:#FFF6D8}
+.hb.sec{position:absolute;top:-12px;right:14px;display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.85);border:1px solid rgba(160,110,10,.45);border-radius:10px;padding:2px 6px;font-size:10.5px;color:#5A4106;z-index:3;pointer-events:none}
+.hb.sec svg{width:16px;height:16px}
+.sp.pick{box-shadow:0 0 0 3px var(--navy),0 0 14px rgba(30,44,87,.5);animation:none}
+.sp .pay{position:absolute;top:-9px;right:-8px;z-index:2}
+.sp .pay svg{width:22px;height:22px}
+.sp.spec{background:transparent;border:0;min-height:auto}
+.strip{display:flex;align-items:stretch;gap:0;background:var(--card);border:1px solid var(--cardline);border-radius:8px;width:max-content;max-width:100%}
+.strip .sp:first-child{border-radius:7px 0 0 7px}.strip .sp:last-child{border-radius:0 7px 7px 0}.strip .sp:only-child{border-radius:7px}
+.strip .sp{border:0;border-radius:0;border-right:1px solid #D6D0C2;background:transparent}
+.strip .sp:last-child{border-right:0}
+.strip .sp.x{background:#E6E2D8}
+.strip .sp.av{background:#FFF6CF}
+.line{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+/* die-face tags: the arrow labels printed on the board */
+.tag{display:inline-flex;align-items:center;flex:none;background:#fff;border:1.5px solid #6d6556;border-radius:7px;padding:2px;position:relative}
+.tag .ti{width:34px;height:34px;border-radius:5px;background:var(--dc);display:grid;place-items:center}
+.tag .ti svg{width:28px;height:28px}
+.tag.r::after{content:"";width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:8px solid #A79FB8;margin:0 2px 0 3px}
+.tag.u{flex-direction:column}
+.tag.u::before{content:"";width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:8px solid #A79FB8;margin:1px 0 3px}
+.tag.sm .ti{width:26px;height:26px}.tag.sm .ti svg{width:21px;height:21px}
+/* building interiors */
+.wonderrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.agora{display:grid;grid-template-columns:auto repeat(3,minmax(52px,1fr));gap:5px;align-items:center;background:rgba(10,30,70,.25);border-radius:10px;padding:6px}
+.agora .first{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff;font-size:10px;font-weight:700}
+.agora .first svg{width:36px;height:36px}
+.agora .first.taken{opacity:.45}
+.agora .ct{display:flex;justify-content:center}
+.market{display:grid;grid-template-columns:repeat(5,auto);grid-template-rows:auto auto auto;gap:5px;align-items:center;justify-content:center}
+.dia{width:46px;height:46px;transform:rotate(45deg);background:#fff;border:2px solid #4a4438;border-radius:8px;display:grid;place-items:center;margin:8px}
+.dia .ti{transform:rotate(-45deg);width:34px;height:34px;border-radius:6px;background:var(--c-yellow);display:grid;place-items:center}
+.dia .ti svg{width:28px;height:28px}
+.market .gap{width:6px;height:100%;border-left:2px dashed rgba(90,65,6,.25)}
+.univ{display:flex;flex-direction:column;gap:6px;background:rgba(0,40,10,.22);border-radius:10px;padding:6px}
+.bar{display:flex;gap:6px;align-items:stretch;justify-content:center}
+.bar .col{display:flex;flex-direction:column-reverse;gap:0;background:var(--card);border:1px solid var(--cardline);border-radius:8px}
+.bar .col .sp:first-child{border-radius:0 0 7px 7px}.bar .col .sp:last-child{border-radius:7px 7px 0 0}
+.bar .col .sp{border:0;border-radius:0;border-top:1px solid #D6D0C2;background:transparent}
+.bar .col .sp.x{background:#E6E2D8}.bar .col .sp.av{background:#FFF6CF}
+.bar .stackc{display:flex;flex-direction:column;align-items:center;gap:5px;justify-content:flex-end}
+.minus{display:flex;align-items:center;justify-content:center;gap:4px;background:#fff;border-radius:7px;border:1.5px solid #6d6556;padding:2px 8px;font-size:11px;font-weight:700;color:var(--ink)}
+.minus svg{width:22px;height:22px}
+.gal{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.galc{display:flex;flex-direction:column;align-items:center;gap:4px}
+.wh{display:flex;gap:6px;flex-wrap:wrap}
+.wh .galc .sp{min-height:30px;min-width:44px}
+.gold{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;max-width:420px}
+.gold i{aspect-ratio:1;border-radius:50%;background:radial-gradient(#FBD15B 40%,#E5A919 42% 64%,#C78A0C 66%);opacity:.28}
+.gold i.on{opacity:1;box-shadow:0 0 0 1.5px #3a3530}
+.bonus{display:flex;gap:10px;justify-content:center}
+.hg{overflow-wrap:normal;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:700;text-align:center;max-width:76px;line-height:1.15;position:relative}
+.hg svg{width:46px;height:62px}
+.hg.x svg{opacity:.4}
+.hg.x::after{content:"";position:absolute;left:8px;right:8px;top:8px;height:50px;background:
+  linear-gradient(45deg,transparent 45%,#3a3530 46%,#3a3530 54%,transparent 55%),linear-gradient(-45deg,transparent 45%,#3a3530 46%,#3a3530 54%,transparent 55%)}
+.hg.av{cursor:pointer}
+.hg.av svg{filter:drop-shadow(0 0 6px var(--glow))}
+
+/* rivals */
+.opps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.opp{overflow:hidden;display:flex;flex-direction:column;gap:6px;padding-bottom:8px}
+.opp-h{display:flex;align-items:center;gap:6px;background:var(--w);color:#fff;padding:6px 10px;font-family:var(--display);font-weight:700;letter-spacing:.04em}
+.opp-h .vp{margin-left:auto;font-family:var(--body);font-size:12px;background:rgba(0,0,0,.25);border-radius:999px;padding:1px 8px}
+.opp .ln{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-inline:10px;font-size:12.5px;font-variant-numeric:tabular-nums}
+.opp .ln span{display:inline-flex;align-items:center;gap:3px}
+.opp .ln svg{width:18px;height:18px}
+.opp .act{padding-inline:10px;font-size:12px;color:var(--muted);font-style:italic}
+.opp .bd{display:flex;gap:4px;padding-inline:10px;flex-wrap:wrap}
+.opp .bd span{width:16px;height:16px;border-radius:4px;background:var(--bc);opacity:.25;display:grid;place-items:center}
+.opp .bd span.on{opacity:1}
+.opp .bd svg{width:10px;height:10px}
+details.peek{padding:10px 12px}
+details.peek>summary{cursor:pointer;font-family:var(--display);font-weight:700;letter-spacing:.04em}
+details.peek[open]>summary{margin-bottom:10px}
+.log{font-size:12.5px;color:var(--muted);max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.log b{color:var(--ink)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(20,26,50,.6);display:grid;place-items:center;padding:16px;z-index:10}
+.sheet{background:var(--paper);border-radius:16px;border:1px solid var(--line);padding:0 18px 18px;width:min(640px,100%);max-height:calc(100% - 20px);overflow:auto;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.sheet h2{margin-inline:-18px;background:var(--navy);color:var(--gold2);padding:14px 18px 22px;font-size:20px;position:relative}
+.sheet h2::after{content:"";position:absolute;left:0;right:0;bottom:5px;height:12px;background:var(--meander) repeat-x}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:1px solid var(--line);background:var(--paper2);border-radius:8px;padding:7px 12px;font-weight:700}
+.opt.sel{border-color:var(--gold);background:#F5E2A8}
+.bopts{display:flex;flex-direction:column;gap:8px}
+.bopt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.bopt:hover{border-color:var(--gold);box-shadow:0 0 0 3px var(--glow)}
+.bopt svg{width:40px;height:54px;flex:none}
+.bopt b{font-family:var(--display);display:block}
+.tblwrap{overflow-x:auto}
+.endsum{background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.endsum p{margin:0}
+table.det{font-size:12.5px}
+table.det th{vertical-align:bottom;text-align:center;border-bottom:3px solid var(--w,var(--line));white-space:nowrap}
+table.det th .rk{display:block;font-family:var(--body);font-size:10px;color:var(--muted);font-weight:700}
+table.det td{text-align:center;vertical-align:top;padding:5px 6px}
+table.det td b{font-size:14px;display:block}
+table.det td .nt{display:block;font-size:10px;color:var(--muted);white-space:normal;min-width:70px;max-width:110px;margin:auto;line-height:1.2}
+table.det .stick{position:sticky;left:0;background:var(--paper);text-align:left;z-index:1;white-space:nowrap;font-weight:700}
+@media(max-width:600px){table.det .stick{white-space:normal;min-width:96px;max-width:110px;font-size:11.5px}table.det td .nt{min-width:60px}}
+table.det .srci{display:inline-block;width:20px;height:20px;vertical-align:-5px;margin-right:6px}
+table.det .srci svg{width:20px;height:20px}
+table.det td.best{background:#F7E3A2}
+table.det .meh,table.det td.mec{background:#FFF6D8}
+table.det td.best.mec{background:#F2D47A}
+table.det tr.tot td{font-family:var(--display);font-size:16px;font-weight:700;border-top:2px solid var(--ink)}
+table.det tr.sub td{font-size:12px;color:var(--muted)}
+.sheet:has(table.det){width:min(980px,100%)}
+
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+th,td{padding:6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-family:var(--display);font-size:11.5px}
+th:first-child,td:first-child{text-align:left}
+tr.mine td{font-weight:700;background:#F5E2A8}
+th.sh{background:var(--hc);text-align:center;padding:4px;border:1px solid #6d6556}
+th.sh svg,th svg{width:24px;height:24px;margin:auto}
+td{text-align:center}td:first-child{text-align:left}
+.rules{font-size:13.5px;display:flex;flex-direction:column;gap:8px}
+.rules ul{margin:0;padding-left:18px}
+.rules h3{font-size:15px;margin-top:4px}
+.ic{display:inline-block;width:1.4em;height:1.4em;vertical-align:-.35em}
+.ic svg{width:100%;height:100%}
+/* ---------- compact view ---------- */
+#app.compact{gap:8px}
+#app.compact .top{padding:6px 16px 18px}
+#app.compact .board{gap:7px;padding:7px}
+#app.compact .bld{padding:5px 7px 7px;gap:4px}
+#app.compact .bld .note{display:none}
+#app.compact .bld .bh{font-size:11.5px}
+#app.compact .flag{width:16px;height:20px}#app.compact .flag svg{width:11px;height:11px}
+#app.compact .sp{min-width:40px;min-height:46px;padding:2px 2px 2px;font-size:10px}
+#app.compact .sp .st{min-height:22px}
+#app.compact .sp .st svg{width:22px;height:22px}
+#app.compact .sp .st .sm svg{width:15px;height:15px}
+#app.compact .sp .cost{height:16px;min-width:16px;font-size:10px;border-width:1px}
+#app.compact .sp .pay svg{width:18px;height:18px}
+#app.compact .tag .ti{width:26px;height:26px}#app.compact .tag .ti svg{width:20px;height:20px}
+#app.compact .tag.sm .ti{width:21px;height:21px}#app.compact .tag.sm .ti svg{width:16px;height:16px}
+#app.compact .tag.r::after{border-top-width:5px;border-bottom-width:5px;border-left-width:6px}
+#app.compact .tag.u::before{border-left-width:5px;border-right-width:5px;border-bottom-width:6px}
+#app.compact .agora{gap:3px;padding:4px;grid-template-columns:auto repeat(3,minmax(40px,1fr))}
+#app.compact .agora .first svg{width:26px;height:26px}
+#app.compact .dia{width:34px;height:34px;margin:5px}#app.compact .dia .ti{width:24px;height:24px}#app.compact .dia .ti svg{width:20px;height:20px}
+#app.compact .market,#app.compact .univ,#app.compact .gal,#app.compact .wh{gap:4px}
+#app.compact .univ{padding:4px}
+#app.compact .minus{font-size:10px;padding:1px 6px}#app.compact .minus svg{width:16px;height:16px}
+#app.compact .gold{max-width:300px;gap:2px}
+#app.compact .hg{font-size:9.5px}#app.compact .hg svg{width:30px;height:41px}
+#app.compact .hg.x::after{top:4px;height:34px;left:4px;right:4px}
+@media(max-width:639px){#app.compact .board{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"wonder wonder" "warehouse warehouse" "market market" "agora agora" "west east" "univ univ" "gallery gallery" "guild guild" "gold bonus"}
+  #app.compact .bar{gap:3px}}
+@media(min-width:1180px){#app.compact .board{grid-template-columns:120px minmax(190px,1fr) minmax(260px,1.1fr) minmax(190px,1fr) 120px;grid-template-areas:"wonder wonder guild gallery gallery" "west agora market univ east" "warehouse warehouse gold bonus bonus"}}
+#app.compact .play{grid-template-columns:minmax(0,1fr)}
+@media(min-width:900px){#app.compact .play{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+#app.compact .forum{grid-template-columns:repeat(4,minmax(0,1fr));padding:8px;gap:6px}
+#app.compact .forum::before,#app.compact .forum::after{display:none}
+#app.compact .quad{min-height:64px;padding:16px 4px 4px}
+#app.compact .q0{order:0}#app.compact .q1{order:1}#app.compact .q2{order:2}#app.compact .q3{order:3}
+#app.compact .quad .cc{left:-3px;top:-3px;right:auto;bottom:auto;width:22px;height:22px}
+#app.compact .quad .dice{gap:6px}
+#app.compact .die{--sz:42px}
+#app.compact .actions{padding:8px 10px;gap:6px}
+#app.compact .banner{padding:6px 10px;font-size:13px}
+#app.compact .last{display:none}
+#app.compact .opp .bd,#app.compact .opp .act{display:none}
+.sumlist{display:flex;flex-direction:column;gap:6px}
+.sumrow{display:flex;gap:10px;align-items:flex-start;background:var(--paper2);border:1px solid var(--line);border-left:5px solid var(--w);border-radius:8px;padding:7px 10px;font-size:13.5px}
+.sumrow b{font-family:var(--display)}
+.sumrow .vpd{margin-left:auto;font-weight:800;white-space:nowrap}
+.sumev{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.bigfx{display:flex;align-items:center;gap:10px;background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:10px}
+.bigfx .sp{pointer-events:none;flex:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app"></div>
+<div id="modal" class="modal" hidden></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   ICONS (drawn to echo the printed board)
+   ===================================================================== */
+const SV=(b,vb="0 0 24 24")=>`<svg viewBox="${vb}" aria-hidden="true">${b}</svg>`;
+const IC={
+ stone:SV('<path d="M5 9l4-4h10v10l-4 4H5z" fill="#9C9C98" stroke="#3d3d3a" stroke-width="1.2" stroke-linejoin="round"/><path d="M5 9h10v10M15 9l4-4" fill="none" stroke="#3d3d3a" stroke-width="1.2"/><path d="M5 9h10v10H5z" fill="#B8B8B3"/><path d="M5 9h10v10H5z" fill="none" stroke="#3d3d3a" stroke-width="1.2"/>'),
+ wood:SV('<g stroke="#4f3014" stroke-width="1.1"><rect x="2" y="5" width="16" height="6" rx="3" fill="#A86A33"/><rect x="5" y="12" width="16" height="6" rx="3" fill="#B77A3F"/></g><g fill="#E9C38D" stroke="#4f3014" stroke-width="1.1"><circle cx="17" cy="8" r="3"/><circle cx="20" cy="15" r="3"/></g>'),
+ brick:SV('<g fill="#C4553A" stroke="#5e2213" stroke-width="1"><rect x="3" y="12" width="9" height="5" rx=".8"/><rect x="12" y="12" width="9" height="5" rx=".8"/><rect x="7.5" y="7" width="9" height="5" rx=".8"/></g><path d="M3 17h18" stroke="#5e2213" stroke-width="1.2"/>'),
+ papyrus:SV('<path d="M6 5h12v13H6z" fill="#EFD9A6" stroke="#7a5a22" stroke-width="1.1"/><rect x="4" y="3.5" width="16" height="3" rx="1.5" fill="#D8B66D" stroke="#7a5a22"/><rect x="4" y="17" width="16" height="3" rx="1.5" fill="#D8B66D" stroke="#7a5a22"/><path d="M8.5 9h7M8.5 11.5h7M8.5 14h5" stroke="#7a5a22"/>'),
+ glass:SV('<path d="M10 3h4v5c3 1.4 5 3.8 5 6.8A7 7 0 0 1 5 14.8C5 11.8 7 9.4 10 8z" fill="#2E66C4" stroke="#163a7a" stroke-width="1.2"/><path d="M10 3h4" stroke="#163a7a" stroke-width="2"/><ellipse cx="9" cy="13" rx="1.6" ry="2.6" fill="#9CC4F5"/>'),
+ cloth:SV('<rect x="3" y="7" width="15" height="11" rx="5.5" fill="#D04F7B" stroke="#6e1d3a" stroke-width="1.2"/><path d="M7 7.5v10M10.5 7v11M14 7.5v10" stroke="#F08AB0" stroke-width="1.2"/><ellipse cx="18" cy="12.5" rx="3" ry="5.5" fill="#E77AA0" stroke="#6e1d3a" stroke-width="1.2"/>'),
+ scales:SV('<path d="M12 4v15M7 19h10M5 7h14" stroke="#7a5418" stroke-width="1.6" stroke-linecap="round"/><path d="M5 7l-3 6h6zM19 7l-3 6h6z" fill="none" stroke="#7a5418" stroke-width="1.2"/><path d="M2 13a3 2 0 0 0 6 0zM16 13a3 2 0 0 0 6 0z" fill="#E4A33A" stroke="#7a5418"/><circle cx="12" cy="4" r="1.6" fill="#E4A33A"/>'),
+ temple:SV('<path d="M3 9L12 4l9 5z" fill="#C9C6BE" stroke="#4a4740" stroke-width="1.1"/><g fill="#DDDAD2" stroke="#4a4740" stroke-width="1"><rect x="5" y="10" width="2.6" height="7"/><rect x="10.7" y="10" width="2.6" height="7"/><rect x="16.4" y="10" width="2.6" height="7"/></g><path d="M3 17.5h18v2.5H3zM3 9h18v1.3H3z" fill="#B5B1A6" stroke="#4a4740" stroke-width="1"/>'),
+ mask:SV('<path d="M4 6c5-2 11-2 16 0 0 8-3 13-8 13S4 14 4 6z" fill="#D9542F" stroke="#6b200c" stroke-width="1.2"/><path d="M7.5 10q1.5-1.5 3 0M13.5 10q1.5-1.5 3 0" stroke="#3a1205" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M8 13.5q4 4.5 8 0" fill="#3a1205"/>'),
+ fountain:SV('<path d="M12 4c-2 2-2 4 0 5 2-1 2-3 0-5z" fill="#7FC7EE"/><path d="M4 11h16c0 3-3.6 5-8 5s-8-2-8-5z" fill="#E7E3D8" stroke="#4a4740" stroke-width="1.1"/><path d="M10 16h4l1 4H9z" fill="#E7E3D8" stroke="#4a4740" stroke-width="1"/><path d="M6 11c1-2 3-2 6-2s5 0 6 2" fill="#8CCEF0"/>'),
+ owl:SV('<path d="M6 5l2 2h8l2-2v10c0 3.5-2.7 6-6 6s-6-2.5-6-6z" fill="#8A5A30" stroke="#3b220c" stroke-width="1.1"/><circle cx="9.5" cy="10" r="2.4" fill="#F4E3B4" stroke="#3b220c"/><circle cx="14.5" cy="10" r="2.4" fill="#F4E3B4" stroke="#3b220c"/><circle cx="9.5" cy="10" r="1" fill="#1b1006"/><circle cx="14.5" cy="10" r="1" fill="#1b1006"/><path d="M11.2 12.4l.8 1.4.8-1.4z" fill="#E8A53A"/><path d="M9 16q3 2 6 0" stroke="#C99A62" stroke-width="1" fill="none"/>'),
+ caduceus:SV('<path d="M12 3v19" stroke="#2B7A3A" stroke-width="1.6"/><path d="M12 6c-6 0-7-3-9-2 2 2 4 4 9 4M12 6c6 0 7-3 9-2-2 2-4 4-9 4" fill="#58B868" stroke="#2B7A3A" stroke-width=".8"/><path d="M9 10c5 1 5 3 0 4.5s0 4 3 4.5M15 10c-5 1-5 3 0 4.5s0 4-3 4.5" stroke="#2B7A3A" stroke-width="1.4" fill="none"/>'),
+ sword:SV('<path d="M18.5 3.5l2 2L9 17l-2-2z" fill="#D9D9D4" stroke="#4a4a46" stroke-width="1"/><path d="M5.5 13.5l5 5M7.5 16.5l-3.5 3.5" stroke="#B8862A" stroke-width="2.2" stroke-linecap="round"/>'),
+ axe:SV('<path d="M7 21L15.5 6" stroke="#6b4320" stroke-width="2.2" stroke-linecap="round"/><path d="M13 4c3-1.5 6-.5 8 2-2.5.5-4 2.5-4.5 5L12 8.5z" fill="#CFCFCB" stroke="#3a3a37" stroke-width="1"/>'),
+ shield:SV('<circle cx="12" cy="12" r="9" fill="#C8322B" stroke="#5e1310" stroke-width="1.3"/><circle cx="12" cy="12" r="6" fill="#8E1F19" stroke="#E7A49F" stroke-width="1"/><circle cx="12" cy="12" r="2.4" fill="#D9D9D4" stroke="#3a3a37"/>'),
+ camel:SV('<path d="M3 13c1-3 3-3 4-6h2l-1 3c2 0 2.5-3 5-3 2 0 2.5 3 4.5 3 1 0 1.5-2 2.5-2l1 1-1.5 1c0 3-1 5-2.5 5.5L18 21h-1.5l-1-4.2h-5L9.5 21H8l.5-4.5C6 16 5 14 5 13z" fill="#B87A3E" stroke="#4f2e10" stroke-width=".9" stroke-linejoin="round"/><path d="M9.5 11.5c1.5-1.2 4-1.2 6 0v2.5h-6z" fill="#3A7AC8" stroke="#1d3f70" stroke-width=".7"/>'),
+ chest:SV('<path d="M3 11h18v9H3z" fill="#9C4E22" stroke="#3b1a08" stroke-width="1.2"/><path d="M3 11c0-4 3-6 9-6s9 2 9 6z" fill="#B35C2A" stroke="#3b1a08" stroke-width="1.2"/><path d="M3 11h18" stroke="#E2B24A" stroke-width="1.6"/><path d="M7 6v14M17 6v14" stroke="#E2B24A" stroke-width="1.4"/><rect x="10.3" y="10" width="3.4" height="4" rx=".6" fill="#F2C94C" stroke="#3b1a08" stroke-width=".8"/>'),
+ tablet:SV('<path d="M6 4h10l3 3v13H6z" fill="#A69A8B" stroke="#4a4038" stroke-width="1.2" stroke-linejoin="round"/><path d="M8.5 8h3M8.5 8v2.5M13 8.5l2 2M8.5 14h7M12 12v4M15 13.5l1 1" stroke="#4a4038" stroke-width="1.1"/>'),
+ compass:SV('<path d="M12 5L6 20M12 5l6 15M8 14h8" stroke="#D9A21E" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="12" cy="4.5" r="2" fill="#F2C94C" stroke="#7a5410"/><path d="M3 20h9V11z" fill="none" stroke="#B8862A" stroke-width="1.4"/>'),
+ wheel:SV('<circle cx="12" cy="12" r="8.5" fill="#8A4B22" stroke="#3b1a08" stroke-width="1.2"/><circle cx="12" cy="12" r="5.5" fill="#B9692F"/><circle cx="12" cy="12" r="2" fill="#3b1a08"/><path d="M12 3.5v17M3.5 12h17M6 6l12 12M18 6L6 18" stroke="#3b1a08" stroke-width="1.1"/><circle cx="12" cy="12" r="8.5" fill="none" stroke="#3b1a08" stroke-width="1.6" stroke-dasharray="1.5 1.5"/>'),
+ pyramid:SV('<path d="M12 3L22 20H2z" fill="#E9B23A" stroke="#7a5410" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 3l2 17M5.5 14h13M8.5 9h7" stroke="#7a5410" stroke-width="1"/><path d="M12 3l2 17h8z" fill="rgba(0,0,0,.15)"/>'),
+ hourglass:(inner)=>SV(`<path d="M6 4h28v4c0 9-9 12-9 18s9 9 9 18v4H6v-4c0-9 9-12 9-18S6 17 6 8z" fill="#fff" stroke="#6d6556" stroke-width="2"/><g transform="translate(9 8) scale(.9)">${inner}</g><rect x="13" y="38" width="14" height="12" rx="2" fill="#fff" stroke="#6d6556" stroke-width="1.5"/>`,"0 0 40 54"),
+ lock:SV('<rect x="5" y="10" width="14" height="10" rx="2" fill="#6d6556"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#6d6556" stroke-width="2" fill="none"/>'),
+ check:SV('<path d="M4 12l5 5L21 5" stroke="#1b1b1b" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'),
+ cycle:SV('<path d="M5 12a7 7 0 0 1 12-5" stroke="#2c6e3c" stroke-width="2.4" fill="none"/><path d="M17 3v4.5h-4.5" stroke="#2c6e3c" stroke-width="2.4" fill="none"/><path d="M19 12a7 7 0 0 1-12 5" stroke="#2c6e3c" stroke-width="2.4" fill="none"/><path d="M7 21v-4.5h4.5" stroke="#2c6e3c" stroke-width="2.4" fill="none"/>')
+};
+const bust=(c)=>SV(`<path d="M12 3a4 4.5 0 1 1 0 9a4 4.5 0 1 1 0-9z" fill="${c}" stroke="#4a4038" stroke-width="1"/><path d="M5 21c0-5 3-8 7-8s7 3 7 8z" fill="${c}" stroke="#4a4038" stroke-width="1"/><path d="M9 21h6v-1.6H9z" fill="rgba(0,0,0,.18)"/>`);
+IC.bust=bust("#E8D5B0");IC.wred=bust("#D8473E");IC.wgreen=bust("#48A85A");IC.wblue=bust("#3A78D0");IC.wyellow=bust("#EDC23B");
+const laurel=(n,faded,col)=>SV(`<g fill="#3E7A3A"><path d="M7 19C3 15 3 9 6 5c.6 4 .4 9 2.4 13z"/><ellipse cx="4.6" cy="14" rx="1.1" ry="2.2" transform="rotate(-30 4.6 14)"/><ellipse cx="4.1" cy="9.8" rx="1" ry="2" transform="rotate(-10 4.1 9.8)"/><ellipse cx="6.8" cy="17.3" rx="1" ry="2" transform="rotate(-55 6.8 17.3)"/><path d="M17 19c4-4 4-10 1-14-.6 4-.4 9-2.4 13z"/><ellipse cx="19.4" cy="14" rx="1.1" ry="2.2" transform="rotate(30 19.4 14)"/><ellipse cx="19.9" cy="9.8" rx="1" ry="2" transform="rotate(10 19.9 9.8)"/><ellipse cx="17.2" cy="17.3" rx="1" ry="2" transform="rotate(55 17.2 17.3)"/></g><text x="12" y="15.6" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="10.5" fill="${col||(faded?'#9b968c':'#1b1b1b')}">${n}</text>`);
+const coin=n=>SV(`<circle cx="12" cy="12" r="10" fill="#F2C33C" stroke="#8a6412" stroke-width="1.4"/><circle cx="12" cy="12" r="7.5" fill="#F7D35E" stroke="#C99A1E" stroke-width="1"/><text x="12" y="15.8" text-anchor="middle" font-family="Open Sans,sans-serif" font-weight="800" font-size="${String(n).length>1?9:11}" fill="#3b2a05">${n}</text>`);
+const SYMS={wh:'<path d="M12 4l7 8-7 8-7-8z" fill="#fff"/>',agora:'<rect x="9" y="4" width="6" height="16" rx="1" fill="#fff"/>',barracks:'<path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/>',market:'<circle cx="12" cy="12" r="6.5" fill="#fff"/>',univ:'<path d="M12 4l8 15H4z" fill="#fff"/>',gallery:'<circle cx="12" cy="9" r="4" fill="#fff"/><path d="M5 20c0-5 3-7 7-7s7 2 7 7z" fill="#fff"/>',guild:'<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6L3.4 9.3l6-.7z" fill="#fff"/>',wonder:'<path d="M12 4l8 15H4z" fill="#fff"/>'};
+IC.any=SV(`<g transform="scale(.5)">${[["barracks","#C8322B",1,1],["univ","#3E9A4E",24,1],["agora","#2F6CC4",1,24],["market","#E8B321",24,24]].map(([k,c,x,y])=>`<g transform="translate(${x} ${y})"><rect width="21" height="21" rx="3" fill="${c}"/><g transform="translate(2.5 2.5) scale(.67)">${SYMS[k]}</g></g>`).join("")}</g><path d="M9 13.5l3 3 8-9" stroke="#1b1b1b" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 13.5l3 3 8-9" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+const BCOL={wh:'var(--c-grey)',agora:'var(--c-blue)',barracks:'var(--c-red)',market:'var(--c-yellow)',univ:'var(--c-green)',gallery:'#C9C2AF',guild:'var(--c-purple)',wonder:'var(--c-wonder)'};
+const bsym=(k,size=22)=>`<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="4" fill="${BCOL[k]}" stroke="rgba(0,0,0,.35)"/>${SYMS[k]}</svg>`;
+const symOnly=k=>SV(SYMS[k]);
+const dieMini=(color,inner='')=>SV(`<path d="M4 8l4-4h12v12l-4 4H4z" fill="${DCOL[color]}" stroke="rgba(0,0,0,.45)" stroke-width="1"/><path d="M4 8h12v12H4z" fill="${DCOL[color]}" stroke="rgba(0,0,0,.45)"/><path d="M16 8l4-4" stroke="rgba(0,0,0,.45)"/>${inner}`);
+const DCOL={grey:'#9A9A96',blue:'#2F6CC4',red:'#C8322B',yellow:'#E8B321',green:'#3E9A4E',black:'#26262A',white:'#F3F0E6',purple:'#7D44B5'};
+
+/* =====================================================================
+   GAME DATA — transcribed from the printed boards
+   ===================================================================== */
+const RES=["stone","wood","brick","papyrus","glass","cloth"];
+const FACES={
+  grey0:["stone","stone","wood","cloth","brick","glass"],
+  grey1:["brick","brick","stone","papyrus","cloth","wood"],
+  grey2:["wood","wood","papyrus","stone","glass","brick"],
+  blue:["scales","temple","mask","fountain","owl","caduceus"],
+  red:["sword","sword","axe","axe","shield","shield"],
+  yellow:["camel","camel","chest","chest","coin7","coin7"],
+  green:["tablet","tablet","compass","compass","wheel","wheel"],
+  white:["bust","bust","wred","wgreen","wblue","wyellow"],
+  black:["wh","agora","barracks","market","univ","any"],
+  purple:["wh","agora","barracks","market","univ","wonder"]
+};
+const SPECIAL=["black","white","purple"];
+const BLD={
+  wonder:{name:"Wonder",die:null,cls:"b-wonder",sym:"wonder"},
+  wh:{name:"Warehouse",die:"grey",cls:"b-grey",sym:"wh"},
+  agora:{name:"Agora",die:"blue",cls:"b-blue",sym:"agora"},
+  bw:{name:"Western Barracks",die:"red",cls:"b-red",sym:"barracks"},
+  be:{name:"Eastern Barracks",die:"red",cls:"b-red",sym:"barracks"},
+  market:{name:"Market",die:"yellow",cls:"b-yellow",sym:"market"},
+  univ:{name:"University",die:"green",cls:"b-green",sym:"univ"},
+  gallery:{name:"Gallery of Leaders",die:"white",cls:"b-white",sym:"gallery"},
+  guild:{name:"Guild Court",die:"purple",cls:"b-purple",sym:"guild"}
+};
+const KEYB={wh:["wh"],agora:["agora"],barracks:["bw","be"],market:["market"],univ:["univ"],gallery:["gallery"],wonder:["wonder"],any:["agora","bw","be","market","univ"]};
+const COLB={red:"barracks",green:"univ",blue:"agora",yellow:"market",grey:"wh"};
+/* Per-board data. "verified" = read from your photos. */
+const BOARDS={
+  gizah:{city:"Gizah",name:"Great Pyramid",verified:true,sky:["#F6B65E","#E9935A"],
+    wh:[0,0,0,1,1,1],
+    univ:{tablet:{dieZero:"red"},compass:{dieBonus:"blue"},wheel:{cross:"market"}},
+    wonder:[{cost:4,eff:[{vp:4}]},{cost:4,eff:[{vp:4}]},{cost:6,eff:[{vp:7}]}]},
+  halicarnassus:{city:"Halicarnassus",name:"Mausoleum",verified:true,sky:["#E9C5D6","#C9A9C9"],
+    wh:[0,0,0,0,2,1],
+    univ:{tablet:{dieZero:"yellow"},compass:{dieBonus:"green"},wheel:{cross:"agora"}},
+    wonder:[{cost:3,eff:[{extra:"A0"}]},{cost:4,eff:[{extra:"A0"},{vp:3}]},{cost:6,eff:[{vp:7}]}]},
+  alexandria:{city:"Alexandria",name:"Lighthouse",verified:true,sky:["#A9C2EE","#7FA2DE"],
+    wh:[0,0,0,1,0,2],
+    univ:{tablet:{dieZero:"green"},compass:{dieBonus:"blue"},wheel:{cross:"barracks"}},
+    wonder:[{cost:2,eff:[{cross:"wh"}]},{cost:4,eff:[{cross:"wh"},{vp:3}]},{cost:6,eff:[{vp:7}]}]},
+  olympia:{city:"Olympia",name:"Statue of Zeus",verified:true,sky:["#F7C67A","#E6A75A"],
+    wh:[0,0,0,0,1,2],
+    univ:{tablet:{dieZero:"yellow"},compass:{dieBonus:"green"},wheel:{cross:"barracks"}},
+    wonder:[{cost:3,eff:[{cross:["agora","market"]}]},{cost:5,eff:[{cross:["barracks","univ"]},{vp:3}]},{cost:6,eff:[{vp:7}]}]},
+  rhodes:{city:"Rhodes",name:"Colossus",verified:true,sky:["#8EC6EA","#E2C98A"],
+    wh:[0,0,0,2,0,1],
+    univ:{tablet:{dieZero:"blue"},compass:{dieBonus:"red"},wheel:{cross:"market"}},
+    wonder:[{cost:3,eff:[{cross:"barracks"}]},{cost:3,eff:[{cross:"barracks"}]},{cost:6,eff:[{vp:7}]}]},
+  ephesus:{city:"Ephesus",name:"Temple of Artemis",verified:true,sky:["#A8D0F0","#9CCB7A"],
+    wh:[0,0,0,1,2,0],
+    univ:{tablet:{dieZero:"green"},compass:{dieBonus:"red"},wheel:{cross:"agora"}},
+    wonder:[{cost:3,eff:[{coins:3},{vp:3}]},{cost:4,eff:[{coins:4},{vp:3}]},{cost:6,eff:[{vp:7}]}]},
+  babylon:{city:"Babylon",name:"Hanging Gardens",verified:true,sky:["#9CC4EE","#B9D88E"],
+    wh:[0,0,0,2,1,0],
+    univ:{tablet:{dieZero:"red"},compass:{dieBonus:"yellow"},wheel:{cross:"univ"}},
+    wonder:[{cost:2,eff:[{cross:"univ"}]},{cost:4,eff:[{cross:"univ"}]},{cost:6,eff:[{vp:7}]}]}
+};
+const BONUSES=[
+  {id:"extra",label:"Take another action",icon:()=>IC.cycle},
+  {id:"cross",label:"Cross off a space (Agora, Barracks, Market or University)",icon:()=>SV(`<g transform="scale(.5)">${['barracks','univ','agora','market'].map((k,i)=>`<g transform="translate(${(i%2)*22} ${Math.floor(i/2)*22})"><rect x="1" y="1" width="21" height="21" rx="3" fill="${BCOL[k]}"/><g transform="translate(0 0) scale(.9)">${SYMS[k]}</g></g>`).join('')}</g><g transform="translate(9 9) scale(.65)">${IC.check.replace(/<\/?svg[^>]*>/g,'')}</g>`)},
+  {id:"coins",label:"Gain 7 coins",icon:()=>coin(7)}
+];
+const CATS=[["wonder","Wonder"],["west","West Barracks"],["east","East Barracks"],["agora","Agora"],["market","Market"],["univ","University"],["guild","Guild Court"],["gallery","Gallery"]];
+const WCOL={gizah:"#D9731A",halicarnassus:"#7B4FA8",alexandria:"#2F5DB8",olympia:"#B98A10",rhodes:"#A8302A",ephesus:"#C8513F",babylon:"#2F8F46"};
+
+function buildSpaces(key){
+  const B=BOARDS[key],A=[];
+  RES.forEach((r,i)=>A.push({id:"w_"+r,b:"wh",sym:[r],cost:B.wh[i],eff:[{res:1}]}));
+  // Agora: rows scales/temple/mask, cols fountain/owl/caduceus; top-right is the 3 VP first-finisher bonus
+  const AG=[[[5,4],[5,5],null],[[4,2],[4,3],[5,6]],[[3,1],[4,3],[5,4]]],rows=["scales","temple","mask"],cols=["fountain","owl","caduceus"];
+  AG.forEach((r,ri)=>r.forEach((c,ci)=>{if(c)A.push({id:`a${ri}${ci}`,b:"agora",row:ri,col:ci,sym:[rows[ri],cols[ci]],cost:c[1],eff:[{vp:c[0]}]})}));
+  // Barracks (bottom to top)
+  [[3,3],[4,4]].forEach(([v,c],i)=>A.push({id:"bwd"+i,b:"bw",tr:"def",sym:["shield"],cost:c,prev:i?"bwd0":null,eff:[{vp:v},{def:1}]}));
+  [[3,2],[4,3],[5,5],[6,6]].forEach(([v,c],i)=>A.push({id:"bwa"+i,b:"bw",tr:"atk",sym:["sword"],cost:c,prev:i?"bwa"+(i-1):null,eff:[{atk:v}]}));
+  [[3,2],[4,3],[5,5],[6,6]].forEach(([v,c],i)=>A.push({id:"bea"+i,b:"be",tr:"atk",sym:["axe"],cost:c,prev:i?"bea"+(i-1):null,eff:[{atk:v}]}));
+  [[2,2],[5,5]].forEach(([v,c],i)=>A.push({id:"bed"+i,b:"be",tr:"def",sym:["shield"],cost:c,prev:i?"bed0":null,eff:[{vp:v},{def:1}]}));
+  // Market (any order)
+  A.push({id:"mc_up",b:"market",pos:"up",sym:["camel"],cost:5,eff:[{dieMinus:"all"}]});
+  A.push({id:"mc_l",b:"market",pos:"left",sym:["camel"],cost:2,eff:[{cross:"wh"}]});
+  A.push({id:"mc_dn",b:"market",pos:"down",sym:["camel"],cost:1,eff:[{coins:7}]});
+  A.push({id:"mt_up",b:"market",pos:"up",sym:["chest"],cost:6,eff:[{per:"wonder",n:2}]});
+  A.push({id:"mt_r",b:"market",pos:"right",sym:["chest"],cost:4,eff:[{per:"market",n:1}]});
+  A.push({id:"mt_dn",b:"market",pos:"down",sym:["chest"],cost:3,eff:[{per:"wh",n:1}]});
+  // University (rows left to right)
+  const U=[["tablet",2,5,3,4,"black"],["compass",1,4,3,5,"purple"],["wheel",0,3,3,6,"white"]];
+  U.forEach(([s,c0,v,c1,c2,die])=>{
+    A.push({id:`u_${s}0`,b:"univ",row:s,sym:[s],cost:c0,eff:[B.univ[s]]});
+    A.push({id:`u_${s}1`,b:"univ",row:s,sym:[s],cost:c1,prev:`u_${s}0`,eff:[{vp:v}]});
+    A.push({id:`u_${s}2`,b:"univ",row:s,sym:[s],cost:c2,prev:`u_${s}1`,eff:[{unlock:die}]});
+  });
+  // Gallery of Leaders
+  A.push({id:"g_b0",b:"gallery",sym:["bust"],cost:0,eff:[{gal:1}]});
+  A.push({id:"g_b1",b:"gallery",sym:["bust"],cost:0,eff:[{gal:1}]});
+  [["wred","barracks"],["wgreen","univ"],["wblue","agora"],["wyellow","market"]].forEach(([f,k])=>A.push({id:"g_"+f,b:"gallery",sym:[f],cost:0,eff:[{cross:k,n:2}]}));
+  // Guild Court
+  [[5,4],[6,5],[7,6]].forEach(([v,c],i)=>A.push({id:"k"+i,b:"guild",sym:FACES.purple,cost:c,prev:i?"k"+(i-1):null,eff:[{vp:v}]}));
+  // Wonder
+  B.wonder.forEach((st,i)=>A.push({id:"wo"+i,b:"wonder",sym:null,cost:st.cost,prev:i?"wo"+(i-1):null,eff:st.eff}));
+  const m={};A.forEach(s=>m[s.id]=s);A.map=m;return A;
+}
+const SPC={};
+const spaces=p=>SPC[p.board]||(SPC[p.board]=buildSpaces(p.board));
+const sp=(p,id)=>spaces(p).map[id];
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+let S=null,UI={mode:"setup",sel:null,pick:null,peek:{}};
+let COMPACT=false;try{COMPACT=localStorage.getItem("wd2_compact")==="1"}catch(e){}
+let SETUP={bots:3,diff:"normal",board:"random"};
+try{const s=JSON.parse(localStorage.getItem("wd2_setup")||"null");if(s&&s.bots)SETUP=s}catch(e){}
+const rnd=n=>Math.floor(Math.random()*n),pickR=a=>a[rnd(a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+function mkPlayer(name,board,isBot){return{name,board,isBot,coins:7,x:{},dieZero:[],dieMinus:{},dieBonus:[],unlocked:[],bonuses:[],completed:[],vpc:{wonder:0,west:0,east:0,agora:0,market:0,univ:0,gallery:0,guild:0},pending:[],last:""}}
+function newGame(){
+  const keys=Object.keys(BOARDS);const mine=SETUP.board==="random"?pickR(keys):SETUP.board;
+  const rest=shuffle(keys.filter(k=>k!==mine));
+  const players=[mkPlayer("You",mine,false)];
+  for(let i=0;i<SETUP.bots;i++)players.push(mkPlayer(BOARDS[rest[i]].city,rest[i],true));
+  S={players,pool:["grey0","grey1","grey2","blue","red","yellow","green"],introduced:[],introQ:[],forum:[],turn:1,endTurn:null,agoraFirst:null,log:[],diff:SETUP.diff,over:false};
+  log(`New game: you lead <b>${BOARDS[mine].city}</b> against ${SETUP.bots} rival${SETUP.bots>1?"s":""}.`);
+  roll();UI={mode:"choose",sel:null,pick:null,peek:{}};save();render(true);
+}
+function roll(){S.forum=S.pool.map(k=>({kind:k,color:k.startsWith("grey")?"grey":k,face:pickR(FACES[k]),sec:rnd(4)}))}
+function save(){try{localStorage.setItem("wd2_state",JSON.stringify({S,mode:UI.mode}))}catch(e){}}
+function loadSaved(){try{const d=JSON.parse(localStorage.getItem("wd2_state")||"null");if(d&&d.S&&!d.S.over&&d.S.players)return d}catch(e){}return null}
+function log(t){S.log.unshift(t);if(S.log.length>250)S.log.length=250}
+
+/* =====================================================================
+   RULES
+   ===================================================================== */
+const N=()=>S.players.length;
+const idx=p=>S.players.indexOf(p);
+const left=p=>S.players[(idx(p)-1+N())%N()];
+const right=p=>S.players[(idx(p)+1)%N()];
+const resCount=p=>RES.filter(r=>p.x["w_"+r]).length;
+function cnt(p,k){if(KEYB[k])return KEYB[k].reduce((a,b)=>a+spaces(p).filter(s=>s.b===b&&p.x[s.id]).length,0);return spaces(p).filter(s=>s.b===k&&p.x[s.id]).length}
+const defOf=(p,b)=>spaces(p).filter(s=>s.b===b&&s.tr==="def"&&p.x[s.id]).length;
+/* Attack value right now: printed VP minus the defenses the target neighbour has already built on the side facing you. */
+function atkNow(p,s){const opp=s.b==="bw"?left(p):right(p);const d=s.b==="bw"?defOf(opp,"be"):defOf(opp,"bw");const base=s.eff.find(e=>e.atk).atk;return{base,d,v:Math.max(0,base-d),opp}}
+function snapshot(){const m=new Map();S.players.forEach(p=>{const c={};["wh","agora","barracks","market","univ","gallery","wonder"].forEach(k=>c[k]=cnt(p,k));m.set(p,{bw:defOf(p,"bw"),be:defOf(p,"be"),c})});return m}
+/* Agora order: a row is filled from its tag (left) to the right, a column from its tag (bottom) upward. */
+const AG_ROWS=["scales","temple","mask"],AG_COLS=["fountain","owl","caduceus"];
+function agoraRowOK(p,s){return spaces(p).filter(t=>t.b==="agora"&&t.row===s.row&&t.col<s.col).every(t=>p.x[t.id])}
+function agoraColOK(p,s){return spaces(p).filter(t=>t.b==="agora"&&t.col===s.col&&t.row>s.row).every(t=>p.x[t.id])}
+function agoraOK(p,s,face){if(AG_ROWS.includes(face))return agoraRowOK(p,s);if(AG_COLS.includes(face))return agoraColOK(p,s);return agoraRowOK(p,s)||agoraColOK(p,s)}
+const available=(p,s)=>!p.x[s.id]&&(!s.prev||p.x[s.prev])&&(s.b!=="agora"||agoraOK(p,s,null));
+const shortfall=(p,c)=>Math.max(0,c-resCount(p));
+function dieCost(p,d){if(p.dieZero.includes(d.color))return 0;return Math.max(0,d.sec-(p.dieMinusAll||0))}
+const canUseDie=(p,d)=>!SPECIAL.includes(d.color)||p.unlocked.includes(d.color);
+function guildOk(p,k,snap){const me=snap.get(p).c[k],L=snap.get(left(p)).c[k],R=snap.get(right(p)).c[k];return N()===2?me>L:(me>=L&&me>=R)}
+function matchSpaces(p,d,snap){
+  if(!canUseDie(p,d))return[];
+  const A=spaces(p);
+  if(d.color==="black"){const bs=KEYB[d.face];return A.filter(s=>bs.includes(s.b)&&available(p,s))}
+  if(d.color==="purple"){if(!guildOk(p,d.face,snap))return[];return A.filter(s=>s.b==="guild"&&available(p,s))}
+  return A.filter(s=>BLD[s.b].die===d.color&&s.sym&&s.sym.includes(d.face)&&available(p,s)&&(s.b!=="agora"||agoraOK(p,s,d.face)));
+}
+const nextWonder=p=>spaces(p).find(s=>s.b==="wonder"&&available(p,s));
+function options(p,snap,o={}){
+  const out=[];
+  S.forum.forEach((d,i)=>{
+    if(o.only&&d.color!==o.only)return;
+    const dc=o.freeDie?0:dieCost(p,d);
+    if(d.face==="coin7"){if(dc<=p.coins)out.push({t:"coins",die:i,pay:dc,free:!!o.freeDie});return}
+    matchSpaces(p,d,snap).forEach(s=>{const pay=dc+shortfall(p,s.cost);if(pay<=p.coins)out.push({t:"build",die:i,sid:s.id,pay,free:!!o.freeDie})});
+  });
+  if(!o.only&&!o.noWonder){const w=nextWonder(p);if(w){const pay=shortfall(p,w.cost);if(pay<=p.coins)out.push({t:"wonder",sid:w.id,pay})}}
+  if(o.pass)out.push({t:"pass",pay:0});
+  return out;
+}
+const crossTargets=(p,bs)=>{const bl=bs.flatMap(k=>KEYB[k]||[k]);return spaces(p).filter(s=>bl.includes(s.b)&&available(p,s)&&shortfall(p,s.cost)<=p.coins)};
+const ALLB=["agora","barracks","market","univ"];
+function doAction(p,a,snap){
+  if(a.t==="pass"){gain(p,3);p.last="Passed · +3 coins";log(`<b>${p.name}</b> passed and took 3 coins.`);return}
+  if(a.t==="coins"){p.coins-=a.pay;gain(p,7);p.last=`Yellow 7-coin die · paid ${a.pay}`;log(`<b>${p.name}</b> took the yellow 7-coin die (paid ${a.pay}, +7 coins).`);return}
+  const s=sp(p,a.sid);p.coins-=a.pay;
+  const d=a.t==="build"?S.forum[a.die]:null;
+  const what=a.t==="wonder"?`Wonder step ${+s.id.slice(2)+1}`:BLD[s.b].name;
+  p.last=`${what}${d?` · ${d.color} die`:""} · paid ${a.pay}`;
+  log(`<b>${p.name}</b> built ${what}${d?` with the ${d.color} die`:""}, paid ${a.pay}.`);
+  if(d&&p.dieBonus.includes(d.color)){gain(p,2);log(`&nbsp;&nbsp;${p.name} gains 2 coins for choosing the ${d.color} die.`)}
+  cross(p,s,snap);
+}
+function gain(p,n){p.coins=Math.min(42,p.coins+n)}
+function catOf(b){return b==="bw"?"west":b==="be"?"east":b==="wh"?"market":b}
+function cross(p,s,snap){
+  p.x[s.id]=true;
+  s.eff.forEach(e=>{
+    if(e.vp)p.vpc[catOf(s.b)]+=e.vp;
+    if(e.coins)gain(p,e.coins);
+    if(e.dieZero&&!p.dieZero.includes(e.dieZero))p.dieZero.push(e.dieZero);
+    if(e.dieMinus)p.dieMinusAll=(p.dieMinusAll||0)+1;
+    if(e.dieBonus&&!p.dieBonus.includes(e.dieBonus))p.dieBonus.push(e.dieBonus);
+    if(e.unlock)unlock(p,e.unlock);
+    if(e.cross)p.pending.push({t:"cross",bs:[].concat(e.cross),n:e.n||1});
+    if(e.extra)p.pending.push({t:"extra",free:true});
+    if(e.per){const g=cnt(p,e.per)*e.n;gain(p,g);if(g)log(`&nbsp;&nbsp;${p.name} gains ${g} coins.`)}
+    if(e.atk){
+      const opp=s.b==="bw"?left(p):right(p);
+      const dd=snap?(s.b==="bw"?snap.get(opp).be:snap.get(opp).bw):(s.b==="bw"?defOf(opp,"be"):defOf(opp,"bw"));
+      const g=Math.max(0,e.atk-dd);p.vpc[catOf(s.b)]+=g;p.atkGain=p.atkGain||{};p.atkGain[s.id]=g;
+      log(`&nbsp;&nbsp;${p.name} attacks ${opp.name}: ${e.atk} − ${dd} defense = ${g} VP.`);
+    }
+  });
+  if(spaces(p).filter(t=>t.b===s.b).every(t=>p.x[t.id])&&!p.completed.includes(s.b)){
+    p.completed.push(s.b);log(`&nbsp;&nbsp;<b>${p.name}</b> completed the ${BLD[s.b].name}!`);
+    if(s.b==="agora"&&(S.agoraFirst===null||S.agoraFirst===S.turn)){S.agoraFirst=S.turn;p.agoraFirst=true;p.vpc.agora+=3;log(`&nbsp;&nbsp;First Agora: +3 VP for ${p.name}.`)}
+    if(s.b!=="wh"&&p.bonuses.length<3)p.pending.unshift({t:"bonus"});
+  }
+}
+function unlock(p,c){if(p.unlocked.includes(c))return;p.unlocked.push(c);log(`&nbsp;&nbsp;${p.name} unlocked the ${c} die.`);if(!S.introduced.includes(c)&&!S.introQ.includes(c))S.introQ.push(c)}
+function applyBonus(p,id){
+  p.bonuses.push(id);log(`&nbsp;&nbsp;${p.name} crosses off a bonus: ${BONUSES.find(b=>b.id===id).label}.`);
+  if(id==="coins")gain(p,7);
+  if(id==="cross")p.pending.unshift({t:"cross",bs:ALLB,n:1});
+  if(id==="extra")p.pending.unshift({t:"extra",free:false});
+}
+function scores(p){
+  const v={...p.vpc};
+  spaces(p).forEach(s=>{if(!p.x[s.id])return;s.eff.forEach(e=>{if(e.per)v.market+=cnt(p,e.per)*e.n;if(e.gal)v.gallery+=cnt(p,"gallery")})});
+  v.total=CATS.reduce((a,[k])=>a+v[k],0);return v;
+}
+
+/* =====================================================================
+   BOTS
+   ===================================================================== */
+function valueOf(p,s,snap){
+  let v=0;const late=S.endTurn!==null;const resV=late?.3:Math.max(.5,(6-resCount(p))*.8);
+  s.eff.forEach(e=>{
+    if(e.vp)v+=e.vp;if(e.coins)v+=e.coins*.5;if(e.res)v+=resV;if(e.def)v+=1.2;
+    if(e.atk){const opp=s.b==="bw"?left(p):right(p);const d=s.b==="bw"?snap.get(opp).be:snap.get(opp).bw;v+=Math.max(0,e.atk-d)}
+    if(e.unlock&&!p.unlocked.includes(e.unlock))v+=late?.5:3.5;
+    if(e.dieZero||e.dieMinus||e.dieBonus)v+=late?0:3;
+    if(e.cross)v+=2.5*(e.n||1);if(e.extra)v+=3;
+    if(e.per)v+=(cnt(p,e.per)+(late?0:2))*e.n*.5+(cnt(p,e.per)+(late?0:2))*e.n;
+    if(e.gal)v+=cnt(p,"gallery")+(late?1:3);
+  });
+  const rest=spaces(p).filter(t=>t.b===s.b&&!p.x[t.id]).length;
+  if(rest===1&&s.b!=="wh"&&!p.completed.includes(s.b)&&p.bonuses.length<3)v+=4;
+  if(s.b==="agora"&&rest===1&&S.agoraFirst===null)v+=3;
+  return v;
+}
+const noise=()=>(Math.random()-.5)*({easy:6,normal:2,hard:.4}[S.diff]||2);
+function botChoose(p,snap,o={pass:true}){
+  let best=null,bv=-1e9;
+  options(p,snap,o).forEach(x=>{let v=x.t==="pass"?1.6+(p.coins<4?1.5:0):x.t==="coins"?(7-x.pay)*.5+(p.coins<4?1.5:0):valueOf(p,sp(p,x.sid),snap)-x.pay*.55;
+    if(x.t==="build"&&p.dieBonus.includes(S.forum[x.die].color))v+=1;v+=noise();if(v>bv){bv=v;best=x}});
+  return best;
+}
+function botBonus(p){const av=BONUSES.filter(b=>!p.bonuses.includes(b.id));const sc={coins:p.coins<6?6:3.5,cross:4,extra:4.2};av.sort((a,b)=>sc[b.id]-sc[a.id]+noise());applyBonus(p,av[0].id)}
+function runBotPending(p){
+  let g=0;
+  while(p.pending.length&&g++<40){
+    const it=p.pending.shift();
+    if(it.t==="bonus"){if(p.bonuses.length<3)botBonus(p)}
+    else if(it.t==="cross"){const snap=snapshot();for(let k=0;k<it.n;k++){const T=crossTargets(p,it.bs);if(!T.length)break;T.sort((a,b)=>(valueOf(p,b,snap)-shortfall(p,b.cost)*.55)-(valueOf(p,a,snap)-shortfall(p,a.cost)*.55));const s=T[0];const pay=shortfall(p,s.cost);p.coins-=pay;log(`&nbsp;&nbsp;${p.name} crosses off ${BLD[s.b].name} (paid ${pay}).`);cross(p,s,null)}}
+    else if(it.t==="extra"){const snap=snapshot();const o=botChoose(p,snap,xo(it));if(o){log(`&nbsp;&nbsp;${p.name} takes an additional action.`);doAction(p,o,null)}}
+  }
+}
+
+/* =====================================================================
+   TURN FLOW
+   ===================================================================== */
+function submitHuman(a){
+  S.logMark=S.log.length;S.vpMark=S.players.map(p=>scores(p).total);S.coinMark=S.players.map(p=>p.coins);
+  const snap=snapshot();
+  const acts=S.players.map(p=>p.isBot?botChoose(p,snap):a);
+  log(`<b>— Turn ${S.turn} —</b>`);
+  S.players.forEach((p,i)=>doAction(p,acts[i],snap));
+  S.players.filter(p=>p.isBot).forEach(runBotPending);
+  UI.sel=null;UI.pick=null;nextHumanPending();
+}
+function nextHumanPending(){
+  const me=S.players[0];
+  while(me.pending.length){
+    const it=me.pending[0];
+    if(it.t==="bonus"){if(me.bonuses.length>=3){me.pending.shift();continue}UI.mode="bonus";render();return}
+    if(it.t==="cross"){if(!crossTargets(me,it.bs).length||it.n<=0){me.pending.shift();continue}UI.mode="cross";UI.sel=null;UI.pick=null;render();return}
+    if(it.t==="extra"){if(!options(me,snapshot(),xo(it)).length){me.pending.shift();log("&nbsp;&nbsp;You had no possible additional action.");continue}UI.mode="extra";UI.sel=null;UI.pick=null;render();return}
+    me.pending.shift();
+  }
+  endTurn();
+}
+function endTurn(){
+  S.introQ.forEach(c=>{const gi=S.pool.map((x,i)=>x.startsWith("grey")?i:-1).filter(i=>i>=0);if(gi.length)S.pool[pickR(gi)]=c;else S.pool.push(c);S.introduced.push(c);log(`The <b>${c}</b> die enters the Forum and replaces a grey die.`)});
+  S.introQ=[];
+  if(S.endTurn!==null&&S.turn>=S.endTurn)return finish();
+  if(S.endTurn===null&&S.players.some(p=>p.bonuses.length>=3)){S.endTurn=S.turn+1;log(`<b>${S.players.filter(p=>p.bonuses.length>=3).map(p=>p.name).join(", ")}</b> crossed off a third bonus. One final turn!`)}
+  if(S.turn>=60)return finish();
+  if(S.vpMark){const n=Math.max(0,S.log.length-S.logMark);UI.dlg={kind:"summary",turn:S.turn,events:S.log.slice(0,n).reverse().filter(l=>/attacks|completed|unlocked|bonus|enters the Forum|First Agora|final turn/.test(l)),
+    rows:S.players.map((p,i)=>({name:p.name,board:p.board,last:p.last,dvp:scores(p).total-S.vpMark[i],dc:p.coins-S.coinMark[i]}))}}
+  S.turn++;roll();UI.mode="choose";save();render(true);
+}
+function finish(){S.over=true;UI.mode="over";log("<b>Game over.</b>");save();render()}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+const $=s=>document.querySelector(s);
+const faceIcon=(color,face)=>face==="coin7"?coin(7):face==="wonder"?IC.pyramid:face==="any"?IC.any:(color==="black"||color==="purple")?bsym(face,34):(IC[face]||"");
+function dieHTML(d,i,state){
+  const rot=((i*37+S.turn*13)%15)-7;
+  return `<button class="die d-${d.color} ${state}" style="--dc:${d.color==="grey"?"#E9E1CF":d.color==="white"?"#F7F4EC":DCOL[d.color]};--rot:${rot}deg" data-die="${i}" aria-label="${d.color} die: ${faceName(d)}">${`<span class="face">${faceIcon(d.color,d.face)}</span>`}${SPECIAL.includes(d.color)&&!S.players[0].unlocked.includes(d.color)?`<span class="lock">${IC.lock}</span>`:""}</button>`;
+}
+function tag(color,face,dir="r",cls=""){return `<span class="tag ${dir} ${cls}"><span class="ti" style="--dc:${DCOL[color]}">${faceIcon(color,face)}</span></span>`}
+function effTop(p,s){
+  const out=[];
+  s.eff.forEach(e=>{
+    if(e.vp&&!e.def)out.push(laurel(e.vp));
+    if(e.def)return;
+    if(e.atk){
+      if(p.x[s.id])out.push(laurel(p.atkGain&&p.atkGain[s.id]!==undefined?p.atkGain[s.id]:e.atk,false));
+      else{const a=atkNow(p,s);out.push(laurel(a.v,!a.d,a.d?"#B3261E":null));if(a.d)out.push(`<span class="dred" title="${a.base} printed − ${a.d} defense">${a.base}−${a.d}</span>`)}}
+    if(e.coins)out.push(coin(e.coins));
+    if(e.dieZero)out.push(`<span class="sm">${dieMini(e.dieZero,`<g transform="translate(-2 -2) scale(.55)">${coin(0).replace(/<\/?svg[^>]*>/g,'')}</g>`)}</span>`);
+    if(e.dieMinus)out.push(`<span class="sm">${coin("-1")}</span><span class="sm">${dieMini("grey")}</span>`);
+    if(e.dieBonus)out.push(`<span class="sm">${dieMini(e.dieBonus)}</span><span class="sm">${coin(2)}</span>`);
+    if(e.unlock)out.push(`<b style="font-size:16px">+</b><span class="sm">${dieMini(e.unlock)}</span>`);
+    if(e.cross){const ks=[].concat(e.cross);out.push(ks.map(k=>bsym(k==="barracks"?"barracks":k,18)).join("")+(e.n===2?`<b>×2</b>`:"")+`<span class="sm" style="width:16px">${IC.check}</span>`)}
+    if(e.extra)out.push(`<span class="sm">${IC.cycle}</span><span class="sm">${dieMini("grey",`<g transform="translate(-2 -2) scale(.55)">${coin(0).replace(/<\/?svg[^>]*>/g,'')}</g>`)}</span>`);
+    if(e.per)out.push(`<span class="sm">${coin(e.n)}</span>${e.per==="wonder"?`<span class="sm">${IC.pyramid}</span>`:bsym(e.per,18)}<span class="sm">${laurel(e.n)}</span>`);
+    if(e.gal)out.push(`<span class="sm">${bust("#fff")}</span><span class="sm">${laurel(1)}</span>`);
+  });
+  return out.join("");
+}
+function spaceHTML(p,s,live,extraCls=""){
+  let cls="sp "+extraCls;if(p.x[s.id])cls+=" x";
+  let pay="";
+  if(live&&UI.avail&&UI.avail.has(s.id)){cls+=" av";const c=UI.avail.get(s.id);if(c!==null)pay=`<span class="pay">${coin(c)}</span>`}
+  else if(live&&UI.hint&&UI.hint.has(s.id)){const h=UI.hint.get(s.id);cls+=" hint";pay=`<span class="hb" title="${h.n>1?h.n+" dice can build this":"Build with this die"}">${dieMini(S.forum[h.die].color==="grey"?"white":S.forum[h.die].color)}${coin(h.pay)}</span>`}
+  else if(live&&UI.wonderHint&&UI.wonderHint.sid===s.id){cls+=" hint";pay=`<span class="hb" title="Build this Wonder step">${IC.pyramid}${coin(UI.wonderHint.pay)}</span>`}
+  if(live&&UI.pick&&UI.pick.sid===s.id)cls+=" pick";
+  const isAv=cls.includes(" av")||cls.includes(" hint");
+  return `<div class="${cls}" ${live?`data-sid="${s.id}"`:""} ${isAv?'role="button" tabindex="0"':""} title="${titleOf(p,s)}">${pay}<span class="st">${effTop(p,s)}</span><span class="cost">${s.cost}</span></div>`;
+}
+function titleOf(p,s){
+  const t=s.eff.map(e=>e.vp&&!e.def?`${e.vp} VP`:e.def?`Defense (${s.eff.find(x=>x.vp).vp} VP)`:e.atk?(p.x[s.id]?`Attack: ${p.atkGain&&p.atkGain[s.id]!==undefined?p.atkGain[s.id]:e.atk} VP (locked when you attacked)`:(()=>{const a=atkNow(p,s);return `Attack ${a.opp.name}: ${a.base} printed − ${a.d} defense = ${a.v} VP now`})()):e.coins?`+${e.coins} coins`:e.dieZero?`${e.dieZero} die costs 0`:e.dieMinus?"Every die cost is reduced by 1":e.dieBonus?`+2 coins whenever you choose a ${e.dieBonus} die`:e.unlock?`Unlock the ${e.unlock} die`:e.cross?`Cross off ${e.n===2?"up to 2 spaces":"a space"} of ${[].concat(e.cross).map(k=>KEYB[k]?{wh:"Warehouse",agora:"Agora",barracks:"Barracks",market:"Market",univ:"University",gallery:"Gallery"}[k]:k).join(" or ")}`:e.extra?"Take action A (construct a building) with the current dice, without paying the die cost":e.per?`Now: ${e.n} coin${e.n>1?"s":""} per ${e.per==="wonder"?"Wonder step":BLD[e.per].name+" space"}. End: ${e.n} VP per one`:e.gal?"End: 1 VP per Gallery space":e.res?"Produces 1 resource":"").filter(Boolean).join(" · ");
+  return `${t} · cost ${s.cost} resource${s.cost===1?"":"s"}`;
+}
+function bh(b,p,label){
+  const tot=spaces(p).filter(s=>s.b===b).length;
+  return `<div class="bh"><span class="flag" style="--bc:${BCOL[BLD[b].sym]}">${symOnly(BLD[b].sym)}</span>${label||BLD[b].name}<span class="cnt">${cnt(p,b)}/${tot}</span></div>`;
+}
+function boardHTML(p,live){
+  const A=spaces(p),B=BOARDS[p.board],done=b=>p.completed.includes(b)?" done":"";
+  const S_=id=>spaceHTML(p,sp(p,id),live);
+  let h=`<div class="board ${live?"":"mini"}">`;
+  // Wonder
+  h+=`<section class="bld b-wonder ar-wonder${done("wonder")}" style="--sky1:${B.sky[0]};--sky2:${B.sky[1]}">${bh("wonder",p,`${B.city} · ${B.name}`)}
+    <div class="wonderrow"><span class="tag r"><span class="ti" style="--dc:#fff">${IC.pyramid}</span></span><div class="strip">${["wo0","wo1","wo2"].map(S_).join("")}</div></div>
+    ${B.verified?"":`<span class="note" style="color:#3A2E1C">Values for this board are estimated until it is photographed.</span>`}</section>`;
+  // Guild
+  h+=`<section class="bld b-purple ar-guild${done("guild")}">${bh("guild",p)}<div class="line"><span class="tag r"><span class="ti" style="--dc:${DCOL.purple}">${SV('<path d="M3 12l4-4v8zM21 12l-4-4v8z" fill="#fff"/><text x="12" y="16.5" text-anchor="middle" font-family="Open Sans" font-weight="800" font-size="13" fill="#fff">?</text>')}</span></span><div class="strip">${["k0","k1","k2"].map(S_).join("")}</div></div>
+    <span class="note" style="color:#EBDDF7">Needs at least as many spaces as each neighbour in the building on the purple die.</span></section>`;
+  // Gallery
+  h+=`<section class="bld b-white ar-gallery${done("gallery")}">${bh("gallery",p)}<div class="gal">
+     <div class="line">${tag("white","bust","r","sm")}<div class="strip">${S_("g_b0")}${S_("g_b1")}</div></div>
+     ${["wred","wgreen","wblue","wyellow"].map(f=>`<div class="galc">${S_("g_"+f)}${tag("white",f,"u","sm")}</div>`).join("")}</div></section>`;
+  // Western Barracks: defense column, attack column
+  const col=ids=>`<div class="col">${ids.map(S_).join("")}</div>`;
+  h+=`<section class="bld b-red ar-west${done("bw")}">${bh("bw",p,"West")}<div class="bar">
+      <div class="stackc">${col(["bwd0","bwd1"])}${tag("red","shield","u","sm")}</div>
+      <div class="stackc">${col(["bwa0","bwa1","bwa2","bwa3"])}${tag("red","sword","u","sm")}</div></div>
+      <div class="minus">◀ ${laurel("-1")} / <span style="width:20px">${IC.shield}</span></div>
+      <span class="note" style="color:#F6D6D3">Attacks ${left(p).name} (their defense ${defOf(left(p),"be")}) · your defense ${defOf(p,"bw")}</span></section>`;
+  h+=`<section class="bld b-red ar-east${done("be")}">${bh("be",p,"East")}<div class="bar">
+      <div class="stackc">${col(["bea0","bea1","bea2","bea3"])}${tag("red","axe","u","sm")}</div>
+      <div class="stackc">${col(["bed0","bed1"])}${tag("red","shield","u","sm")}</div></div>
+      <div class="minus">${laurel("-1")} / <span style="width:20px">${IC.shield}</span> ▶</div>
+      <span class="note" style="color:#F6D6D3">Attacks ${right(p).name} (their defense ${defOf(right(p),"bw")}) · your defense ${defOf(p,"be")}</span></section>`;
+  // Agora
+  const rows=["scales","temple","mask"],cols=["fountain","owl","caduceus"];
+  let ag=`<div class="agora">`;
+  rows.forEach((r,ri)=>{ag+=tag("blue",r,"r","sm");cols.forEach((c,ci)=>{const s=A.find(x=>x.b==="agora"&&x.row===ri&&x.col===ci);
+    ag+=s?spaceHTML(p,s,live):`<div class="first ${S.agoraFirst!==null&&!p.agoraFirst?"taken":""}" title="First city to finish its Agora: +3 VP">${laurel(3)}<span>1st</span></div>`})});
+  ag+=`<div></div>${cols.map(c=>`<div class="ct">${tag("blue",c,"u","sm")}</div>`).join("")}</div>`;
+  h+=`<section class="bld b-blue ar-agora${done("agora")}">${bh("agora",p)}${ag}</section>`;
+  // Market
+  h+=`<section class="bld b-yellow ar-market${done("market")}">${bh("market",p)}<div class="market">
+     <div></div>${S_("mc_up")}<div class="gap" style="grid-row:1/4;grid-column:3"></div>${S_("mt_up")}<div></div>
+     ${S_("mc_l")}<div class="dia"><span class="ti">${IC.camel}</span></div><div class="dia" style="grid-column:4"><span class="ti">${IC.chest}</span></div>${S_("mt_r")}
+     <div></div>${S_("mc_dn")}<div style="grid-column:4">${S_("mt_dn")}</div><div></div></div>
+     <span class="note" style="color:#5A4106">Spaces around each symbol can be crossed off in any order.</span></section>`;
+  // University
+  h+=`<section class="bld b-green ar-univ${done("univ")}">${bh("univ",p)}<div class="univ">${["tablet","compass","wheel"].map(r=>`<div class="line">${tag("green",r,"r","sm")}<div class="strip">${[0,1,2].map(i=>S_(`u_${r}${i}`)).join("")}</div></div>`).join("")}</div></section>`;
+  // Warehouse
+  h+=`<section class="bld b-grey ar-warehouse${done("wh")}">${bh("wh",p)}<div class="wh">${RES.map(r=>`<div class="galc">${S_("w_"+r)}${tag("grey",r,"u","sm")}</div>`).join("")}</div>
+     <span class="note">Each crossed-off space produces 1 resource for the rest of the game. Finishing the Warehouse gives no bonus.</span></section>`;
+  // Gold reserve
+  const ch=live&&UI.coinHint;
+  h+=`<section class="bld b-gold ar-gold ${ch?"hintsec":""}" ${ch?`data-gold7="1" role="button" tabindex="0" title="Take the yellow 7-coin die (pay ${UI.coinHint.pay})"`:""}>${ch?`<span class="hb sec">${dieMini("yellow")}${coin(7)}<b>take</b>${coin(UI.coinHint.pay)}<b>pay</b></span>`:""}<div class="bh"><span class="flag" style="--bc:var(--gold)">${symOnly("market")}</span>Gold reserve<span class="cnt" style="color:#fff">${p.coins}</span></div><div class="gold">${Array.from({length:42},(_,i)=>`<i class="${i<p.coins?"on":""}"></i>`).join("")}</div></section>`;
+  // Bonuses
+  const pickB=live&&UI.mode==="bonus";
+  h+=`<section class="bld b-gold ar-bonus"><div class="bh"><span class="flag" style="--bc:var(--gold)">${symOnly("guild")}</span>Bonuses<span class="cnt" style="color:#fff">${p.bonuses.length}/3</span></div><div class="bonus">${BONUSES.map(b=>{const x=p.bonuses.includes(b.id);const av=pickB&&!x;return `<div class="hg ${x?"x":""} ${av?"av":""}" ${av?`data-bonus="${b.id}" role="button" tabindex="0"`:""}>${IC.hourglass(b.icon().replace(/<\/?svg[^>]*>/g,''))}<span>${b.label}</span></div>`}).join("")}</div></section>`;
+  return h+`</div>`;
+}
+function usableDie(p,i,snap,o){const d=S.forum[i];if(o.only&&d.color!==o.only)return false;const dc=o.freeDie?0:dieCost(p,d);if(d.face==="coin7")return dc<=p.coins;return matchSpaces(p,d,snap).some(s=>dc+shortfall(p,s.cost)<=p.coins)}
+function curOpts(){const me=S.players[0];if(UI.mode==="extra")return xo(me.pending[0]);return{}}
+function xo(it){return it.free?{freeDie:true,noWonder:true}:{pass:true}}
+function forumHTML(){
+  const me=S.players[0],o=curOpts(),act=UI.mode==="choose"||UI.mode==="extra";
+  const q=[0,1,3,2].map(c=>`<div class="quad q${c}" aria-label="Section costing ${c}"><span class="cc">${coin(o.freeDie?0:c)}</span><div class="dice">`+
+    S.forum.map((d,i)=>[d,i]).filter(([d])=>d.sec===c).map(([d,i])=>{let st="";if(act){st=usableDie(me,i,UI.snap,o)?"usable":"dim"}if(UI.sel===i)st+=" sel";return dieHTML(d,i,st)}).join("")+`</div></div>`);
+  return `<div class="forum" id="forum">${q.join("")}</div>`;
+}
+function actionsHTML(){
+  const me=S.players[0];let h=`<div class="actions panel">`;
+  if(UI.mode==="bonus")h+=`<div class="banner">You finished a building. Choose a bonus in the window.</div>`;
+  else if(UI.mode==="cross"){const it=me.pending[0];const nm=it.bs.length>=4?"Agora, Barracks, Market or University":it.bs.map(k=>({wh:"Warehouse",agora:"Agora",barracks:"Barracks",market:"Market",univ:"University",gallery:"Gallery"})[k]).join(" or ");
+    h+=`<div class="banner">Cross off ${it.n>1?`up to ${it.n} spaces`:"a space"} in the ${nm}. Tap a glowing space; you pay its resource cost.</div><div class="row"><button class="btn" data-act="skipcross">Skip</button></div>`}
+  else if(UI.mode==="over")h+=`<div class="banner">Game over.</div><div class="row"><button class="btn primary big" data-act="showscore">Show final scores</button><button class="btn" data-act="new">New game</button></div>`;
+  else{
+    const ex=UI.mode==="extra",it=ex?me.pending[0]:null;
+    h+=`<div class="banner">${ex?(it.free?"Extra action A: construct a building with any die in the Forum, without paying the die cost.":"Another action: build with a die (the same die is allowed), build your Wonder, or pass."):`Turn ${S.turn}${S.endTurn===S.turn?" · final turn":""}: tap a die in the Forum to see what it does. Or build your Wonder, or pass.`}</div>`;
+    if(UI.pick&&UI.pick.t==="wonder"&&UI.dieModal==null){const s=sp(me,UI.pick.sid),d=UI.pick.t==="build"?S.forum[UI.pick.die]:null,dc=d?(UI.pick.free?0:dieCost(me,d)):0,sf=shortfall(me,s.cost);
+      h+=`<div class="confirm"><div class="what">${d?`<span style="width:30px">${faceIcon(d.color,d.face)}</span>`:IC.pyramid}${s.b==="wonder"?`${BOARDS[me.board].name} · step ${+s.id.slice(2)+1}`:BLD[s.b].name}</div>
+        <div class="hint">${titleOf(me,s)}</div>
+        <div class="hint">Pay <b>${UI.pick.pay}</b> coin${UI.pick.pay===1?"":"s"}: die ${dc} + ${sf} missing resource${sf===1?"":"s"} (space needs ${s.cost}, you produce ${resCount(me)}).</div>
+        <div class="row"><button class="btn primary" data-act="confirm">Confirm</button><button class="btn" data-act="cancel">Back</button></div></div>`}
+    const w=nextWonder(me),wp=w?shortfall(me,w.cost):0;
+    h+=`<div class="row">${!ex||!it.free?`<button class="btn primary" data-act="wonder" ${w&&wp<=me.coins?"":"disabled"}>${w?`Build Wonder step ${+w.id.slice(2)+1} · pay ${wp}`:"Wonder complete"}</button>`:""}${!ex||!it.free?`<button class="btn" data-act="pass">Pass · +3 coins</button>`:""}${ex?`<button class="btn" data-act="skip">Skip</button>`:""}</div>`;
+    const last=S.players.slice(1).filter(p=>p.last);
+    if(last.length&&S.turn>1)h+=`<div class="last"><span class="label">Last turn</span>${last.map(p=>`<div style="--w:${WCOL[p.board]}"><span class="dot"></span><b>${p.name}</b> ${p.last}</div>`).join("")}</div>`;
+  }
+  return h+`</div>`;
+}
+function oppsHTML(){
+  return `<div class="opps">${S.players.slice(1).map(p=>{const sc=scores(p);const me=S.players[0];
+    return `<article class="opp panel" style="--w:${WCOL[p.board]}"><div class="opp-h">${p.name}<span class="vp">${sc.total} VP</span></div>
+    <div class="ln"><span>${coin(p.coins)}</span><span>${IC.stone}${resCount(p)}</span><span>${IC.shield}W${defOf(p,"bw")} E${defOf(p,"be")}</span><span>Bonuses ${p.bonuses.length}/3</span></div>
+    <div class="bd">${["wonder","wh","agora","bw","be","market","univ","gallery","guild"].map(b=>`<span class="${p.completed.includes(b)?"on":""}" style="--bc:${BCOL[BLD[b].sym]}" title="${BLD[b].name}: ${cnt(p,b)}/${spaces(p).filter(s=>s.b===b).length}">${symOnly(BLD[b].sym)}</span>`).join("")}</div>
+    <div class="act">${p===left(me)?"Your west neighbour · ":""}${p===right(me)?"Your east neighbour · ":""}${p.last||"—"}</div></article>`}).join("")}</div>`+
+    S.players.slice(1).map((p,i)=>`<details class="peek panel" data-peek="${i}" ${UI.peek[i]?"open":""}><summary>${p.name}'s city</summary>${boardHTML(p,false)}</details>`).join("");
+}
+function hdrHTML(){
+  const me=S&&S.players[0];
+  let st="";
+  if(me){const sc=scores(me);st=`<span class="hs">${coin(me.coins)}<b>${me.coins}</b></span><span class="hs">${IC.stone}<b>${resCount(me)}</b> resources</span><span class="hs">${laurel(sc.total)}<b>${sc.total}</b> VP</span><span class="hs">${IC.hourglass("").replace('viewBox','style="width:16px;height:22px" viewBox')}<b>${me.bonuses.length}/3</b></span><span class="hs">Turn <b>${S.turn}</b>${S.endTurn!==null?" · last turn":""}</span>`}
+  return `<header class="top"><div class="brand">Wonders Dice<small>${me?`${BOARDS[me.board].city} · ${BOARDS[me.board].name}`:"Shake the Forum · 2–7 cities"}</small></div><div class="hstats">${st}</div><div class="row">${S&&S.over?`<button class="btn" data-act="showscore">Final scores</button>`:""}${S?`<button class="btn ${UI.compact?"primary":""}" data-act="compact" aria-pressed="${UI.compact?"true":"false"}">${UI.compact?"Full view":"Compact view"}</button>`:""}<button class="btn" data-act="rules">Rules</button><button class="btn primary" data-act="menu">New game</button></div></header>`;
+}
+function computeAvail(){
+  UI.avail=null;UI.hint=null;UI.coinHint=null;UI.wonderHint=null;if(!S||S.over)return;const me=S.players[0];
+  if((UI.mode==="choose"||UI.mode==="extra")&&UI.sel===null&&UI.dieModal==null){const o=curOpts();UI.hint=new Map();
+    S.forum.forEach((d,i)=>{if(o.only&&d.color!==o.only)return;const dc=o.freeDie?0:dieCost(me,d);
+      matchSpaces(me,d,UI.snap).forEach(s=>{const pay=dc+shortfall(me,s.cost);if(pay>me.coins)return;const h=UI.hint.get(s.id);
+        if(!h)UI.hint.set(s.id,{die:i,pay,n:1});else{h.n++;if(pay<h.pay){h.pay=pay;h.die=i}}})
+      if(d.face==="coin7"&&dc<=me.coins&&(!UI.coinHint||dc<UI.coinHint.pay))UI.coinHint={die:i,pay:dc}});
+    const w=nextWonder(me);if(w&&!o.noWonder&&!o.only&&shortfall(me,w.cost)<=me.coins)UI.wonderHint={sid:w.id,pay:shortfall(me,w.cost)}}
+  if(UI.mode==="cross"){const it=me.pending[0];UI.avail=new Map(crossTargets(me,it.bs).map(s=>[s.id,shortfall(me,s.cost)]));return}
+  if((UI.mode==="choose"||UI.mode==="extra")&&UI.sel!==null&&S.forum[UI.sel].face!=="coin7"){const o=curOpts(),d=S.forum[UI.sel];const dc=o.freeDie?0:dieCost(me,d);UI.avail=new Map();
+    matchSpaces(me,d,UI.snap).forEach(s=>{const pay=dc+shortfall(me,s.cost);if(pay<=me.coins)UI.avail.set(s.id,pay)})}
+}
+const SHEAD={wonder:["#fff",IC.pyramid],west:["var(--c-red)",SV(SYMS.barracks+'<path d="M12 1l3 3H9z" fill="#fff"/>')],east:["var(--c-red)",SV(SYMS.barracks+'<path d="M12 23l3-3H9z" fill="#fff"/>')],agora:["var(--c-blue)",symOnly("agora")],market:["var(--c-yellow)",symOnly("market")],univ:["var(--c-green)",symOnly("univ")],guild:["var(--c-purple)",symOnly("guild")],gallery:["#fff",IC.bust]};
+function scoreDetail(p){
+  const x=id=>p.x[id],sum=(pre,f)=>spaces(p).filter(s=>s.id.startsWith(pre)&&x(s.id)).reduce((a,s)=>a+f(s),0);
+  const defVP=pre=>sum(pre,s=>s.eff.find(e=>e.vp).vp);
+  const atkVP=pre=>sum(pre,s=>(p.atkGain&&p.atkGain[s.id])||0);
+  const sc=scores(p),first=p.agoraFirst?3:0;
+  const mk=[];spaces(p).forEach(s=>{if(x(s.id))s.eff.forEach(e=>{if(e.per)mk.push(`${cnt(p,e.per)*e.n} from ${e.per==="wonder"?"Wonder steps":BLD[e.per].name}`)})});
+  const n=b=>`${cnt(p,b)}/${spaces(p).filter(s=>s.b===b).length}`;
+  return [
+    {k:"wonder",label:"Wonder",ic:IC.pyramid,vp:sc.wonder,note:`${n("wonder")} steps`},
+    {k:"west",label:"West Barracks",ic:bsym("barracks",20),vp:sc.west,note:`attacks ${atkVP("bwa")} · defense ${defVP("bwd")}`},
+    {k:"east",label:"East Barracks",ic:bsym("barracks",20),vp:sc.east,note:`attacks ${atkVP("bea")} · defense ${defVP("bed")}`},
+    {k:"agora",label:"Agora spaces",ic:bsym("agora",20),vp:sc.agora-first,note:`${n("agora")} spaces`},
+    {k:"first",label:"First to finish Agora",ic:laurel(3),vp:first,note:first?"bonus":"—"},
+    {k:"univ",label:"University",ic:bsym("univ",20),vp:sc.univ,note:`${n("univ")} spaces`},
+    {k:"market",label:"Market (end of game)",ic:bsym("market",20),vp:sc.market,note:mk.join(" · ")||"no chest spaces"},
+    {k:"guild",label:"Guild Court",ic:bsym("guild",20),vp:sc.guild,note:`${n("guild")} spaces`},
+    {k:"gallery",label:"Gallery of Leaders",ic:IC.bust,vp:sc.gallery,note:`${n("gallery")} spaces`}
+  ];
+}
+function scoreHTML(){
+  const rows=S.players.map(p=>({p,s:scores(p),d:scoreDetail(p)})).sort((a,b)=>b.s.total-a.s.total||b.p.coins-a.p.coins);
+  const ord=["1st","2nd","3rd","4th","5th","6th","7th"];
+  const keys=rows[0].d.map(r=>r.k);
+  const best=k=>Math.max(...rows.map(r=>r.d.find(x=>x.k===k).vp));
+  const meI=rows.findIndex(r=>!r.p.isBot),me=rows[meI],win=rows[0];
+  const top=[...me.d].filter(r=>r.vp>0).sort((a,b)=>b.vp-a.vp).slice(0,3);
+  const weak=[...me.d].filter(r=>r.k!=="first").map(r=>({...r,gap:best(r.k)-r.vp})).sort((a,b)=>b.gap-a.gap)[0];
+  const head=`<tr><th class="stick">Source</th>${rows.map((r,i)=>`<th class="${r.p.isBot?"":"meh"}" style="--w:${WCOL[r.p.board]}"><span class="rk">${ord[i]}</span>${r.p.isBot?r.p.name:"You"}</th>`).join("")}</tr>`;
+  const body=keys.map((k,ki)=>{const b=best(k);const d0=rows[0].d[ki];
+    return `<tr><td class="stick"><span class="srci">${d0.ic}</span>${d0.label}</td>${rows.map(r=>{const d=r.d[ki];return `<td class="${r.p.isBot?"":"mec"} ${d.vp&&d.vp===b?"best":""}" title="${d.note}"><b>${d.vp}</b><span class="nt">${d.note}</span></td>`}).join("")}</tr>`}).join("");
+  const tot=`<tr class="tot"><td class="stick">Total</td>${rows.map(r=>`<td class="${r.p.isBot?"":"mec"}">${r.s.total}</td>`).join("")}</tr>
+    <tr class="sub"><td class="stick">Coins left (tie-break)</td>${rows.map(r=>`<td class="${r.p.isBot?"":"mec"}">${r.p.coins}</td>`).join("")}</tr>
+    <tr class="sub"><td class="stick">Bonuses used</td>${rows.map(r=>`<td class="${r.p.isBot?"":"mec"}">${r.p.bonuses.length}/3</td>`).join("")}</tr>`;
+  const summary=meI===0
+    ?`You won with <b>${me.s.total} VP</b>${rows[1]?`, ${me.s.total-rows[1].s.total} ahead of ${rows[1].p.name}`:""}.`
+    :`You finished <b>${ord[meI]}</b> with <b>${me.s.total} VP</b>, ${win.s.total-me.s.total} behind ${win.p.name} (${win.s.total} VP).`;
+  return `<h2>${meI===0?"You win!":win.p.name+" wins"}</h2>
+   <div class="endsum"><p>${summary}</p>
+     <p>Your best sources: ${top.map(r=>`<b>${r.label}</b> ${r.vp}`).join(" · ")||"none"}.</p>
+     ${weak&&weak.gap>0?`<p class="note">Biggest gap: ${weak.label}, ${weak.gap} VP behind the best city there.</p>`:""}</div>
+   <div class="tblwrap"><table class="det"><thead>${head}</thead><tbody>${body}${tot}</tbody></table></div>
+   <p class="note">Gold cells mark the best score in each row. Ties go to the city with more coins left.</p>
+   <div class="row"><button class="btn primary" data-act="start">Play again</button><button class="btn" data-act="close">View boards</button></div>`;
+}
+function rulesHTML(){return `<h2>How to play</h2><div class="rules">
+  <p>Each turn the Forum is shaken. The 7 dice land in sections that cost 0 to 3 coins. All cities act at the same time, and several may pick the same die. Choose one:</p>
+  <ul><li><b>Construct a building:</b> pick a die and pay its section cost. Its symbol points to a space on your board (follow the arrows). Then pay the space's cost: each resource you produce covers 1, and you pay 1 coin for each missing one.</li>
+  <li><b>Construct your Wonder:</b> no die needed. Pay only the next step's cost.</li>
+  <li><b>Pass:</b> gain 3 coins.</li></ul>
+  <h3>Buildings</h3><ul>
+  <li><b>Warehouse</b> (grey die): each space gives 1 resource for good.</li>
+  <li><b>Agora</b> (blue die): follow the arrows. A row symbol takes the next space from the left, a column symbol the next space from the bottom. First city to finish it gets 3 VP.</li>
+  <li><b>Barracks</b> (red die): sword attacks your west neighbour, axe your east neighbour, shields build defense. An attack scores its VP minus 1 per defense the target had at the start of the turn.</li>
+  <li><b>Market</b> (yellow die): camel and chest spaces in any order.</li>
+  <li><b>University</b> (green die): rows end by unlocking the black, purple and white dice. The first unlock of each special die swaps it in for a grey die in the Forum; only cities that unlocked it may pick it.</li>
+  <li><b>Gallery of Leaders</b> (white die), <b>Guild Court</b> (purple die: you need at least as many spaces as each neighbour in the building shown), and the black die, which crosses off a space of the building it shows.</li></ul>
+  <h3>End of game</h3><p>Finishing a building (any building except the Warehouse) lets you cross off one of your 3 bonuses. When a city has crossed off all 3, finish the turn and play one last turn. Most VP wins; ties go to the most coins.</p>
+  <p class="note">All 7 boards use the printed values. The rules come from the official rulebook and player aid.</p>
+  <button class="btn" data-act="close">Close</button></div>`}
+function setupHTML(){
+  const saved=loadSaved();
+  return `<h2>New game</h2>
+  <div><span class="label">Computer cities</span><div class="opts" style="margin-top:6px">${[1,2,3,4,5,6].map(n=>`<button class="opt ${SETUP.bots===n?"sel":""}" data-bots="${n}">${n}</button>`).join("")}</div></div>
+  <div><span class="label">Difficulty</span><div class="opts" style="margin-top:6px">${["easy","normal","hard"].map(d=>`<button class="opt ${SETUP.diff===d?"sel":""}" data-diff="${d}">${d[0].toUpperCase()+d.slice(1)}</button>`).join("")}</div></div>
+  <div><span class="label">Your city</span><div class="opts" style="margin-top:6px"><button class="opt ${SETUP.board==="random"?"sel":""}" data-board="random">Random</button>${Object.keys(BOARDS).map(k=>`<button class="opt ${SETUP.board===k?"sel":""}" data-board="${k}">${BOARDS[k].city}${BOARDS[k].verified?"":" *"}</button>`).join("")}</div></div>
+  <div class="row"><button class="btn primary big" data-act="start">Start game</button>${saved?`<button class="btn" data-act="resume">Continue saved game (turn ${saved.S.turn})</button>`:""}${S?`<button class="btn" data-act="close">Cancel</button>`:""}</div>`;
+}
+let MODAL=null;
+const COLNAME={grey:"Grey",blue:"Blue",red:"Red",yellow:"Yellow",green:"Green",black:"Black",white:"White",purple:"Purple"};
+const BNAME={wh:"Warehouse",agora:"Agora",barracks:"Barracks",market:"Market",univ:"University",gallery:"Gallery of Leaders",wonder:"Wonder",any:"Agora, Barracks, Market or University"};
+const FNAME={stone:"Stone",wood:"Wood",brick:"Brick",papyrus:"Papyrus",glass:"Glass",cloth:"Cloth",scales:"Scales",temple:"Temple",mask:"Mask",fountain:"Fountain",owl:"Owl",caduceus:"Caduceus",sword:"Sword",axe:"Axe",shield:"Shield",camel:"Camel",chest:"Chest",coin7:"7 coins",tablet:"Tablet",compass:"Compass",wheel:"Wheel",bust:"Leader",wred:"Red leader",wgreen:"Green leader",wblue:"Blue leader",wyellow:"Yellow leader"};
+function faceName(d){return (d.color==="black"||d.color==="purple")?BNAME[d.face]:FNAME[d.face]||d.face}
+const UNLOCKROW={black:"tablet",purple:"compass",white:"wheel"};
+function dieExplain(p,d,snap){
+  const f=d.face;
+  switch(d.color){
+    case "grey":return `Resource die. Cross off the <b>${FNAME[f]}</b> space of your Warehouse. Every Warehouse space produces 1 resource for the rest of the game.`;
+    case "blue":return `Agora die. Cross off the next space in the <b>${FNAME[f]}</b> ${["scales","temple","mask"].includes(f)?"row, from left to right":"column, from the bottom up"} of your Agora. VP are scored right away.`;
+    case "red":return f==="sword"?`Barracks die. <b>Sword</b>: attack your west neighbour (${left(p).name}). You score the VP shown minus 1 for each defense their East Barracks had at the start of the turn.`:f==="axe"?`Barracks die. <b>Axe</b>: attack your east neighbour (${right(p).name}). You score the VP shown minus 1 for each defense their West Barracks had at the start of the turn.`:`Barracks die. <b>Shield</b>: build the next defense space in either Barracks. Defense scores its VP and weakens your neighbour's attacks.`;
+    case "yellow":return f==="coin7"?`Market die. <b>7 coins</b>: pay the die cost first, then gain 7 coins. You can't use the 7 coins to pay for this die.`:`Market die. Cross off one of the three spaces next to the <b>${FNAME[f]}</b> in your Market, in any order.`;
+    case "green":return `University die. Cross off the next space in the <b>${FNAME[f]}</b> row of your University. The last space of each row unlocks a special die.`;
+    case "white":return f==="bust"?`Gallery die. <b>Leader</b>: cross off a leader space. At the end it scores 1 VP per crossed-off Gallery space.`:`Gallery die. <b>${FNAME[f]}</b>: cross off this space, then cross off up to 2 spaces of your ${BNAME[COLB[f.slice(1)]]} (paying their costs).`;
+    case "black":return (f==="any"?`Black die. Cross off the next space of <b>one of these buildings</b>: Agora, Barracks, Market or University, ignoring its symbol.`:f==="wh"?`Black die. Cross off <b>any open Warehouse space</b>, whatever resource it shows.`:`Black die. Cross off the next space of your <b>${BNAME[f]}</b>, ignoring its symbol.`)+`<br><span class="note">The black die never builds the Guild Court, the Gallery of Leaders or the Wonder.</span>`;
+    case "purple":{const c=snap.get(p).c[f],L=snap.get(left(p)).c[f],Rr=snap.get(right(p)).c[f];
+      return `Guild Court die. You may cross off the next Guild Court space if you have ${N()===2?"more":"at least as many"} crossed-off spaces in your <b>${BNAME[f]}</b> as ${N()===2?"your rival":"each neighbour"}.<br><span class="note">You ${c} · ${left(p).name} ${L}${N()>2?` · ${right(p).name} ${Rr}`:""}</span>`}
+  }
+  return "";
+}
+function dieWhyNot(p,d,snap,o){
+  if(o.only&&d.color!==o.only)return `This extra action needs a ${o.only} die.`;
+  if(!canUseDie(p,d))return `This die is locked for you. Finish the ${FNAME[UNLOCKROW[d.color]]} row of your University to unlock it.`;
+  const dc=o.freeDie?0:dieCost(p,d);
+  if(d.face==="coin7")return dc>p.coins?`You need ${dc} coins to take this die and have ${p.coins}.`:"";
+  if(d.color==="purple"&&!guildOk(p,d.face,snap)&&spaces(p).some(s=>s.b==="guild"&&available(p,s)))return `You don't meet the condition in the ${BNAME[d.face]}.`;
+  const M=matchSpaces(p,d,snap);
+  if(!M.length)return "You have no open space for this symbol.";
+  const cheapest=Math.min(...M.map(s=>dc+shortfall(p,s.cost)));
+  if(cheapest>p.coins)return `You need at least ${cheapest} coins and have ${p.coins}.`;
+  return "";
+}
+function dlgHTML(){
+  const me=S.players[0],D=UI.dlg;
+  if(D.kind==="summary"){
+    return `<h2>Turn ${D.turn} summary</h2><div class="sumlist">${D.rows.map(r=>`<div class="sumrow" style="--w:${WCOL[r.board]}"><span><b>${r.name}</b><br>${r.last||"—"}</span><span class="vpd">${r.dvp?`+${r.dvp} VP`:""}${r.dvp&&r.dc?" · ":""}${r.dc?`${r.dc>0?"+":""}${r.dc} coins`:""}</span></div>`).join("")}</div>
+      ${D.events.length?`<div class="sumev">${D.events.map(e=>`<div>${e.replace(/^(&nbsp;)+/,"")}</div>`).join("")}</div>`:""}
+      <div class="row"><button class="btn primary big" data-act="dlgok">Next turn</button></div>`;
+  }
+  if(D.kind==="wonder"){const w=nextWonder(me),B=BOARDS[me.board],sf=shortfall(me,w.cost);
+    return `<h2>Build your Wonder</h2><div class="bigfx">${spaceHTML(me,w,false)}<div><b>${B.city} · ${B.name}, step ${+w.id.slice(2)+1} of 3</b><div class="note">${titleOf(me,w)}</div></div></div>
+      <p>No die needed. The step needs ${w.cost} resources; you produce ${resCount(me)}, so you pay <b>${sf}</b> coin${sf===1?"":"s"} (you have ${me.coins}).</p>
+      <div class="row"><button class="btn primary big" data-act="dlgok">Confirm · pay ${sf}</button><button class="btn" data-act="dlgcancel">Cancel</button></div>`}
+  if(D.kind==="pass")return `<h2>Pass</h2><p>Skip building this turn and gain <b>3 coins</b> (you have ${me.coins}, you'll have ${Math.min(42,me.coins+3)}).</p><div class="row"><button class="btn primary big" data-act="dlgok">Pass · +3 coins</button><button class="btn" data-act="dlgcancel">Cancel</button></div>`;
+  if(D.kind==="cross"){const s=sp(me,D.sid),sf=shortfall(me,s.cost),it=me.pending[0];
+    return `<h2>Cross off a space</h2><div class="bigfx">${spaceHTML(me,s,false)}<div><b>${s.b==="wonder"?"Wonder":BLD[s.b].name}</b><div class="note">${titleOf(me,s)}</div></div></div>
+      <p>No die needed. The space needs ${s.cost} resources; you produce ${resCount(me)}, so you pay <b>${sf}</b> coin${sf===1?"":"s"}.${it.n>1?` You can cross off ${it.n-1} more after this one.`:""}</p>
+      <div class="row"><button class="btn primary big" data-act="dlgok">Confirm · pay ${sf}</button><button class="btn" data-act="dlgcancel">Cancel</button></div>`}
+  return "";
+}
+const BONUSDESC={extra:"Right away, take another action (build with a die, build your Wonder, or pass). You may even use the same die again.",cross:"Cross off a space of your Agora, Barracks, Market or University, following its order and paying its resource cost. No die needed.",coins:"Gain 7 coins right away."};
+function bonusHTML(){
+  const me=S.players[0];
+  return `<h2>Building complete!</h2><p>Cross off one of your bonuses. You have used ${me.bonuses.length} of 3; ${me.bonuses.length===2?"<b>this is your third, so the game will end after one more turn.</b>":"the third one starts the last turn."}</p>
+   <div class="bopts">${BONUSES.filter(b=>!me.bonuses.includes(b.id)).map(b=>`<button class="bopt ${UI.bsel===b.id?"on":""}" data-bsel="${b.id}" style="${UI.bsel===b.id?"border-color:var(--gold);background:#FFF3C9;box-shadow:0 0 0 3px var(--glow)":""}">${IC.hourglass(b.icon().replace(/<\/?svg[^>]*>/g,''))}<span><b>${b.label}</b><span class="note">${BONUSDESC[b.id]}</span></span></button>`).join("")}</div>
+   <div class="row"><button class="btn primary big" data-act="bonusok" ${UI.bsel?"":"disabled"}>Confirm</button></div>`;
+}
+function dieModalHTML(){
+  const me=S.players[0],d=S.forum[UI.dieModal],o=curOpts(),snap=UI.snap;
+  const act=UI.mode==="choose"||UI.mode==="extra";
+  const why=act?dieWhyNot(me,d,snap,o):"It is not your turn to pick a die.";
+  const baseDc=dieCost(me,d),dc=o.freeDie?0:baseDc;
+  let costLine=`Die cost: <b>${dc}</b> coin${dc===1?"":"s"} (Forum section ${d.sec})`;
+  if(o.freeDie)costLine+=" · free for this extra action";
+  else if(me.dieZero.includes(d.color))costLine+=` · your University makes ${d.color} dice free`;
+  else if(me.dieMinusAll&&d.sec)costLine+=` · Market discount −${me.dieMinusAll}`;
+  if(me.dieBonus.includes(d.color))costLine+=` · you gain 2 coins for choosing it`;
+  let opts="";
+  if(!why){
+    if(d.face==="coin7"){opts=`<div class="dopts"><div class="dopt on"><span class="pv">${coin(7)}</span><span><b>Gain 7 coins</b><span class="pd">Pay ${dc} now, then take 7.</span></span></div></div>`}
+    else{
+      const L=matchSpaces(me,d,snap).map(s=>({s,pay:dc+shortfall(me,s.cost)})).filter(x=>x.pay<=me.coins);
+      opts=`<span class="label">${L.length>1?"Choose a space":"Space"}</span><div class="dopts">${L.map(({s,pay})=>{const sf=shortfall(me,s.cost);const on=UI.pick&&UI.pick.sid===s.id;
+        return `<button class="dopt ${on?"on":""}" data-opt="${s.id}">${spaceHTML(me,s,false)}<span><b>${s.b==="wonder"?"Wonder":BLD[s.b].name}</b><span class="pd">${titleOf(me,s)}<br>Die ${dc} + ${sf} missing resource${sf===1?"":"s"}</span></span><span class="pv">${coin(pay)}</span></button>`}).join("")}</div>`;
+    }
+  }
+  const ready=!why&&UI.pick&&UI.pick.die===UI.dieModal;
+  return `<h2>${COLNAME[d.color]} die</h2>
+   <div class="dhead">${dieHTML(d,UI.dieModal,"big").replace('<button','<span').replace('</button>','</span>')}<div><h3>${faceName(d)}</h3><div class="sub">${costLine}</div></div></div>
+   <div class="dexp"><div>${dieExplain(me,d,snap)}</div>${why?`<div class="why">${why}</div>`:""}</div>
+   ${opts}
+   <div class="row">${why?`<button class="btn primary" data-act="dclose">OK</button>`:`<button class="btn primary big" data-act="confirm" ${ready?"":"disabled"}>Confirm${ready?` · pay ${UI.pick.pay}`:""}</button><button class="btn" data-act="dclose">Cancel</button>`}</div>`;
+}
+function renderModal(){
+  const m=$("#modal");let h="";
+  if(MODAL==="setup")h=setupHTML();else if(MODAL==="rules")h=rulesHTML();else if(MODAL==="end"&&S)h=scoreHTML();else if(S&&UI.dieModal!=null)h=dieModalHTML();else if(S&&UI.dlg)h=dlgHTML();else if(S&&UI.mode==="bonus")h=bonusHTML();
+  if(h){m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true">${h}</div>`;m.hidden=false}else{m.hidden=true;m.innerHTML=""}
+}
+function render(rolled){
+  const app=$("#app");
+  if(!S){app.innerHTML=hdrHTML();MODAL="setup";renderModal();return}
+  UI.compact=COMPACT;app.classList.toggle("compact",COMPACT);
+  UI.snap=snapshot();computeAvail();
+  const me=S.players[0];
+  app.innerHTML=`${hdrHTML()}
+   <div class="play">${forumHTML()}${actionsHTML()}</div>
+   ${boardHTML(me,true)}
+   <span class="label">Rival cities</span>${oppsHTML()}
+   <details class="peek panel" open><summary>Chronicle</summary><div class="log">${S.log.slice(0,90).map(l=>`<div>${l}</div>`).join("")}</div></details>`;
+  if(rolled){const f=$("#forum");if(f){f.classList.add("rolling");setTimeout(()=>f.classList.remove("rolling"),550)}}
+  if(UI.mode==="over"&&MODAL!=="closed")MODAL="end";
+  renderModal();
+}
+
+/* =====================================================================
+   INPUT
+   ===================================================================== */
+document.addEventListener("click",ev=>{
+  const t=ev.target.closest("[data-act],[data-die],[data-opt],[data-bsel],[data-gold7],[data-sid],[data-bonus],[data-bots],[data-diff],[data-board],details.peek>summary");
+  if(!t)return;
+  if(t.matches("details.peek>summary")){const d=t.parentElement;if(d.dataset.peek!==undefined)setTimeout(()=>{UI.peek[d.dataset.peek]=d.open},0);return}
+  if(t.dataset.bots){SETUP.bots=+t.dataset.bots;renderModal();return}
+  if(t.dataset.diff){SETUP.diff=t.dataset.diff;renderModal();return}
+  if(t.dataset.board){SETUP.board=t.dataset.board;renderModal();return}
+  const a=t.dataset.act;
+  if(a==="start"){try{localStorage.setItem("wd2_setup",JSON.stringify(SETUP))}catch(e){}MODAL=null;newGame();return}
+  if(a==="resume"){const d=loadSaved();if(d){S=d.S;UI={mode:d.mode||"choose",sel:null,pick:null,peek:{}};MODAL=null;render()}return}
+  if(a==="menu"||a==="new"){MODAL="setup";renderModal();return}
+  if(a==="rules"){MODAL="rules";renderModal();return}
+  if(a==="close"){MODAL=S&&S.over?"closed":null;renderModal();return}
+  if(a==="showscore"&&S&&S.over){MODAL="end";renderModal();return}
+  if(a==="compact"){COMPACT=!COMPACT;try{localStorage.setItem("wd2_compact",COMPACT?"1":"0")}catch(e){}render();return}
+  if(a==="dlgcancel"){UI.dlg=null;render();return}
+  if(a==="dlgok"&&UI.dlg){const D=UI.dlg,me=S.players[0];UI.dlg=null;
+    if(D.kind==="summary"){render(true);return}
+    if(D.kind==="pass"){if(UI.mode==="extra"){me.pending.shift();doAction(me,{t:"pass",pay:0},null);nextHumanPending()}else submitHuman({t:"pass",pay:0});return}
+    if(D.kind==="wonder"){const w=nextWonder(me);const pk={t:"wonder",sid:w.id,pay:shortfall(me,w.cost)};UI.pick=null;UI.sel=null;
+      if(UI.mode==="extra"){me.pending.shift();log("&nbsp;&nbsp;You take an additional action.");doAction(me,pk,null);nextHumanPending()}else submitHuman(pk);return}
+    if(D.kind==="cross"){const s=sp(me,D.sid),it=me.pending[0];const pay=shortfall(me,s.cost);me.coins-=pay;log(`&nbsp;&nbsp;You cross off ${BLD[s.b].name} (paid ${pay}).`);it.n--;if(it.n<=0)me.pending.shift();cross(me,s,null);nextHumanPending();return}
+    return}
+  if(t.dataset.bsel&&UI.mode==="bonus"){UI.bsel=t.dataset.bsel;renderModal();return}
+  if(a==="bonusok"&&UI.mode==="bonus"&&UI.bsel){const me=S.players[0],b=UI.bsel;UI.bsel=null;me.pending.shift();applyBonus(me,b);nextHumanPending();return}
+  if(a==="dclose"){UI.dieModal=null;UI.sel=null;UI.pick=null;render();return}
+  if(t.dataset.opt!==undefined&&UI.dieModal!=null){const me=S.players[0],o=curOpts(),d=S.forum[UI.dieModal];const s=sp(me,t.dataset.opt);UI.sel=UI.dieModal;UI.pick={t:"build",die:UI.dieModal,sid:s.id,pay:(o.freeDie?0:dieCost(me,d))+shortfall(me,s.cost),free:!!o.freeDie};render();return}
+  if(!S||S.over)return;
+  const me=S.players[0];
+  if(t.dataset.bonus&&UI.mode==="bonus"){me.pending.shift();applyBonus(me,t.dataset.bonus);nextHumanPending();return}
+  if(UI.mode==="cross"){
+    if(a==="skipcross"){me.pending.shift();nextHumanPending();return}
+    if(t.dataset.sid&&UI.avail&&UI.avail.has(t.dataset.sid)){UI.dlg={kind:"cross",sid:t.dataset.sid};render()}
+    return;
+  }
+  if(UI.mode!=="choose"&&UI.mode!=="extra")return;
+  const ex=UI.mode==="extra",o=curOpts();
+  if(t.dataset.die!==undefined){const i=+t.dataset.die;UI.dieModal=i;UI.pick=null;UI.sel=null;
+    if(usableDie(me,i,UI.snap,o)){UI.sel=i;
+      if(S.forum[i].face==="coin7")UI.pick={t:"coins",die:i,pay:o.freeDie?0:dieCost(me,S.forum[i]),free:!!o.freeDie};
+      else{computeAvail();if(UI.avail&&UI.avail.size===1){const [sid,pay]=[...UI.avail][0];UI.pick={t:"build",die:i,sid,pay,free:!!o.freeDie}}}}
+    render();return}
+  if(t.dataset.sid&&UI.avail&&UI.avail.has(t.dataset.sid)){UI.pick={t:"build",die:UI.sel,sid:t.dataset.sid,pay:UI.avail.get(t.dataset.sid),free:!!o.freeDie};render();return}
+  if(t.dataset.sid&&UI.wonderHint&&UI.wonderHint.sid===t.dataset.sid){UI.dlg={kind:"wonder"};render();return}
+  if(t.dataset.gold7&&UI.coinHint){const h=UI.coinHint;UI.dieModal=h.die;UI.sel=h.die;UI.pick={t:"coins",die:h.die,pay:h.pay,free:!!o.freeDie};render();return}
+  if(t.dataset.sid&&UI.hint&&UI.hint.has(t.dataset.sid)){const h=UI.hint.get(t.dataset.sid);UI.dieModal=h.die;UI.sel=h.die;UI.pick={t:"build",die:h.die,sid:t.dataset.sid,pay:h.pay,free:!!o.freeDie};render();return}
+  if(a==="wonder"){const w=nextWonder(me);if(!w||shortfall(me,w.cost)>me.coins)return;UI.sel=null;UI.pick=null;UI.dlg={kind:"wonder"};render();return}
+  if(a==="cancel"){UI.pick=null;render();return}
+  if(a==="pass"&&(!ex||!me.pending[0].free)){UI.dlg={kind:"pass"};render();return}
+  if(a==="skip"&&ex){me.pending.shift();nextHumanPending();return}
+  if(a==="confirm"&&UI.pick){const p=UI.pick;UI.pick=null;UI.sel=null;UI.dieModal=null;
+    if(ex){me.pending.shift();log("&nbsp;&nbsp;You take an additional action.");doAction(me,p,null);nextHumanPending()}else submitHuman(p);return}
+});
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-sid][tabindex],[data-bonus][tabindex],[data-gold7]")){e.preventDefault();e.target.click()}});
+render();
+</script>
+
+
+<style>
+#siteHome{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);z-index:2147482000;
+ width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(16,18,24,.55);color:#fff;
+ display:grid;place-items:center;padding:0;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.8}
+#siteHome:hover,#siteHome:focus-visible{opacity:1}
+#siteHome svg{width:21px;height:21px}
+</style>
+<button id="siteHome" type="button" aria-label="מסך הבית" title="מסך הבית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></button>
+<script>
+(()=>{const b=document.getElementById('siteHome');
+ ['pointerdown','touchstart','mousedown'].forEach(t=>b.addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+ b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
+  location.href='/';});   // leaving the page fires the games' own save-on-exit handlers
+ if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
+})();
+</script>
+</body></html>
