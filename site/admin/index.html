@@ -122,6 +122,8 @@ input.f{display:block;width:100%;font:inherit;font-size:17px;padding:12px 14px;b
       <div class="card" id="famCard">
         <h2>הסיסמה המשפחתית</h2>
         <p class="hint" id="famState"></p>
+        <div class="codebox" id="famShow" hidden><div class="c" id="famVal" dir="ltr">••••••</div>
+          <div class="row" style="justify-content:center"><button class="btn" id="famEye">הצגה</button><button class="btn" id="famCopy">העתקה</button></div></div>
         <input class="f" id="famPass" type="text" autocomplete="off" placeholder="סיסמה חדשה (4 תווים לפחות)">
         <div class="row"><button class="btn pri" id="famSave">שמירת סיסמה</button><button class="btn danger" id="famClear">ביטול הסיסמה</button></div>
         <p class="msg" id="famMsg"></p>
@@ -203,15 +205,19 @@ function renderPass(){
  $('famCard').hidden=ov.mode!=='family';$('invCard').hidden=ov.mode!=='email';
  $('famState').textContent=ov.familySet?'יש סיסמה משפחתית. אפשר להחליף אותה: מי שכבר מחובר נשאר מחובר, ומכשירים חדשים יצטרכו את הסיסמה החדשה.'
   +(ov.familyFromSecret?' (יש גם סיסמה שהוגדרה בהגדרות Cloudflare, והיא ממשיכה לעבוד.)':''):'כרגע אין סיסמה: כל מי שיש לו את הכתובת יכול להירשם.';
- $('famClear').hidden=!ov.familySet;}
+ $('famClear').hidden=!ov.familySet;
+ $('famShow').hidden=!ov.familyPassword;famShown=false;$('famVal').textContent='••••••';$('famEye').textContent='הצגה';}
+let famShown=false;
+$('famEye').onclick=()=>{famShown=!famShown;$('famVal').textContent=famShown?ov.familyPassword:'••••••';$('famEye').textContent=famShown?'הסתרה':'הצגה';};
+$('famCopy').onclick=async()=>{try{await navigator.clipboard.writeText(ov.familyPassword);$('famCopy').textContent='הועתק ✓';}catch(e){famShown=true;$('famVal').textContent=ov.familyPassword;}};
 document.querySelectorAll('[name=mode]').forEach(r=>r.onchange=async()=>{
  try{await OFEK.api('/api/admin/config',{method:'POST',body:{mode:r.value}});ov.mode=r.value;renderPass();
   say('modeMsg',r.value==='email'?'מעכשיו נרשמים עם מייל וקוד אישי. מי שכבר רשום לא מושפע.':'מעכשיו נרשמים עם הסיסמה המשפחתית.');}
  catch(e){say('modeMsg','השמירה לא הצליחה',true);}});
 $('famSave').onclick=async()=>{const p=$('famPass').value.trim();if(p.length<4){say('famMsg','צריך 4 תווים לפחות',true);return;}
- try{await OFEK.api('/api/admin/config',{method:'POST',body:{familyPassword:p}});$('famPass').value='';ov.familySet=true;renderPass();say('famMsg','הסיסמה נשמרה');}
+ try{await OFEK.api('/api/admin/config',{method:'POST',body:{familyPassword:p}});$('famPass').value='';ov.familySet=true;ov.familyPassword=p;renderPass();say('famMsg','הסיסמה נשמרה');}
  catch(e){say('famMsg','השמירה לא הצליחה',true);}};
-$('famClear').onclick=async()=>{try{await OFEK.api('/api/admin/config',{method:'POST',body:{familyPassword:''}});ov.familySet=ov.familyFromSecret;renderPass();say('famMsg','הסיסמה בוטלה');}
+$('famClear').onclick=async()=>{try{await OFEK.api('/api/admin/config',{method:'POST',body:{familyPassword:''}});ov.familySet=ov.familyFromSecret;ov.familyPassword=null;renderPass();say('famMsg','הסיסמה בוטלה');}
  catch(e){say('famMsg','הפעולה לא הצליחה',true);}};
 $('invGo').onclick=async()=>{const email=$('invMail').value.trim();
  try{const r=await OFEK.api('/api/admin/invite',{method:'POST',body:{email}});

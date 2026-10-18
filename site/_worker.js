@@ -232,6 +232,7 @@ async function api(req, env, url) {
       const h = await meta(db, 'home-games');
       return json({
         mode: s.mode, familySet: !!(s.famHash || s.envCode), familyFromSecret: !!s.envCode,
+        familyPassword: (await meta(db, 'family-plain')) || null,
         homeGames: h ? JSON.parse(h) : null, deployRequest: JSON.parse((await meta(db, 'deploy-request')) || 'null'),
         players: players.map(p => ({ ...p, games: (counts.find(c => c.player === p.name) || {}).n || 0 })),
       });
@@ -243,8 +244,9 @@ async function api(req, env, url) {
       if (typeof b.familyPassword === 'string') {
         const p = b.familyPassword.trim();
         if (p.length && p.length < 4) return json({ error: 'short' }, 400);
-        if (p) { const salt = randHex(16); await setMeta(db, 'family-salt', salt); await setMeta(db, 'family-hash', await sha256(salt + '|' + p)); }
-        else { await setMeta(db, 'family-hash', null); await setMeta(db, 'family-salt', null); }
+        // the family password is shared with the whole family anyway, so the owner can see it again in the dashboard
+        if (p) { const salt = randHex(16); await setMeta(db, 'family-salt', salt); await setMeta(db, 'family-hash', await sha256(salt + '|' + p)); await setMeta(db, 'family-plain', p); }
+        else { await setMeta(db, 'family-hash', null); await setMeta(db, 'family-salt', null); await setMeta(db, 'family-plain', null); }
       }
       if (b.deployRequest) await setMeta(db, 'deploy-request', JSON.stringify({ at: Date.now(), games: (b.deployRequest.games || []).slice(0, 100) }));
       return json({ ok: true });
