@@ -12,7 +12,7 @@ PAGES = {
 }
 # pages whose title sits where the home and light/dark buttons float
 FIX = {'puzzle': '#setup{padding-top:calc(env(safe-area-inset-top,0px) + 58px)}',
-       'pulse-lanes': '#menu .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 64px)}.hudl{padding-left:96px}'}
+       'pulse-lanes': '#menu .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 64px)}.hudl{padding-left:96px}.etop{padding-left:calc(max(12px,env(safe-area-inset-left,0px)) + 100px)!important}'}
 for page, (native, default) in PAGES.items():
     p = 'site/index.html' if page == 'index' else f'site/{page}/index.html'
     s = open(p, encoding='utf-8').read()

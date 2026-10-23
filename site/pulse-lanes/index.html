@@ -1,5 +1,5 @@
 <!doctype html><html><head><script src="/theme.js" data-native="dark"></script>
-<style id="themeFix">#menu .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 64px)}.hudl{padding-left:96px}</style>
+<style id="themeFix">#menu .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 64px)}.hudl{padding-left:96px}.etop{padding-left:calc(max(12px,env(safe-area-inset-left,0px)) + 100px)!important}</style>
 <meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="manifest" href="/pulse-lanes/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/pulse-lanes-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -75,6 +75,33 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,64px);li
 .song.own .bpm{color:var(--blue)}
 .song:disabled{cursor:default;opacity:.75}
 .song:disabled:hover{background:var(--panel)}
+.editor{background:#07050d;touch-action:none;position:fixed;inset:0;height:100%;height:100dvh}
+#ecv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.etop{position:fixed;z-index:2;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding-block:10px;
+  padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px));background:linear-gradient(#07050d,rgba(7,5,13,0.6))}
+.etitle{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.etitle b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.etitle span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ebar{position:fixed;left:0;right:0;bottom:0;z-index:2;max-height:60%;overflow-y:auto;display:flex;flex-direction:column;gap:8px;background:rgba(20,15,34,0.94);border-top:1px solid var(--line);
+  padding-block:10px max(10px, env(safe-area-inset-bottom, 0px));padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px))}
+.eseekrow{display:flex;align-items:center;gap:10px}
+.eseekrow input{flex:1;min-width:0;accent-color:var(--amber)}
+#eTime{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;white-space:nowrap}
+.erow{display:flex;flex-wrap:nowrap;gap:6px;align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;touch-action:pan-x;padding-bottom:2px}
+.erow>*{flex:none}
+.erow .btn{min-height:40px;padding:8px 12px;font-size:14px}
+.erow .btn:disabled,.etop .btn:disabled{opacity:.45}
+.tog[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#eSelTools .kl{font-size:13px;color:var(--amber);font-weight:700;margin-right:2px}
+.ename{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;-webkit-user-select:text;user-select:text}
+#eMenu .card,#eStart .card{max-height:90%;overflow-y:auto}
+.leadrow{display:flex;align-items:center;justify-content:center;gap:16px}
+.leadrow b{min-width:60px;text-align:center;font-variant-numeric:tabular-nums}
+.trystop{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 8px);z-index:3;
+  display:flex;align-items:center;gap:14px;padding:20px 38px;border-radius:999px;border:2px solid rgba(255,255,255,0.6);
+  background:rgba(20,15,34,0.45);color:#fff;font:700 21px Rubik, system-ui, sans-serif;white-space:nowrap;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.trystop i{width:22px;height:22px;border-radius:3px;background:#fff;display:block}
+.editbanner{margin:0;background:var(--panel2);border:1px solid var(--accent);border-radius:12px;padding:10px 14px;font-size:14px}
 .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--line);margin-bottom:-8px}
 .tabs button{border:0;background:none;padding:12px 6px;font-weight:700;font-size:16px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px;display:inline-flex;gap:8px;justify-content:center;align-items:center}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
@@ -212,6 +239,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         </div>
       </section>
 
+      <p id="editBanner" class="editbanner" hidden>Edit notes is on: tapping a song opens the editor. Switch back to Play in Settings.</p>
+
       <div class="tabs" role="tablist" aria-label="Song lists">
         <button role="tab" data-tab="built">Tracks</button>
         <button role="tab" data-tab="mine">My songs<span id="mineCount" class="count"></span></button>
@@ -221,6 +250,15 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <div id="panelBuilt" role="tabpanel"><ul id="songs" class="songs"></ul></div>
 
       <div id="panelSettings" role="tabpanel" class="setpanel" hidden>
+      <div>
+        <p class="label" style="margin-bottom:8px">Mode</p>
+        <div class="diff" role="radiogroup" aria-label="Mode" id="appMode" style="grid-template-columns:1fr 1fr">
+          <button role="radio" data-a="play">Play</button>
+          <button role="radio" data-a="edit">Edit notes</button>
+        </div>
+        <p class="hint" style="margin:8px 0 0">In Edit notes, tapping a song opens the editor: tap along with the music to place notes, slow the song down, jump back and forward, move notes around, and save the result as "My chart".</p>
+      </div>
+
       <div>
         <p class="label" style="margin-bottom:8px">Look</p>
         <div class="diff skins" role="radiogroup" aria-label="Look" id="skin">
@@ -236,9 +274,10 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
           <button role="radio" data-st="beat"><b>Beat</b><small>The drums and rhythm, like the built-in tracks</small></button>
           <button role="radio" data-st="voice"><b>Singing + lead</b><small>The voice when someone sings, the leading melody when nobody does</small></button>
           <button role="radio" data-st="voicebeat"><b>Singing + beat</b><small>The voice, with the drums in the gaps and instrumental parts</small></button>
+          <button role="radio" data-st="custom"><b>My charts</b><small>Your latest chart from Edit notes, where you made one; other songs use Beat</small></button>
           <button role="radio" data-st="lead"><b>Melody only</b><small>The strongest melodic line in the mix, all the way through</small></button>
         </div>
-        <p class="hint" style="margin:8px 0 0">Applies to every song under My songs. To try a different style on one song, change it in that song's row.</p>
+        <p class="hint" style="margin:8px 0 0">Applies to every song under My songs (and My chart also to the built-in tracks). To try a different style on one song, change it in that song's row.</p>
       </div>
 
       <div>
@@ -283,10 +322,10 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <div id="panelMine" role="tabpanel" class="mine" hidden>
         <div class="upload">
           <div class="upbtns">
-            <label class="btn primary" for="files">Add songs<input type="file" id="files" class="vh" multiple accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac,.aif,.aiff"></label>
+            <label class="btn primary" for="files">Add songs<input type="file" id="files" class="vh" multiple accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac,.aif,.aiff,.json,application/json"></label>
             <label class="btn" for="folder" id="folderBtn">Add a folder<input type="file" id="folder" class="vh" webkitdirectory multiple></label>
           </div>
-          <p id="ustatus" aria-live="polite">Pick several songs at once, or a whole folder. You can also drag files or folders here. The game finds the tempo, the verses and the choruses, and writes notes that follow the singing. Songs stay on this device.</p>
+          <p id="ustatus" aria-live="polite">Pick several songs at once, or a whole folder. Chart files (".pulse.json") picked with them load too. You can also drag files or folders here. The game finds the tempo, the verses and the choruses, and writes notes that follow the singing. Songs stay on this device.</p>
         </div>
         <p id="cloudLine" class="hint" style="margin:0"></p>
         <p id="mineEmpty" class="empty">No songs yet. Your MP3, M4A and WAV files will show up here.</p>
@@ -309,6 +348,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <button id="pauseBtn" class="iconbtn" aria-label="Pause"></button>
       </div>
     </div>
+    <button id="tryStop" class="trystop" hidden aria-label="Stop and go back to editing"><i></i>Back to editing</button>
     <div id="nextOv" class="overlay" hidden>
       <div class="card">
         <p class="eyebrow" id="nxDone" style="text-align:center"></p>
@@ -326,6 +366,102 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <button id="resumeBtn" class="btn primary">Resume</button>
         <button id="restartBtn" class="btn">Restart</button>
         <button id="quitBtn" class="btn">Back to tracks</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- EDITOR -->
+  <section id="editor" class="screen editor" hidden>
+    <canvas id="ecv"></canvas>
+    <div class="etop">
+      <button id="eDoneBtn" class="btn">Done</button>
+      <div class="etitle"><b id="eSong"></b><span id="eInfo"></span></div>
+      <button id="eSave" class="btn primary">Save</button>
+    </div>
+    <div id="ebar" class="ebar">
+      <div class="eseekrow"><input type="range" id="eSeek" min="0" max="1" step="0.01" value="0" aria-label="Position in the song"><span id="eTime"></span></div>
+      <div class="erow">
+        <button id="eBack2" class="btn">−2s</button>
+        <button id="ePlay" class="btn primary">Play</button>
+        <button id="ePlayHere" class="btn">Play from here</button>
+        <button id="eFwd2" class="btn">+2s</button>
+        <button id="eSpeed" class="btn">1×</button>
+        <button id="eSnap" class="btn">Snap 1/16</button>
+        <button id="eZoomOut" class="btn" aria-label="Zoom out">−</button>
+        <button id="eZoomIn" class="btn" aria-label="Zoom in">+</button>
+        <button id="eClick" class="btn tog" aria-pressed="false">Click</button>
+        <button id="eSelMode" class="btn tog" aria-pressed="false">Select</button>
+        <button id="ePaste" class="btn" hidden>Paste</button>
+        <button id="eUndo" class="btn">Undo</button>
+        <button id="eMoreBtn" class="btn">More</button>
+      </div>
+      <div class="erow" id="eSelTools" hidden>
+        <span class="kl" id="eSelCount"></span>
+        <button id="eTypeTap" class="btn tog">Tap</button>
+        <button id="eTypeHold" class="btn tog">Hold</button>
+        <button id="eSwU" class="btn tog" aria-label="Swipe up">↑</button>
+        <button id="eSwD" class="btn tog" aria-label="Swipe down">↓</button>
+        <button id="eSwL" class="btn tog" aria-label="Swipe left">←</button>
+        <button id="eSwR" class="btn tog" aria-label="Swipe right">→</button>
+        <button id="eHoldM" class="btn">Shorter</button>
+        <button id="eHoldP" class="btn">Longer</button>
+        <button id="eMirror" class="btn">Mirror</button>
+        <button id="eRotate" class="btn">Shift lanes</button>
+        <button id="eCopy" class="btn">Copy</button>
+        <button id="eFillBtn" class="btn">Fill…</button>
+        <button id="eTidy" class="btn">Tidy</button>
+        <button id="eDel" class="btn">Delete</button>
+        <button id="eSelNone" class="linkbtn">Done</button>
+      </div>
+    </div>
+    <div id="eStart" class="overlay" hidden>
+      <div class="card">
+        <h2>Build the notes</h2>
+        <div id="eCharts" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button id="eFromSongStart" class="btn">Start from the song's notes</button>
+        <button id="eEmpty" class="btn">Start empty</button>
+        <p id="eStartNote" class="hint" style="margin:0;text-align:center"></p>
+        <button id="eStartCancel" class="linkbtn">Back</button>
+      </div>
+    </div>
+    <div id="eMenu" class="overlay" hidden>
+      <div class="card">
+        <h2>Chart</h2>
+        <label class="label" for="eName" style="margin:0">Name</label>
+        <input id="eName" class="ename" maxlength="40" autocomplete="off">
+        <button id="eSaveNew" class="btn">Save as a new chart</button>
+        <button id="eTry" class="btn primary">Try it from the start</button>
+        <p class="label" style="margin:6px 0 0">Section of the song</p>
+        <button id="eTrimMin" class="btn">One minute from here</button>
+        <button id="eTrimA" class="btn">Start the song here</button>
+        <button id="eTrimB" class="btn">End the song here</button>
+        <button id="eTrimClear" class="btn">Use the whole song</button>
+        <p class="label" style="margin:6px 0 0">Silence before the song</p>
+        <div class="leadrow"><button id="eLeadM" class="btn" aria-label="Less silence">−</button><b id="eLead">0 s</b><button id="eLeadP" class="btn" aria-label="More silence">+</button></div>
+        <p class="label" style="margin:6px 0 0">Notes</p>
+        <button id="eFromSong" class="btn">Replace with the song's notes</button>
+        <button id="eTidyAll" class="btn">Tidy up all notes</button>
+        <button id="eClear" class="btn">Remove all notes</button>
+        <button id="eExport" class="btn">Export charts to a file</button>
+        <button id="eDelMine" class="btn">Delete this saved chart</button>
+        <button id="eMenuClose" class="linkbtn">Close</button>
+      </div>
+    </div>
+    <div id="eFill" class="overlay" hidden>
+      <div class="card">
+        <h2>Fill automatically</h2>
+        <p id="eFillWhat" class="hint" style="margin:0;text-align:center"></p>
+        <div id="eFillList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button id="eFillClose" class="linkbtn">Cancel</button>
+      </div>
+    </div>
+    <div id="eAsk" class="overlay" hidden>
+      <div class="card">
+        <h2>Save changes?</h2>
+        <button id="eAskSave" class="btn primary">Save as My chart</button>
+        <button id="eAskDiscard" class="btn">Leave without saving</button>
+        <button id="eAskStay" class="linkbtn">Keep editing</button>
       </div>
     </div>
   </section>
@@ -916,7 +1052,8 @@ async function initCloud(tries=0){
       if(ch.type==='removed'){   // removed on another device
         if(s&&s.cloud&&s.status!=='busy'&&s.status!=='downloading'){mine.splice(mine.indexOf(s),1);dbDel(s.id)}continue}
       if(!s)mine.push({id:sid,name:c.name,kind:'file',size:c.size,added:c.added,style:c.style||undefined,cloud:{parts:c.parts},status:'cloud'});
-      else{s.cloud={parts:c.parts};
+      if(Array.isArray(c.charts))store.set(chartsKey(sid),c.charts);
+      if(s){s.cloud={parts:c.parts};
         if((c.style||undefined)!==s.style){s.style=c.style||undefined;if(s.status==='ready')dbDo('songs','readwrite',st=>st.put(meta(s))).catch(()=>{})}}
     }
     cloud.ready=true;mine.sort((a,b)=>(a.added||0)-(b.added||0));renderMine();cloudPump();
@@ -931,17 +1068,52 @@ let saved=true;
 
 const AUDIO_EXT=/\.(mp3|m4a|aac|wav|ogg|oga|flac|aif|aiff|opus|webm)$/i;
 function addFiles(files){
-  const list=Array.from(files).filter(f=>AUDIO_EXT.test(f.name)||(f.type||'').startsWith('audio/'));
+  const all=Array.from(files),chartFiles=all.filter(f=>/\.json$/i.test(f.name));
+  const list=all.filter(f=>!/\.json$/i.test(f.name)&&(AUDIO_EXT.test(f.name)||(f.type||'').startsWith('audio/')));
   let added=0;
   for(const f of list){
     const id=`file:${f.name}:${f.size}`;
     if(mine.some(s=>s.id===id))continue;
     mine.push({id,name:f.name.replace(/\.[^.]+$/,''),kind:'file',file:f,size:f.size,status:'queued',progress:0,added:Date.now()});added++;
   }
-  const skipped=files.length-list.length;
+  const skipped=files.length-list.length-chartFiles.length;
+  if(chartFiles.length)importChartFiles(chartFiles);   // chart files that sit next to the songs come in with them
   setStatus(added?`Added ${added} song${added>1?'s':''}${skipped?`, skipped ${skipped} file${skipped>1?'s':''} that ${skipped>1?'are':'is'} not audio`:''}.`
     :list.length?'Those songs are already in your list.':'No audio files found there. Pick MP3, M4A or WAV files.');
   renderMine();pump();keepForGood();
+}
+/* chart files: "<song name>.pulse.json" next to the song file */
+const chartFileName=s=>`${s.name}.pulse.json`;
+const baseOfChartFile=n=>n.replace(/\.pulse\.json$/i,'').replace(/\.json$/i,'');
+async function importChartFiles(files){
+  let songs=0,charts=0;const missing=[];
+  for(const f of files){
+    let data;try{data=JSON.parse(await f.text())}catch(e){continue}
+    if(!data||data.format!=='pulse-lanes-charts'||!Array.isArray(data.charts))continue;
+    const base=baseOfChartFile(f.name).toLowerCase(),want=String(data.song||'').toLowerCase();
+    const s=mine.find(x=>x.name.toLowerCase()===base)||mine.find(x=>x.name.toLowerCase()===want)||SONGS.find(x=>x.name.toLowerCase()===base||x.name.toLowerCase()===want);
+    if(!s){missing.push(f.name);continue}
+    const L=myCharts(s);let n=0;
+    for(const c of data.charts){if(!c||!Array.isArray(c.notes)||!c.notes.length)continue;
+      const same=L.find(x=>x.name===c.name&&x.notes.length===c.notes.length&&JSON.stringify(x.notes)===JSON.stringify(c.notes));if(same)continue;
+      const copy={...c,notes:c.notes.filter(x=>x&&typeof x.t==='number'&&x.lane>=0&&x.lane<=2)};
+      if(!copy.id||L.some(x=>x.id===copy.id))copy.id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      if(!copy.name||L.some(x=>x.name===copy.name))copy.name=(copy.name||'Chart')+' (imported)';
+      L.push(copy);n++}
+    if(n){saveMyCharts(s,L);songs++;charts+=n}
+  }
+  if(charts)notice(`Loaded ${charts} chart${charts>1?'s':''} for ${songs} song${songs>1?'s':''} from the chart files.`,6000);
+  else if(missing.length)notice(`No song matches ${missing.join(', ')}. Add the song together with its chart file.`,7000);
+  renderMenu();
+}
+async function exportCharts(s){
+  const L=myCharts(s);if(!L.length){notice('Save a chart first, then export it.');return}
+  const text=JSON.stringify({format:'pulse-lanes-charts',version:1,song:s.name,charts:L});
+  const fname=chartFileName(s),done=()=>notice(`Saved "${fname}". Keep it in the same folder as the song: when you add the song (or the whole folder) again, its charts come in too.`,8000);
+  const dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;
+  if(dl){try{await dl.save({filename:fname,data:text});done()}catch(e){if(!e||e.code!=='declined')notice('The file could not be saved here.')}return}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'application/json'}));a.download=fname;document.body.appendChild(a);a.click();a.remove();done()}
+  catch(e){notice('The file could not be saved here.')}
 }
 let pumping=false;
 async function pump(){
@@ -990,8 +1162,8 @@ function songCard(s){
   const best=s.status==='ready'||s.kind==='synth'?store.get(bestKey(s.id,settings.diff),null):null;
   const len=s.kind==='synth'?generate(s).dur:s.dur;
   let sub;
-  if(s.kind==='synth')sub=`${s.feel} · ${fmtLen(len)}`;
-  else if(s.status==='ready')sub=`${fmtLen(len)} · ${s.charts[styleOf(s)][settings.diff].length} notes`+
+  if(s.kind==='synth')sub=`${s.feel} · ${fmtLen(len)}`+(useMine(s)?` · ${pickedChart(s).name} (${pickedChart(s).notes.length} notes)`:'');
+  else if(s.status==='ready')sub=`${fmtLen(len)} · `+(useMine(s)?`${pickedChart(s).name} (${pickedChart(s).notes.length} notes)`:`${s.charts[styleOf(s)][settings.diff].length} notes`)+
     (s.cloud?' · In your account':s.syncing?' · Saving to your account…':s.cloudErr?' · '+s.cloudErr:cloud.on&&cloud.assets?' · Waiting to save to your account':'');
   else if(s.status==='busy')sub=`Finding the beat and the singing… ${Math.round((s.progress||0)*100)}%`;
   else if(s.status==='queued')sub='Waiting to be analysed';
@@ -1004,7 +1176,7 @@ function songCard(s){
       <span class="best"><div class="stars">${starsHTML(best?best.stars:0)}</div>${best?best.score.toLocaleString():ready?'Not played':''}</span></button>`;
   li.querySelector('.name').textContent=s.name;
   li.querySelector('.sub').textContent=sub;
-  li.querySelector('.song').onclick=()=>playSong(s);
+  li.querySelector('.song').onclick=()=>settings.app==='edit'?openEditor(s):playSong(s);
   if(ready){const inPl=settings.playlist.includes(s.id),b=document.createElement('button');b.className='addpl';
     b.setAttribute('aria-pressed',inPl);b.setAttribute('aria-label',(inPl?'Remove from playlist: ':'Add to playlist: ')+s.name);
     b.textContent=inPl?'✓':'+';b.onclick=()=>plToggle(s.id);li.appendChild(b)}
@@ -1013,10 +1185,17 @@ function songCard(s){
     if(s.status==='ready'){   // this song's own note style
       const lab=document.createElement('label');lab.className='stylerow';lab.textContent='Notes follow ';
       const sel=document.createElement('select');sel.id='style-'+s.id;
-      sel.innerHTML=`<option value="">Default (${STYLES[settings.style]||STYLES.beat})</option>`+Object.entries(STYLES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
-      sel.value=STYLES[s.style]?s.style:'';
+      sel.innerHTML=`<option value="">Default (${settings.style==='custom'?'my latest chart':STYLES[settings.style]||STYLES.beat})</option>`+Object.entries(STYLES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')+chartOptions(s);
+      sel.value=STYLES[s.style]||(s.style&&s.style.startsWith('custom:')&&pickedChart(s))?s.style:'';
       sel.onchange=()=>{s.style=sel.value||undefined;dbDo('songs','readwrite',st=>st.put(meta(s))).catch(()=>{});cloudStyle(s);renderMine()};
       lab.appendChild(sel);li.appendChild(lab)}}
+  if(s.kind==='synth'&&myCharts(s).length){   // a built-in track you made your own charts for
+    const lab=document.createElement('label');lab.className='stylerow';lab.textContent='Notes follow ';
+    const sel=document.createElement('select');sel.id='style-'+s.id;
+    sel.innerHTML=`<option value="">Default (${settings.style==='custom'?'my latest chart':'composed notes'})</option><option value="composed">Composed notes</option>`+chartOptions(s);
+    const ps=perSong(s);sel.value=ps==='composed'||(ps&&ps.startsWith('custom:')&&pickedChart(s))?ps:'';
+    sel.onchange=()=>{settings.songStyle=Object.assign({},settings.songStyle,{[s.id]:sel.value||undefined});saveSettings();renderMenu()};
+    lab.appendChild(sel);li.appendChild(lab)}
   return li;
 }
 function renderMine(){
@@ -1116,6 +1295,353 @@ async function playSong(s){
   startRun(s);
 }
 
+/* ================= EDITOR: build your own notes for a song ================= */
+// "My chart" for a song: {notes:[{t,lane,end?}], a?, b?} — a/b trim the song to a section
+// your own charts for a song: a list of {id, name, notes:[{t,lane,end?,swipe?,dir?}], a?, b?} — a/b trim the song to a section
+const chartKey=id=>'pl:chart:'+id,chartsKey=id=>'pl:charts:'+id;
+function myCharts(s){let L=store.get(chartsKey(s.id),null);
+  if(!Array.isArray(L)){L=[];const old=store.get(chartKey(s.id),null),o=Array.isArray(old)?{notes:old}:old;   // a chart saved before names existed
+    if(o&&Array.isArray(o.notes)&&o.notes.length)L.push({id:'c1',name:'Chart 1',notes:o.notes,a:o.a,b:o.b});
+    store.set(chartsKey(s.id),L)}
+  return L.filter(c=>c&&Array.isArray(c.notes)&&c.notes.length)}
+const chartById=(s,cid)=>myCharts(s).find(c=>c.id===cid)||null;
+const perSong=s=>s.kind==='file'?s.style:(settings.songStyle||{})[s.id];
+function pickedChart(s){const ps=perSong(s);
+  if(ps&&ps.startsWith('custom:'))return chartById(s,ps.slice(7));
+  if(ps==='custom'||(!ps&&settings.style==='custom')){const L=myCharts(s);return L[L.length-1]||null}
+  return null}
+const useMine=s=>!!pickedChart(s);
+function saveMyCharts(s,L){store.set(chartsKey(s.id),L);
+  if(s.kind==='file'&&cloud.on&&s.cloud)cloud.col.doc(cloudId(s.id)).update({charts:L}).catch(()=>{})}
+function chartOptions(s){return myCharts(s).map(c=>`<option value="custom:${c.id}">${esc(c.name)} (${c.notes.length} notes)</option>`).join('')}
+let E=null,edReturn=false;
+const ecv=$('#ecv'),ex=ecv.getContext('2d');let ecw=0,ech=0;
+function resizeE(){const r=ecv.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);ecw=r.width;ech=r.height;ecv.width=Math.round(ecw*d);ecv.height=Math.round(ech*d);ex.setTransform(d,0,0,d,0,0)}
+window.addEventListener('resize',()=>{if(!$('#editor').hidden)resizeE()});
+function peaksOf(buf){const d=buf.getChannelData(0),step=Math.round(buf.sampleRate*0.01),n=Math.floor(d.length/step),p=new Float32Array(n);
+  let mx=0;for(let i=0;i<n;i++){let m=0;for(let j=i*step,e=j+step;j<e;j+=4){const v=Math.abs(d[j]);if(v>m)m=v}p[i]=m;if(m>mx)mx=m}
+  if(mx>0)for(let i=0;i<n;i++)p[i]/=mx;return p}
+function eventPeaks(g){const n=Math.ceil(g.dur*100),p=new Float32Array(n);   // a stand-in waveform from the drum hits
+  for(const e of g.events){const nm=e.p.name||'';const v=nm==='kick'?1:nm==='snare'?0.7:0.25,i=Math.round(e.t*100);
+    for(let k=0;k<12&&i+k<n;k++)p[i+k]=Math.max(p[i+k],v*Math.exp(-k/4))}return p}
+async function openEditor(song){
+  const pending=mine.filter(x=>['queued','busy','cloud','downloading'].includes(x.status));
+  if(pending.length){notice(`Your songs are still being prepared: ${mine.length-pending.length} of ${mine.length} ready.`);return}
+  const ac=audio();let buf=null;
+  try{
+    if(song.kind==='file'){if(song.status!=='ready')return;
+      if(!song.buffer){notice(`Opening "${song.name}"…`,0);song.buffer=await decode(ac,await songData(song));if(decoded&&decoded!==song)decoded.buffer=null;decoded=song}
+      buf=song.buffer}
+    $('#notice').hidden=true;
+  }catch(e){notice('This song could not be opened for editing.');return}
+  let beats,dp=0,orig,g=null;
+  if(song.kind==='synth'){g=generate(song);beats=[];for(let k=0;k*g.beat<g.dur;k++)beats.push(k*g.beat);orig=chartFromLead(g,settings.diff,song.seed*7+settings.diff.length)}
+  else{beats=song.beats;dp=song.dp;orig=song.charts[styleOf(song)][settings.diff]}
+  E={song,buf,g,dur:buf?buf.duration:g.dur,beats,dp,orig:orig.map(cp),peaks:buf?peaksOf(buf):eventPeaks(g),
+     notes:[],sels:new Set(),range:null,clip:E&&E.clip||null,undo:[],playing:false,pos:0,speed:1,snap:4,view:3,click:false,selMode:false,
+     dirty:false,src:null,rec:{},a:null,b:null,cid:null,name:'',lead:0};
+  $('#eSong').textContent=song.name;
+  const box=$('#eCharts');box.innerHTML='';   // one button per saved chart
+  for(const c of myCharts(song)){const b=document.createElement('button');b.className='btn primary';b.textContent=`Continue "${c.name}"`;b.onclick=()=>edBegin('continue',c.id);box.appendChild(b)}
+  $('#eStartNote').textContent=myCharts(song).length?'Starting over makes a new chart; your saved ones stay.':'';
+  for(const id of ['eStart','eAsk','eMenu','eFill'])$('#'+id).hidden=id!=='eStart';
+  show('editor');resizeE();edUI();requestAnimationFrame(edLoop);
+}
+const cp=n=>{const o={t:n.t,lane:n.lane};if(n.end)o.end=n.end;if(n.swipe){o.swipe=true;o.dir=n.dir||'up'}return o};
+function nextName(s){let k=1;for(const c of myCharts(s)){const m=/^Chart (\d+)$/.exec(c.name);if(m)k=Math.max(k,+m[1]+1);else k=Math.max(k,myCharts(s).length+1)}return 'Chart '+k}
+function edBegin(kind,cid){
+  const saved=cid?chartById(E.song,cid):null;
+  if(saved){E.notes=saved.notes.map(cp);E.a=saved.a??null;E.b=saved.b??null;E.lead=saved.lead||0;E.cid=saved.id;E.name=saved.name;E.dirty=false}
+  else{E.notes=kind==='song'?E.orig.map(cp):[];E.cid=null;E.name=nextName(E.song);E.dirty=true}
+  $('#eName').value=E.name;
+  E.pos=E.a!=null?E.a:-E.lead;$('#eStart').hidden=true;edUI();
+}
+/* transport: your songs play from their audio, the built-in tracks are played live (slowed by stretching the schedule) */
+const edNow=()=>E.playing?Math.max(-E.lead,Math.min(E.dur,E.p0+(AC.currentTime-E.t0-(AC.outputLatency||0))*E.speed)):E.pos;
+function edClick(w,bar){const o=AC.createOscillator(),gn=AC.createGain();o.frequency.value=bar?1760:1175;
+  gn.gain.setValueAtTime(0.0001,w);gn.gain.exponentialRampToValueAtTime(bar?0.35:0.2,w+0.004);gn.gain.exponentialRampToValueAtTime(0.0001,w+0.06);
+  o.connect(gn);gn.connect(E.bus||master);o.start(w);o.stop(w+0.08)}
+function edPlay(){if(!E)return;if(E.playing)return edPause();audio();
+  if(E.pos>=E.dur-0.05)E.pos=E.a!=null?E.a:-E.lead;
+  E.t0=AC.currentTime+0.05;E.p0=E.pos;E.playing=true;
+  const bus=AC.createGain();bus.connect(master);E.bus=bus;
+  if(E.buf){const s=AC.createBufferSource();s.buffer=E.buf;s.playbackRate.value=E.speed;s.connect(bus);
+    if(E.pos<0)s.start(E.t0+(-E.pos)/E.speed,0);else s.start(E.t0,E.pos);E.src=s;   // in the silence, the music comes in later
+    s.onended=()=>{if(E&&E.src===s){E.pos=Math.min(edNow(),E.dur);edStop();edUI()}}}
+  const ev=E.g?E.g.events:[];let i=0;while(i<ev.length&&ev[i].t<E.pos-0.005)i++;E.ei=i;
+  let m=0;while(m<E.beats.length&&E.beats[m]<E.pos-0.005)m++;E.mi=m;
+  const tick=()=>{if(!E||!E.playing)return;const h=AC.currentTime+0.25,at=x=>E.t0+(x-E.p0)/E.speed;
+    if(E.g){out=E.bus;while(E.ei<ev.length){const w=at(ev[E.ei].t);if(w>=h)break;if(w>=AC.currentTime-0.01)ev[E.ei].p(w);E.ei++}}
+    while(E.mi<E.beats.length){const w=at(E.beats[E.mi]);if(w>=h)break;   // metronome
+      if(E.click&&w>=AC.currentTime-0.01)edClick(w,((E.mi-E.dp)%4+4)%4===0);E.mi++}
+    if(!E.buf&&edNow()>=E.dur-0.05){E.pos=E.dur;edStop();edUI()}};
+  tick();E.timer=setInterval(tick,25);edUI()}
+function edStop(){E.playing=false;clearInterval(E.timer);const s=E.src;E.src=null;if(s)try{s.stop()}catch(e){}
+  const b=E.bus;E.bus=null;if(b){try{b.gain.setValueAtTime(b.gain.value,AC.currentTime);b.gain.linearRampToValueAtTime(0,AC.currentTime+0.05)}catch(e){}setTimeout(()=>{try{b.disconnect()}catch(e){}},150)}}
+function edPause(){if(!E||!E.playing)return;E.pos=edNow();edStop();edUI()}
+function edSeek(t){const was=E.playing;if(was)edPause();E.pos=Math.max(-E.lead,Math.min(E.dur,t));if(was)edPlay();edUI()}
+function edBeatLen(t){const B=E.beats;if(B.length<2)return 0.5;let i=B.findIndex(b=>b>t);if(i<1)i=1;i=Math.min(i,B.length-1);return B[i]-B[i-1]||0.5}
+function snapT(t,div){
+  const d=div==null?E.snap:div;if(!d||E.beats.length<2)return Math.max(0,t);
+  const B=E.beats;let a,b;
+  if(t<=B[0]){const st0=B[1]-B[0],k=Math.floor((B[0]-t)/st0)+1;a=B[0]-k*st0;b=a+st0}else if(t>=B[B.length-1]){a=B[B.length-1];b=a+(a-B[B.length-2])}
+  else{let lo=0,hi=B.length-1;while(lo<hi-1){const m=(lo+hi)>>1;if(B[m]<=t)lo=m;else hi=m}a=B[lo];b=B[lo+1]}
+  const st=(b-a)/d;return Math.max(0,a+Math.round((t-a)/st)*st)}
+/* editing */
+function edSnapshot(){E.undo.push(JSON.stringify({n:E.notes,a:E.a,b:E.b}));if(E.undo.length>100)E.undo.shift()}
+function edDone(){E.notes.sort((a,b)=>a.t-b.t||a.lane-b.lane);E.dirty=true;edUI()}
+function edAdd(t,lane){if(E.notes.some(n=>n.lane===lane&&Math.abs(n.t-t)<0.04))return null;edSnapshot();const n={t,lane};E.notes.push(n);edDone();return n}
+const selList=()=>E.notes.filter(n=>E.sels.has(n));
+function selectOnly(n){E.sels.clear();E.range=null;if(n)E.sels.add(n);edUI()}
+function edDelete(){if(!E.sels.size)return;edSnapshot();E.notes=E.notes.filter(n=>!E.sels.has(n));E.sels.clear();edDone()}
+function edHold(dir){const L=selList();if(!L.length)return;edSnapshot();
+  for(const n of L){const st=edBeatLen(n.t)/(E.snap||4);
+    let end=(n.end||n.t)+dir*st;if(dir>0&&!n.end){end=n.t+Math.max(2*st,0.25);delete n.swipe}   // the first "Longer" turns a tap into a hold
+    if(end-n.t<0.2)delete n.end;else n.end=snapT(end)}
+  edDone()}
+function edType(kind,dir){const L=selList();if(!L.length)return;edSnapshot();   // tap, hold or swipe
+  for(const n of L){if(kind==='tap'){delete n.end;delete n.swipe;delete n.dir}
+    else if(kind==='hold'){delete n.swipe;delete n.dir;if(!n.end)n.end=snapT(n.t+edBeatLen(n.t))}
+    else{delete n.end;n.swipe=true;n.dir=dir}}
+  edDone()}
+function edLanes(fn){const L=selList();if(!L.length)return;edSnapshot();for(const n of L)n.lane=fn(n.lane);edDone()}
+function edUndo(){if(!E.undo.length)return;const u=JSON.parse(E.undo.pop());E.notes=u.n;E.a=u.a;E.b=u.b;E.sels.clear();E.range=null;E.dirty=true;edUI()}
+function selSpan(){const L=selList();if(E.range)return {a:E.range.a,b:E.range.b};if(!L.length)return null;
+  return {a:L[0].t,b:Math.max(...L.map(n=>n.end||n.t))}}
+function edCopy(){const L=selList(),sp=selSpan();if(!L.length||!sp)return;
+  const len=E.range?sp.b-sp.a:Math.max(edBeatLen(sp.a),snapT(sp.b+edBeatLen(sp.b)/2,1)-sp.a);
+  E.clip={len,notes:L.map(n=>{const o={t:n.t-sp.a,lane:n.lane};if(n.end)o.end=n.end-sp.a;return o})};
+  notice(`Copied ${L.length} notes. Move to where they should go and press Paste.`,3500);edUI()}
+function edPaste(){if(!E.clip)return;const at=snapT(E.playing?edNow():E.pos);edSnapshot();E.sels.clear();E.range=null;let added=0;
+  for(const c of E.clip.notes){const t=at+c.t;if(t>E.dur)continue;if(E.notes.some(n=>n.lane===c.lane&&Math.abs(n.t-t)<0.04))continue;
+    const n={t,lane:c.lane};if(c.end)n.end=Math.min(E.dur,at+c.end);E.notes.push(n);E.sels.add(n);added++}
+  if(!E.playing)E.pos=Math.min(E.dur,at+E.clip.len);   // ready to paste the next copy straight after
+  edDone();notice(`Pasted ${added} notes.`,2000)}
+function edTrim(which){edSnapshot();const t=snapT(E.playing?edNow():E.pos);
+  if(which==='a'){E.a=t;if(E.b!=null&&E.b<=t+5)E.b=null}
+  else if(which==='b'){E.b=Math.max(t,(E.a||0)+5)}
+  else if(which==='minute'){E.a=t;E.b=Math.min(E.dur,t+60)}
+  else{E.a=null;E.b=null}
+  E.dirty=true;edUI()}
+// fill a part of the song automatically with one of the note styles
+function fillSources(){const s=E.song;if(s.kind==='synth')return [['composed','Composed notes']];
+  return Object.entries(STYLES).map(([k,v])=>[k,v])}
+function edFill(src){const sp=selSpan()||{a:0,b:E.dur};
+  const from=src==='composed'?E.orig:E.song.charts[src][settings.diff];
+  edSnapshot();E.notes=E.notes.filter(n=>n.t<sp.a-0.001||n.t>sp.b+0.001);E.sels.clear();
+  for(const n of from){if(n.t<sp.a-0.001||n.t>sp.b+0.001)continue;const c=cp(n);if(c.end)c.end=Math.min(c.end,sp.b);E.notes.push(c);E.sels.add(c)}
+  edDone();notice(`Filled ${fmtLen(sp.a)}–${fmtLen(sp.b)} with ${E.sels.size} notes.`,3000)}
+// clean up a hand-recorded part: on the grid, no doubles, holds that end in time, no long runs in one lane
+function edTidy(){const R=selSpan();edSnapshot();
+  const inR=n=>!R||(n.t>=R.a-0.001&&n.t<=R.b+0.001),keep=E.notes.filter(n=>!inR(n)),out=[];
+  const work=E.notes.filter(inR).map(n=>{const o={t:snapT(n.t,E.snap||4),lane:n.lane};if(n.end){const e=snapT(n.end,E.snap||4);if(e-o.t>=0.2)o.end=e}return o}).sort((a,b)=>a.t-b.t||a.lane-b.lane);
+  let fixed=0;
+  for(const n of work){
+    if(out.some(o=>o.lane===n.lane&&Math.abs(o.t-n.t)<0.05)){fixed++;continue}
+    if(out.filter(o=>Math.abs(o.t-n.t)<0.01).length>=2){fixed++;continue}
+    for(let i=out.length-1;i>=0;i--){const o=out[i];if(o.lane!==n.lane)continue;
+      if(o.end&&o.end>n.t-0.08){const e=snapT(n.t-0.12,E.snap||4);if(e-o.t>=0.2&&e<o.end)o.end=e;else delete o.end;fixed++}break}
+    out.push(n)}
+  for(let i=3;i<out.length;i++){const a=out[i],r=out.slice(i-3,i);
+    if(r.every(o=>o.lane===a.lane)&&a.t-r[0].t<1.2&&!out.some(o=>o!==a&&Math.abs(o.t-a.t)<0.01)){a.lane=(a.lane+1+(i%2))%3;fixed++}}
+  E.notes=keep.concat(out);E.sels=new Set(R?out:[]);edDone();
+  notice(`Tidied ${out.length} notes${fixed?`, fixed ${fixed}`:''}.`,3000)}
+function edSave(asNew){
+  const notes=E.notes.map(n=>{const o={t:+n.t.toFixed(3),lane:n.lane};if(n.end)o.end=+n.end.toFixed(3);if(n.swipe){o.swipe=true;o.dir=n.dir}return o});
+  if(!notes.length){notice('Add some notes before saving.');return}
+  const L=myCharts(E.song);let c=!asNew&&E.cid?L.find(x=>x.id===E.cid):null;
+  if(!c){c={id:'c'+Date.now().toString(36),name:asNew||!E.name?nextName(E.song):E.name};L.push(c);E.cid=c.id}
+  E.name=c.name=(E.name&&!asNew?E.name:c.name);c.notes=notes;delete c.a;delete c.b;
+  if(E.a!=null)c.a=+E.a.toFixed(3);if(E.b!=null)c.b=+E.b.toFixed(3);delete c.lead;if(E.lead)c.lead=E.lead;
+  saveMyCharts(E.song,L);E.dirty=false;$('#eName').value=E.name;edUI();
+  notice(`Saved as "${c.name}". To play it, choose it under Notes follow in the song's row.`,6000);
+}
+function edLeave(){edPause();E=null;$('#eAsk').hidden=true;renderMenu();show('menu')}
+function edTry(here){edPause();const notes=E.notes.map(cp);if(!notes.length)return;edReturn=true;E.backTo=E.pos;
+  if(here&&E.pos<0){startRun(E.song,{notes,a:E.a,b:E.b,lead:-E.pos});return}   // starting inside the silence
+  const a=here?Math.max(E.a||0,snapT(E.pos,1)-0.02):E.a;startRun(E.song,{notes,a:a>0?a:null,b:E.b,lead:here?0:E.lead})}
+function edBack(){edReturn=false;$('#tryStop').hidden=true;if(E&&E.backTo!=null)E.pos=E.backTo;show('editor');resizeE();edUI();requestAnimationFrame(edLoop)}
+function edUI(){if(!E)return;
+  $('#eLead').textContent=E.lead+' s';
+  $('#ePlay').textContent=E.playing?'Pause':'Play';$('#eSpeed').textContent=E.speed+'×';
+  $('#eSnap').textContent='Snap '+({4:'1/16',2:'1/8',1:'1/4',0:'off'}[E.snap]);
+  $('#eClick').setAttribute('aria-pressed',E.click);$('#eSelMode').setAttribute('aria-pressed',E.selMode);
+  $('#eInfo').textContent=`${E.name||'New chart'} · ${E.notes.length} notes${E.a!=null||E.b!=null?` · section ${fmtLen(E.a||0)}–${fmtLen(E.b??E.dur)}`:''}${E.lead?` · ${E.lead} s silence first`:''}${E.dirty?' · not saved':''}`;
+  $('#eSave').disabled=!E.dirty;$('#eUndo').disabled=!E.undo.length;$('#ePaste').hidden=!E.clip;
+  const n=E.sels.size;$('#eSelTools').hidden=!n&&!E.range;
+  $('#eSelCount').textContent=E.range?`${fmtTime(E.range.a)}–${fmtTime(E.range.b)}: ${n} notes`:`${n} selected`;
+  for(const id of ['eHoldM','eHoldP','eMirror','eRotate','eCopy','eDel','eTypeTap','eTypeHold','eSwU','eSwD','eSwL','eSwR'])$('#'+id).disabled=!n;
+  const L=selList(),one=L.length===1?L[0]:null;
+  $('#eTypeTap').setAttribute('aria-pressed',!!one&&!one.end&&!one.swipe);$('#eTypeHold').setAttribute('aria-pressed',!!one&&!!one.end);
+  for(const [id,d] of [['eSwU','up'],['eSwD','down'],['eSwL','left'],['eSwR','right']])$('#'+id).setAttribute('aria-pressed',!!one&&!!one.swipe&&one.dir===d);
+  $('#eSeek').max=E.dur.toFixed(2);$('#eSeek').min=(-E.lead).toFixed(2);
+}
+/* drawing */
+function edLoop(){if(!E||$('#editor').hidden)return;edDraw();requestAnimationFrame(edLoop)}
+function edDraw(){
+  const W=ecw,H=ech,t=edNow(),c=ex,star=settings.skin==='star',TH=songColor(E.song);
+  const top=$('.etop').offsetHeight+8,bottom=$('#ebar').offsetHeight;
+  const hitY=Math.min(star?H-Math.max(170,H*0.27):H-Math.max(160,H*0.26),H-bottom-34),pps=Math.max(30,(hitY-top)/E.view);
+  const LW=Math.min((W-80)/3,star?260:280),x0=W/2-1.5*LW+18,gap=star?8:0;
+  const th=star?Math.max(22,Math.min(LW*0.62,pps*0.22,(LW-gap-10)*0.9)):Math.max(18,Math.min(58,LW*0.3,pps*0.14));
+  E.geo={x0,LW,hitY,pps,th};
+  const yOf=tt=>hitY-(tt-t)*pps,t0=t-(H-hitY)/pps,t1=t+hitY/pps;
+  c.fillStyle=star?'#0b0b10':'#07050d';c.fillRect(0,0,W,H);
+  const P=E.peaks,wx=x0-14;c.fillStyle='rgba(155,140,210,0.45)';   // waveform: loud parts show where the music hits
+  for(let y=0;y<H;y+=2){const i=Math.round((t+(hitY-y)/pps)*100);if(i<0||i>=P.length)continue;const w=P[i]*44;c.fillRect(wx-w,y,w,2)}
+  for(let l=0;l<3;l++){const x=x0+l*LW+gap/2,w=LW-gap;
+    if(star){const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(255,255,255,0.06)');g.addColorStop(0.45,'rgba(225,229,238,0.55)');g.addColorStop(0.8,'#eef1f6');g.addColorStop(1,'#f7f8fb');c.fillStyle=g}
+    else c.fillStyle=l===1?'#100c1c':'#0d0a17';
+    c.fillRect(x,0,w,H)}
+  const ink=star?'0,0,0':'220,210,255';
+  if(E.range){const ya=yOf(E.range.a),yb=yOf(E.range.b);c.fillStyle='rgba(255,194,61,0.18)';c.fillRect(x0,yb,3*LW,ya-yb);
+    c.fillStyle='rgba(255,170,0,0.9)';c.fillRect(x0,ya-1,3*LW,2);c.fillRect(x0,yb-1,3*LW,2)}
+  if(E.drag&&E.drag.box){const d=E.drag,ya=yOf(d.ra),yb=yOf(d.rb);c.fillStyle='rgba(255,194,61,0.25)';c.fillRect(x0,Math.min(ya,yb),3*LW,Math.abs(ya-yb))}
+  const a=E.a,b=E.b;
+  if(a!=null&&a>t0){c.fillStyle='rgba(0,0,0,0.55)';const y=yOf(a);c.fillRect(x0,y,3*LW,H-y);c.fillStyle='#26d97a';c.fillRect(x0-30,y-1,3*LW+30,3);c.font='700 11px Rubik, system-ui';c.textAlign='left';c.fillText('START',x0-30,y-6)}
+  if(b!=null&&b<t1){c.fillStyle='rgba(0,0,0,0.55)';const y=yOf(b);c.fillRect(x0,0,3*LW,y);c.fillStyle='#ff4d5e';c.fillRect(x0-30,y-1,3*LW+30,3);c.font='700 11px Rubik, system-ui';c.textAlign='left';c.fillText('END',x0-30,y+14)}
+  const B=E.beats;   // beat grid with bar numbers
+  if(E.lead&&t0<0){const y0=yOf(0),y1=yOf(-E.lead);   // the silence before the music
+    c.fillStyle=star?'rgba(11,11,16,0.55)':'rgba(255,255,255,0.03)';c.fillRect(x0,y0,3*LW,y1-y0);
+    c.fillStyle='rgba(41,184,255,0.9)';c.fillRect(x0-30,y0-1,3*LW+30,3);c.font='700 11px Rubik, system-ui';c.textAlign='left';
+    c.fillText('MUSIC STARTS',x0-30,y0-6);c.fillStyle=star?'rgba(255,255,255,0.7)':'rgba(220,210,255,0.6)';
+    c.font='700 15px Rubik, system-ui';c.textAlign='center';c.fillText(`${E.lead} s of silence`,x0+1.5*LW,(Math.max(0,y0)+Math.min(H,y1,hitY))/2);c.textAlign='left';
+    if(B.length>1){const st0=B[1]-B[0];for(let k=1;B[0]-k*st0>=-E.lead-0.001;k++){const y=yOf(B[0]-k*st0);if(y>H+5)break;c.fillStyle=`rgba(${ink},0.12)`;c.fillRect(x0,Math.round(y),3*LW,1)}}}
+  for(let j=0;j<B.length;j++){const bt=B[j];if(bt<t0-1)continue;if(bt>t1+1)break;
+    const y=yOf(bt),bar=((j-E.dp)%4+4)%4===0;
+    c.fillStyle=`rgba(${ink},${bar?0.3:0.12})`;c.fillRect(x0,Math.round(y),3*LW,bar?2:1);
+    if(bar){c.fillStyle='rgba(220,210,255,0.6)';c.font='500 11px Rubik, system-ui';c.textAlign='right';c.fillText(String(Math.floor((j-E.dp)/4)+1),x0+3*LW+26,y+4)}
+    if(E.snap>1&&B[j+1]&&pps*(B[j+1]-bt)/E.snap>6){const st=(B[j+1]-bt)/E.snap;c.fillStyle=`rgba(${ink},0.05)`;for(let k=1;k<E.snap;k++)c.fillRect(x0,Math.round(yOf(bt+k*st)),3*LW,1)}}
+  if(!star){c.strokeStyle='rgba(255,255,255,0.07)';c.lineWidth=1;for(let j=0;j<=3;j++){const x=Math.round(x0+j*LW)+0.5;c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke()}}
+  // the hit row, as in the game
+  for(let l=0;l<3;l++){const rec=Object.values(E.rec).some(r=>r.n.lane===l);
+    if(star){const x=x0+l*LW+gap/2+5,w=LW-gap-10;rr2(c,x,hitY-th/2,w,th,10);c.fillStyle=rec?rgba(TH,0.85):'rgba(255,255,255,0.85)';c.fill();c.lineWidth=3;c.strokeStyle=rec?TH:'rgba(20,20,30,0.18)';c.stroke()}
+    else{const x=x0+l*LW+6,w=LW-12,sh=th+12;rr2(c,x,hitY-sh/2,w,sh,16);c.fillStyle=rec?rgba(COL[l],0.35):'rgba(255,255,255,0.03)';c.fill();c.lineWidth=4;c.strokeStyle=rgba(COL[l],rec?1:0.55);c.stroke()}}
+  c.fillStyle=star?'rgba(20,20,30,0.5)':'rgba(255,255,255,0.6)';c.fillRect(x0-6,hitY-1,3*LW+12,2);
+  // notes
+  laneGaps(E.notes);const th0=th;
+  for(const n of E.notes){if((n.end||n.t)<t0-0.5||n.t>t1+0.5)continue;
+    const y=yOf(n.t),sel=E.sels.has(n),col=star?TH:COL[n.lane],th=fitH(n,th0,pps);
+    if(star){const x=x0+n.lane*LW+gap/2+5,w=LW-gap-10;
+      if(n.end){const ye=yOf(n.end),bw=w*0.46,bx=x+(w-bw)/2;rr2(c,bx,ye-th*0.3,bw,Math.max(0,y-ye+th*0.3),10);c.fillStyle='rgba(16,17,22,0.88)';c.fill();c.fillStyle=rgba(TH,0.85);c.fillRect(bx+bw/2-3,ye,6,Math.max(0,y-ye))}
+      const g=c.createLinearGradient(0,y-th/2,0,y+th/2);g.addColorStop(0,'#33363d');g.addColorStop(1,'#0c0d10');rr2(c,x,y-th/2,w,th,10);c.fillStyle=g;c.fill();
+      if(sel){c.lineWidth=5;c.strokeStyle=TH;c.stroke()}
+      c.shadowColor='#fff';c.shadowBlur=10;c.fillStyle='#fff';
+      if(n.swipe){c.restore&&0;edArrow(c,x+w/2,y,th*0.62,n.dir,'#ffffff')}else{const dw=w*0.4,dh=Math.max(3,th*0.07);rr2(c,x+(w-dw)/2,y-dh/2,dw,dh,dh/2);c.fill()}
+      c.shadowBlur=0}
+    else{const x=x0+n.lane*LW+10,w=LW-20;
+      if(n.end){const ye=yOf(n.end),tw=LW*0.36;c.fillStyle=rgba(col,sel?0.75:0.5);rr2(c,x0+n.lane*LW+(LW-tw)/2,ye,tw,Math.max(0,y-ye),tw/2);c.fill()}
+      if(n.swipe){rr2(c,x,y-th*0.65,w,th*1.3,14);c.fillStyle='#ffffff';c.fill();c.lineWidth=3;c.strokeStyle=col;c.stroke();edArrow(c,x+w/2,y,th*0.95,n.dir,col)}
+      else{rr2(c,x,y-th/2+th*0.16,w,th,12);c.fillStyle=rgba(col,0.45);c.fill();rr2(c,x,y-th/2,w,th,12);c.fillStyle=col;c.fill();
+        rr2(c,x+w*0.06,y-th/2+th*0.14,w*0.88,th*0.24,th*0.12);c.fillStyle='rgba(255,255,255,0.45)';c.fill()}
+      if(sel){rr2(c,x-3,y-th*0.7,w+6,th*1.4,14);c.lineWidth=4;c.strokeStyle='#ffffff';c.stroke()}}}
+  if(!E.notes.length&&$('#eStart').hidden){c.fillStyle=star?'rgba(20,20,30,0.75)':'rgba(244,239,252,0.7)';c.font='500 14px Rubik, system-ui';c.textAlign='center';
+    ['Press Play and tap the lanes with the music','(or press your lane keys).','Paused: tap a lane to add a note,','drag a note to move it, drag empty space to scroll.'].forEach((s,i)=>c.fillText(s,W/2,top+60+i*22))}
+  if(!$('#eSeek').matches(':active'))$('#eSeek').value=t.toFixed(2);
+  $('#eTime').textContent=`${fmtTime(t)} / ${fmtTime(E.dur)}`;
+}
+function edArrow(c,x,y,size,dir,col){c.save();c.translate(x,y);c.rotate({up:0,right:Math.PI/2,down:Math.PI,left:-Math.PI/2}[dir]||0);
+  const h=size/2,w=size*0.42,sw=size*0.17;c.beginPath();c.moveTo(0,-h);c.lineTo(w,-h+w);c.lineTo(sw,-h+w);c.lineTo(sw,h);c.lineTo(-sw,h);c.lineTo(-sw,-h+w);c.lineTo(-w,-h+w);c.closePath();
+  c.fillStyle=col;c.fill();c.restore()}
+const fmtTime=s=>(s<0?'-':'')+`${Math.floor(Math.abs(s)/60)}:${(Math.abs(s)%60).toFixed(1).padStart(4,'0')}`;
+function rr2(c,x,y,w,h,r){r=Math.max(0,Math.min(r,h/2,w/2));c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+/* input */
+function edHit(x,y){const g=E.geo,t=E.pos;let best=null,bd=1e9;
+  for(const n of E.notes){const nx=g.x0+n.lane*g.LW;if(x<nx||x>nx+g.LW)continue;
+    const ny=g.hitY-(n.t-t)*g.pps,ye=n.end?g.hitY-(n.end-t)*g.pps:ny;
+    const d=y>=ye-4&&y<=ny?0:Math.abs(y-ny);if(d<=g.th/2+10&&d<bd){bd=d;best=n}}
+  return best}
+function edRecDown(lane,key){const t=snapT(edNow()),n=edAdd(t,lane);if(n)E.rec[key]={n,start:edNow()}}
+function edRecUp(key){const r=E.rec[key];if(!r)return;delete E.rec[key];
+  const now=edNow();if(now-r.start>=0.3){const end=snapT(now);if(end-r.n.t>=0.2){r.n.end=end;E.dirty=true;edUI()}}}
+ecv.addEventListener('pointerdown',e=>{e.preventDefault();if(!E||!$('#eStart').hidden)return;audio();
+  const r=ecv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,g=E.geo;if(!g)return;
+  const inL=x>=g.x0&&x<=g.x0+3*g.LW,lane=Math.max(0,Math.min(2,Math.floor((x-g.x0)/g.LW)));
+  try{ecv.setPointerCapture(e.pointerId)}catch(_){}
+  if(E.playing){if(inL)edRecDown(lane,'p'+e.pointerId);return}
+  const hit=inL?edHit(x,y):null,multi=E.selMode||e.shiftKey||e.metaKey||e.ctrlKey,tAt=E.pos+(g.hitY-y)/g.pps;
+  if(hit&&multi){if(E.sels.has(hit))E.sels.delete(hit);else E.sels.add(hit);E.range=null;edUI();return}
+  if(hit&&!E.sels.has(hit))selectOnly(hit);
+  const group=hit?selList().map(n=>({n,t:n.t,lane:n.lane,end:n.end})):null;
+  E.drag={id:e.pointerId,x0:x,y0:y,moved:false,note:hit,group,startPos:E.pos,lane,inL,tAt,box:!hit&&E.selMode,ra:tAt,rb:tAt};
+  edUI()});
+ecv.addEventListener('pointermove',e=>{const d=E&&E.drag;if(!d||d.id!==e.pointerId)return;
+  const r=ecv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,g=E.geo;
+  if(!d.moved&&Math.hypot(x-d.x0,y-d.y0)<7)return;
+  if(!d.moved){d.moved=true;if(d.note)edSnapshot()}
+  if(d.note){const p=d.group.find(q=>q.n===d.note),dt=snapT(p.t+(d.y0-y)/g.pps)-p.t,dl=Math.floor((x-g.x0)/g.LW)-Math.floor((d.x0-g.x0)/g.LW);
+    for(const q of d.group){q.n.t=Math.max(0,q.t+dt);q.n.lane=Math.max(0,Math.min(2,q.lane+dl));if(q.end)q.n.end=q.end+dt}}
+  else if(d.box)d.rb=E.pos+(g.hitY-y)/g.pps;
+  else E.pos=Math.max(0,Math.min(E.dur,d.startPos+(y-d.y0)/g.pps))});
+const edUp=e=>{if(!E)return;if(E.rec['p'+e.pointerId]){edRecUp('p'+e.pointerId);return}
+  const d=E.drag;if(!d||d.id!==e.pointerId)return;E.drag=null;
+  if(d.moved){if(d.note)edDone();
+    else if(d.box){const a=snapT(Math.min(d.ra,d.rb)),b=snapT(Math.max(d.ra,d.rb));
+      E.range=b-a>0.05?{a,b}:null;E.sels=new Set(E.range?E.notes.filter(n=>n.t>=a-0.001&&n.t<=b+0.001):[]);edUI()}
+    return}
+  if(!d.note){if(E.selMode||E.sels.size||E.range)selectOnly(null);
+    else if(d.inL){const n=edAdd(snapT(d.tAt),d.lane);selectOnly(n)}}
+  edUI()};
+ecv.addEventListener('pointerup',edUp);ecv.addEventListener('pointercancel',edUp);
+document.addEventListener('keydown',e=>{
+  if(!E||$('#editor').hidden||!$('#eStart').hidden||waitKey>=0)return;
+  if(e.target&&e.target.tagName==='INPUT'&&e.target.type!=='range')return;
+  const mod=e.metaKey||e.ctrlKey;
+  if(e.code==='Space'){e.preventDefault();edPlay();return}
+  if(mod&&e.code==='KeyZ'){e.preventDefault();edUndo();return}
+  if(mod&&e.code==='KeyC'){e.preventDefault();edCopy();return}
+  if(mod&&e.code==='KeyV'){e.preventDefault();edPaste();return}
+  if(mod&&e.code==='KeyA'){e.preventDefault();E.range=null;E.sels=new Set(E.notes);edUI();return}
+  if(e.code==='Escape'){selectOnly(null);return}
+  if(e.code==='Delete'||e.code==='Backspace'){e.preventDefault();edDelete();return}
+  if(e.code in KEYS){e.preventDefault();if(e.repeat)return;const l=KEYS[e.code];
+    if(E.playing)edRecDown(l,'k'+e.code);else selectOnly(edAdd(snapT(E.pos),l));return}
+  if(e.code==='ArrowUp'||e.code==='ArrowDown'){e.preventDefault();edSeek(E.pos+(e.code==='ArrowUp'?1:-1)*edBeatLen(E.pos))}
+},true);
+document.addEventListener('keyup',e=>{if(E&&E.rec['k'+e.code])edRecUp('k'+e.code)},true);
+/* buttons */
+const on=(id,f)=>{$('#'+id).onclick=f};
+on('eDoneBtn',()=>{if(E&&E.dirty){edPause();$('#eAsk').hidden=false}else if(E)edLeave()});
+on('eAskSave',()=>{edSave(false);if(!E.dirty)edLeave()});on('eAskDiscard',edLeave);on('eAskStay',()=>{$('#eAsk').hidden=true});
+on('eSave',()=>edSave(false));on('eSaveNew',()=>{$('#eMenu').hidden=true;edSave(true)});on('ePlayHere',()=>edTry(true));
+on('eTypeTap',()=>edType('tap'));on('eTypeHold',()=>edType('hold'));
+on('eSwU',()=>edType('swipe','up'));on('eSwD',()=>edType('swipe','down'));on('eSwL',()=>edType('swipe','left'));on('eSwR',()=>edType('swipe','right'));
+$('#eName').onchange=e=>{const v=e.target.value.trim().slice(0,40);if(!v){e.target.value=E.name;return}E.name=v;
+  const L=myCharts(E.song),c=L.find(x=>x.id===E.cid);if(c){c.name=v;saveMyCharts(E.song,L)}else E.dirty=true;edUI()};on('ePlay',edPlay);on('eBack2',()=>edSeek(edNow()-2));on('eFwd2',()=>edSeek(edNow()+2));
+on('eSpeed',()=>{const L=[1,0.75,0.5,0.25];E.speed=L[(L.indexOf(E.speed)+1)%L.length];if(E.playing){edPause();edPlay()}edUI()});
+on('eSnap',()=>{const L=[4,2,1,0];E.snap=L[(L.indexOf(E.snap)+1)%L.length];edUI()});
+on('eZoomIn',()=>{E.view=Math.max(1,E.view/1.5);edUI()});on('eZoomOut',()=>{E.view=Math.min(10,E.view*1.5);edUI()});
+on('eClick',()=>{E.click=!E.click;edUI()});on('eSelMode',()=>{E.selMode=!E.selMode;edUI()});
+on('eUndo',edUndo);on('eDel',edDelete);on('eHoldM',()=>edHold(-1));on('eHoldP',()=>edHold(1));
+on('eMirror',()=>edLanes(l=>2-l));on('eRotate',()=>edLanes(l=>(l+1)%3));
+on('eCopy',edCopy);on('ePaste',edPaste);on('eTidy',edTidy);on('eSelNone',()=>selectOnly(null));
+on('eFillBtn',()=>{edPause();const box=$('#eFillList');box.innerHTML='';const sp=selSpan();
+  $('#eFillWhat').textContent=sp?`Replaces the notes from ${fmtTime(sp.a)} to ${fmtTime(sp.b)}.`:'Select a part first.';
+  for(const [k,v] of fillSources()){const b=document.createElement('button');b.className='btn';b.textContent=v;b.onclick=()=>{$('#eFill').hidden=true;edFill(k)};box.appendChild(b)}
+  $('#eFill').hidden=false});
+on('eFillClose',()=>{$('#eFill').hidden=true});
+$('#eSeek').oninput=e=>edSeek(+e.target.value);
+on('eMoreBtn',()=>{edPause();$('#eMenu').hidden=false});on('eMenuClose',()=>{$('#eMenu').hidden=true});
+on('eTrimA',()=>{edTrim('a');$('#eMenu').hidden=true});on('eTrimB',()=>{edTrim('b');$('#eMenu').hidden=true});
+on('eLeadM',()=>{E.lead=Math.max(0,E.lead-1);if(E.pos<-E.lead)E.pos=-E.lead;E.dirty=true;edUI()});
+on('eLeadP',()=>{const atStart=E.pos<=-E.lead+0.01;E.lead=Math.min(10,E.lead+1);if(atStart)E.pos=-E.lead;E.dirty=true;edUI()});
+on('eTrimMin',()=>{edTrim('minute');$('#eMenu').hidden=true});on('eTrimClear',()=>{edTrim('clear');$('#eMenu').hidden=true});
+on('eFromSong',()=>{edSnapshot();E.notes=E.orig.map(cp);E.sels.clear();E.range=null;edDone();$('#eMenu').hidden=true});
+on('eClear',()=>{edSnapshot();E.notes=[];E.sels.clear();E.range=null;edDone();$('#eMenu').hidden=true});
+on('eTidyAll',()=>{E.sels.clear();E.range=null;$('#eMenu').hidden=true;edTidy()});
+on('eExport',()=>{$('#eMenu').hidden=true;if(E.dirty)notice('Save first: the file holds your saved charts.');else exportCharts(E.song)});
+on('eTry',()=>{$('#eMenu').hidden=true;edTry()});
+on('eDelMine',()=>{$('#eMenu').hidden=true;if(!E.cid){notice('This chart has not been saved yet.');return}
+  const L=myCharts(E.song).filter(c=>c.id!==E.cid);saveMyCharts(E.song,L);
+  notice(`"${E.name}" was deleted. The notes are still here; Save keeps them as a new chart.`,5000);E.cid=null;E.name=nextName(E.song);$('#eName').value=E.name;E.dirty=true;edUI()});
+on('eFromSongStart',()=>edBegin('song'));on('eEmpty',()=>edBegin('empty'));
+on('eStartCancel',()=>{E=null;show('menu')});
+
+function laneGaps(list){const last=[null,null,null];
+  for(const n of list)n.gap=9;
+  for(const n of list){const p=last[n.lane];if(p){const g=n.t-(p.end||p.t);if(g<p.gap)p.gap=g;if(g<n.gap)n.gap=g}last[n.lane]=n}}
+// a stone never taller than the room it has, so close notes don't cover each other
+const fitH=(n,h,pps)=>Math.max(8,Math.min(h,(n.gap??9)*pps-4));
 /* ================= GAME ================= */
 const cv=$('#cv'),cx=cv.getContext('2d');
 let cw=0,ch=0,dpr=1;
@@ -1131,18 +1657,31 @@ function resize(){const r=cv.getBoundingClientRect();dpr=Math.min(2,window.devic
   cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);cx.setTransform(dpr,0,0,dpr,0,0)}
 window.addEventListener('resize',()=>{if(!$('#play').hidden)resize()});
 
-function show(id){for(const s of ['menu','play','results'])$('#'+s).hidden=s!==id}
+function show(id){for(const s of ['menu','play','results','editor'])$('#'+s).hidden=s!==id}
 
-function startRun(song){
+function startRun(song,ov){
   stopRun();
   const ac=audio();lastSong=song;
   const diff=settings.diff,D=DIFFS[diff];
-  let notes,events=[],dur,beats,dp=0;
+  let notes,events=[],dur,beats,dp=0,from=0,lead=0;
   if(song.kind==='synth'){const g=generate(song);notes=chartFromLead(g,diff,song.seed*7+diff.length);events=g.events;dur=g.dur;
     beats=[];for(let k=0;k*g.beat<dur;k++)beats.push(k*g.beat)}
   else{notes=song.charts[styleOf(song)][diff];dur=song.buffer.duration;beats=song.beats;dp=song.dp}
-  notes=notes.map(n=>Object.assign({state:0},n,{swipe:false}));
-  if(settings.swipes&&settings.mode!=='keys'){   // single notes with a little room around them become arrows
+  if(!ov&&useMine(song)){const c=pickedChart(song);ov={notes:c.notes,a:c.a,b:c.b,lead:c.lead}}
+  if(ov){notes=ov.notes;
+    const a=Math.max(0,ov.a||0),b=Math.min(dur,ov.b??dur);
+    if(a>0||b<dur){   // play only the chosen section of the song
+      notes=notes.filter(n=>n.t>=a-0.01&&n.t<=b).map(n=>{const o={...n,t:n.t-a};if(n.end)o.end=Math.min(n.end,b)-a;return o});
+      events=events.filter(e=>e.t>=a-0.005&&e.t<b).map(e=>({t:Math.max(0,e.t-a),p:e.p}));
+      const i0=beats.findIndex(x=>x>=a);beats=beats.filter(x=>x>=a&&x<=b).map(x=>x-a);dp=i0>=0?((dp-i0)%4+4)%4:0;
+      from=a;dur=b-a}
+    const L=Math.max(0,Math.min(10,ov.lead||0));
+    if(L){   // seconds of silence before the music starts
+      notes=notes.map(n=>{const o={...n,t:n.t+L};if(n.end)o.end=n.end+L;return o});
+      events=events.map(e=>({t:e.t+L,p:e.p}));beats=beats.map(x=>x+L);lead=L;dur+=L}
+    notes=notes.filter(n=>n.t>=0)}
+  notes=notes.map(n=>Object.assign({state:0},n,ov&&settings.mode!=='keys'?{}:{swipe:false}));   // a chart's own arrows need a touch screen
+  if(!ov&&settings.swipes&&settings.mode!=='keys'){   // single notes with a little room around them become arrows
     // about one note in ten, the ones with the most room around them, never two arrows within a second
     const rng=mulberry(notes.length*31+7),D4=['up','down','left','right'],cand=[];
     notes.forEach((n,i)=>{if(n.end)return;const nx=notes[i+1],pv=notes[i-1];
@@ -1156,7 +1695,9 @@ function startRun(song){
   S={song,diff,D,notes,events,ei:0,dur,beats,dp,bi:0,start,lo:0,paused:false,over:false,
      score:0,combo:0,maxCombo:0,acc:0,c:{perfect:0,great:0,good:0,miss:0},holdOk:0,holdDrop:0,
      holds:notes.filter(n=>n.end).length,down:[0,0,0],holding:[null,null,null],fx:[],judg:null,bus:out,src:null,timer:0,raf:0};
-  if(song.kind==='file'){const s=ac.createBufferSource();s.buffer=song.buffer;s.connect(out);s.start(start);S.src=s}
+  laneGaps(notes);
+  S.trial=!!(ov&&edReturn);S.from=from;S.lead=lead;$('#tryStop').hidden=!S.trial;
+  if(song.kind==='file'){const s=ac.createBufferSource();s.buffer=song.buffer;s.connect(out);s.start(start+lead,from,dur-lead+0.5);S.src=s}
   else{schedule();S.timer=setInterval(schedule,30)}
   $('#hSong').textContent=song.name;$('#hDiff').textContent=D.label;$('#hScore').textContent='0';$('#hMult').textContent='×1';
   $('#pauseOv').hidden=true;
@@ -1296,14 +1837,15 @@ function drawStar(t){
       rr(bx,ye-th*0.3,bw,Math.max(0,yh-ye+th*0.3),10);cx.fillStyle='rgba(16,17,22,0.88)';cx.fill();
       cx.fillStyle=n.state===1?TH:rgba(TH,0.8);cx.fillRect(bx+bw/2-3,ye,6,Math.max(0,yh-ye))}
     if(yh<topY-th*1.6||yh>H+th)continue;
+    const pps=(hitY-topY)/A,h=fitH(n,th,pps);
     cx.globalAlpha=Math.max(0,Math.min(1,(yh-(topY-th))/(th*1.2)));
-    if(n.state===0){const pps=(hitY-topY)/A,gH=WIN.good*pps,live=Math.abs(n.t-t)<=WIN.good;
-      rr(x-3,yh-th/2-gH,tw+6,th+2*gH,12);cx.fillStyle=rgba(TH,live?0.26:0.1);cx.fill()}
-    const g=cx.createLinearGradient(0,yh-th/2,0,yh+th/2);g.addColorStop(0,'#33363d');g.addColorStop(1,'#0c0d10');
-    rr(x,yh-th/2,tw,th,10);cx.fillStyle=g;cx.fill();cx.lineWidth=1.5;cx.strokeStyle='rgba(255,255,255,0.16)';cx.stroke();
+    if(n.state===0){const gH=WIN.good*pps,live=Math.abs(n.t-t)<=WIN.good;
+      rr(x-3,yh-h/2-gH,tw+6,h+2*gH,12);cx.fillStyle=rgba(TH,live?0.26:0.1);cx.fill()}
+    const g=cx.createLinearGradient(0,yh-h/2,0,yh+h/2);g.addColorStop(0,'#33363d');g.addColorStop(1,'#0c0d10');
+    rr(x,yh-h/2,tw,h,Math.min(10,h/2));cx.fillStyle=g;cx.fill();cx.lineWidth=1.5;cx.strokeStyle='rgba(255,255,255,0.16)';cx.stroke();
     cx.shadowColor='#ffffff';cx.shadowBlur=12;cx.fillStyle='#ffffff';
-    if(n.swipe)drawArrow(x+tw/2,yh,th*0.62,n.dir,'#ffffff');
-    else{const dw=tw*0.4,dh=Math.max(4,th*0.07);rr(x+(tw-dw)/2,yh-dh/2,dw,dh,dh/2);cx.fill()}
+    if(n.swipe)drawArrow(x+tw/2,yh,Math.min(th*0.62,h*0.85),n.dir,'#ffffff');
+    else{const dw=tw*0.4,dh=Math.max(3,Math.min(th*0.07,h*0.3));rr(x+(tw-dw)/2,yh-dh/2,dw,dh,dh/2);cx.fill()}
     cx.shadowBlur=0;cx.globalAlpha=1;
   }
   // score dial
@@ -1397,9 +1939,10 @@ function draw(t){
       rr(hx,yh-gH-nh/2,hw,2*gH+nh,18);cx.fillStyle=rgba(COL[l],live?0.2:0.09);cx.fill();
       cx.lineWidth=live?2:1;cx.strokeStyle=rgba(COL[l],live?0.75:0.3);cx.stroke();
       rr(hx+4,yh-pH-nh/2,hw-8,2*pH+nh,16);cx.fillStyle=rgba(COL[l],live?0.3:0.14);cx.fill()}
-    if(n.swipe){rr(x0+l*LW+10,yh-nh*0.65,LW-20,nh*1.3,14);cx.fillStyle='#ffffff';cx.fill();cx.lineWidth=3;cx.strokeStyle=COL[l];cx.stroke();
-      drawArrow(x0+l*LW+LW/2,yh,nh*0.95,n.dir,COL[l])}
-    else drawTile(x0+l*LW+10,yh,LW-20,nh,COL[l]);cx.globalAlpha=1;
+    {const h=fitH(n,nh,(hitY-topY)/A);
+    if(n.swipe){const sh2=Math.min(nh*1.3,fitH(n,nh*1.3,(hitY-topY)/A));rr(x0+l*LW+10,yh-sh2/2,LW-20,sh2,Math.min(14,sh2/2));cx.fillStyle='#ffffff';cx.fill();cx.lineWidth=3;cx.strokeStyle=COL[l];cx.stroke();
+      drawArrow(x0+l*LW+LW/2,yh,Math.min(nh*0.95,sh2*0.8),n.dir,COL[l])}
+    else drawTile(x0+l*LW+10,yh,LW-20,h,COL[l]);}cx.globalAlpha=1;
   }
   // hit effects
   const now=performance.now();
@@ -1425,6 +1968,7 @@ function finish(){
   const fc=s.c.miss===0&&s.holdDrop===0;
   const stars=s.failed?0:acc>=0.93?3:acc>=0.8?2:acc>=0.6?1:0;
   const grade=s.failed?'OUT':acc>=0.97&&fc?'S':acc>=0.9?'A':acc>=0.8?'B':acc>=0.65?'C':'D';
+  if(edReturn){setTimeout(()=>{stopRun();edBack();notice(`Try-out: ${s.score.toLocaleString()} points, ${s.c.miss} missed.`,4000)},700);return}
   const key=bestKey(s.song.id,s.diff),prev=store.get(key,null),isBest=!prev||s.score>prev.score;
   if(isBest)store.set(key,{score:s.score,stars:Math.max(stars,prev?prev.stars:0),acc});
   else if(stars>prev.stars)store.set(key,Object.assign(prev,{stars}));
@@ -1449,7 +1993,9 @@ function resume(){if(!S||!S.paused)return;S.down=[0,0,0];
 $('#pauseBtn').onclick=pause;
 $('#resumeBtn').onclick=resume;
 $('#restartBtn').onclick=()=>{const s=lastSong;stopRun();startRun(s)};   // restarts this song; the playlist carries on after it
-$('#quitBtn').onclick=()=>{PL=null;clearInterval(nxTimer);$('#nextOv').hidden=true;stopRun();renderMenu();show('menu')};
+function trialBackTo(){if(S&&E&&S.trial){const songAt=S.from+Math.max(0,songTime())-S.lead;E.backTo=Math.max(-E.lead,Math.min(E.dur,songAt-2))}}
+$('#tryStop').onclick=()=>{if(!edReturn)return;trialBackTo();stopRun();$('#tryStop').hidden=true;edBack()};
+$('#quitBtn').onclick=()=>{if(edReturn){trialBackTo();stopRun();edBack();return}PL=null;clearInterval(nxTimer);$('#nextOv').hidden=true;stopRun();renderMenu();show('menu')};
 $('#nxGo').onclick=plNext;$('#nxStop').onclick=plStop;
 $('#plPlay').onclick=()=>plStart(false);$('#plShuffle').onclick=()=>plStart(true);
 $('#plClear').onclick=()=>{settings.playlist=[];saveSettings();renderMenu()};
@@ -1486,7 +2032,9 @@ const keyLabel=e=>({ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'�
 function renderKeys(){
   document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',b.dataset.m===settings.mode));
   document.querySelectorAll('#skin button').forEach(b=>b.setAttribute('aria-checked',b.dataset.s===settings.skin));
-  document.querySelectorAll('#nstyle button').forEach(b=>b.setAttribute('aria-checked',b.dataset.st===(STYLES[settings.style]?settings.style:'beat')));
+  document.querySelectorAll('#nstyle button').forEach(b=>b.setAttribute('aria-checked',b.dataset.st===(STYLES[settings.style]||settings.style==='custom'?settings.style:'beat')));
+  document.querySelectorAll('#appMode button').forEach(b=>b.setAttribute('aria-checked',b.dataset.a===(settings.app||'play')));
+  $('#editBanner').hidden=settings.app!=='edit';
   $('#keysBox').hidden=settings.mode!=='keys';$('#funHint').hidden=settings.mode!=='fun';
   $('#suddenOpt').checked=!!settings.sudden;
   const so=$('#swipeOpt');so.disabled=settings.mode==='keys';so.checked=!!settings.swipes&&settings.mode!=='keys';
@@ -1495,6 +2043,7 @@ function renderKeys(){
   document.querySelectorAll('.keybtn').forEach(b=>{const i=+b.dataset.k,w=waitKey===i;b.classList.toggle('wait',w);
     b.textContent=w?'Press a key':settings.keys[i].label;b.setAttribute('aria-label',`Key for lane ${i+1}: ${settings.keys[i].label}`)});
 }
+document.querySelectorAll('#appMode button').forEach(b=>b.onclick=()=>{settings.app=b.dataset.a;saveSettings();renderKeys();renderMenu()});
 document.querySelectorAll('#nstyle button').forEach(b=>b.onclick=()=>{settings.style=b.dataset.st;saveSettings();renderKeys();renderMenu()});
 document.querySelectorAll('#skin button').forEach(b=>b.onclick=()=>{settings.skin=b.dataset.s;saveSettings();renderKeys();renderMenu()});
 document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{settings.mode=b.dataset.m;waitKey=-1;saveSettings();renderKeys()});
