@@ -1,4 +1,5 @@
 <!doctype html><html><head><script src="/theme.js" data-native="dark"></script>
+<style id="themeFix">#menu .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 64px)}.hudl{padding-left:96px}</style>
 <meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="manifest" href="/pulse-lanes/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/pulse-lanes-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -74,7 +75,7 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,64px);li
 .song.own .bpm{color:var(--blue)}
 .song:disabled{cursor:default;opacity:.75}
 .song:disabled:hover{background:var(--panel)}
-.tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);margin-bottom:-8px}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--line);margin-bottom:-8px}
 .tabs button{border:0;background:none;padding:12px 6px;font-weight:700;font-size:16px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px;display:inline-flex;gap:8px;justify-content:center;align-items:center}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .count{font-size:12px;background:var(--panel2);color:var(--ink);border-radius:10px;padding:1px 8px;font-variant-numeric:tabular-nums}
@@ -83,8 +84,25 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,64px);li
 .mine.drag{box-shadow:0 0 0 2px var(--blue)}
 .upbtns{display:flex;gap:10px;flex-wrap:wrap}
 .empty{margin:0;color:var(--muted);text-align:center;padding:18px 8px;font-size:14px}
-.songrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:stretch}
-.songrow:has(> .song:only-child){grid-template-columns:1fr}
+.songrow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.songrow>.song{flex:1;min-width:0}
+.addpl{width:44px;border:1px solid var(--line);background:var(--panel);border-radius:14px;font-size:22px;color:var(--muted)}
+.addpl[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#1a1205;font-size:18px}
+.stylerow{flex-basis:100%}
+.plbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.plbox.has{border-color:var(--accent)}
+.plhead{display:flex;align-items:center;gap:8px}
+.pllist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+.pllist li{display:flex;align-items:center;gap:8px;background:var(--panel2);border-radius:10px;padding:6px 8px}
+.pln{width:22px;text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
+.plt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.plmv,.plx{width:34px;height:34px;border:1px solid var(--line);background:transparent;border-radius:8px;color:var(--muted)}
+.plmv:disabled{opacity:.3}
+.setpanel{display:flex;flex-direction:column;gap:22px;padding-top:6px}
+.setpanel .settings{padding:6px 14px}
+.toggle{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:500;cursor:pointer}
+.toggle input{width:22px;height:22px;accent-color:var(--amber);margin:0}
+.toggle:has(input:disabled){opacity:.5;cursor:default}
 .rm{width:44px;border:1px solid var(--line);background:var(--panel);border-radius:14px;font-size:22px;color:var(--muted)}
 .rm:hover{color:var(--coral);border-color:var(--coral)}
 .rm:disabled{opacity:.4}
@@ -136,6 +154,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .tally dd{margin:6px 0 0;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
 .tally .wide{grid-column:span 2}
 #mode{grid-template-columns:1fr 1fr 1fr}
+#diff{grid-template-columns:repeat(4,1fr)}
+#diff button[data-d=extreme][aria-checked=true]{background:var(--coral);color:#1a0705}
 .skins{grid-template-columns:1fr 1fr}
 .notice{position:sticky;top:max(8px,env(safe-area-inset-top,0px));z-index:5;margin:0;background:var(--amber);color:#1a1205;font-weight:500;border-radius:14px;padding:12px 16px;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .styles{grid-template-columns:1fr 1fr}
@@ -177,9 +197,30 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
           <button role="radio" data-d="easy">Easy</button>
           <button role="radio" data-d="normal">Normal</button>
           <button role="radio" data-d="hard">Hard</button>
+          <button role="radio" data-d="extreme">Extreme</button>
         </div>
       </div>
 
+      <section id="plBox" class="plbox" aria-label="Playlist">
+        <div class="plhead"><p class="label" style="margin:0">Playlist</p><span id="plCount" class="count"></span></div>
+        <p id="plEmpty" class="hint" style="margin:0">Tap + on any song below to add it. The playlist plays the songs one after another without going back to this screen.</p>
+        <ol id="plList" class="pllist" hidden></ol>
+        <div id="plActions" class="actions" style="justify-content:flex-start" hidden>
+          <button id="plPlay" class="btn primary">Play playlist</button>
+          <button id="plShuffle" class="btn">Shuffle and play</button>
+          <button id="plClear" class="linkbtn">Clear</button>
+        </div>
+      </section>
+
+      <div class="tabs" role="tablist" aria-label="Song lists">
+        <button role="tab" data-tab="built">Tracks</button>
+        <button role="tab" data-tab="mine">My songs<span id="mineCount" class="count"></span></button>
+        <button role="tab" data-tab="settings">Settings</button>
+      </div>
+
+      <div id="panelBuilt" role="tabpanel"><ul id="songs" class="songs"></ul></div>
+
+      <div id="panelSettings" role="tabpanel" class="setpanel" hidden>
       <div>
         <p class="label" style="margin-bottom:8px">Look</p>
         <div class="diff skins" role="radiogroup" aria-label="Look" id="skin">
@@ -218,13 +259,27 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         </div>
       </div>
 
-      <div class="tabs" role="tablist" aria-label="Song lists">
-        <button role="tab" data-tab="built">Tracks</button>
-        <button role="tab" data-tab="mine">My songs<span id="mineCount" class="count"></span></button>
+      <div>
+        <p class="label" style="margin-bottom:8px">Swipe notes</p>
+        <label class="toggle" for="swipeOpt"><input type="checkbox" id="swipeOpt"><span>Add swipe notes</span></label>
+        <p class="hint" id="swipeHint" style="margin:8px 0 0">Some notes become arrows. Swipe your finger in the arrow's direction (up, down, left or right) as the note reaches its slot. For iPhone and iPad; not available with the keyboard.</p>
       </div>
 
-      <div id="panelBuilt" role="tabpanel"><ul id="songs" class="songs"></ul></div>
+      <div>
+        <p class="label" style="margin-bottom:8px">Challenge</p>
+        <label class="toggle" for="suddenOpt"><input type="checkbox" id="suddenOpt"><span>One miss and you're out</span></label>
+        <p class="hint" style="margin:8px 0 0">Missing a single note, or letting go of a long one too early, ends the song. In a playlist the next song starts.</p>
+      </div>
 
+      <div>
+        <p class="label" style="margin-bottom:8px">Sound and timing</p>
+        <div class="settings">
+<div class="row"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="100" step="1"><output id="volOut"></output></div>
+        <div class="row"><label for="off">Timing offset</label><input id="off" type="range" min="-200" max="200" step="5"><output id="offOut"></output></div>
+        <p class="hint">If your taps keep landing late (common with Bluetooth headphones), move the offset to the right until "Perfect" feels on the beat.</p>
+              </div>
+      </div>
+      </div>
       <div id="panelMine" role="tabpanel" class="mine" hidden>
         <div class="upload">
           <div class="upbtns">
@@ -238,12 +293,6 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <ul id="mySongs" class="songs"></ul>
       </div>
 
-      <details class="settings">
-        <summary>Settings</summary>
-        <div class="row"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="100" step="1"><output id="volOut"></output></div>
-        <div class="row"><label for="off">Timing offset</label><input id="off" type="range" min="-200" max="200" step="5"><output id="offOut"></output></div>
-        <p class="hint">If your taps keep landing late (common with Bluetooth headphones), move the offset to the right until "Perfect" feels on the beat.</p>
-      </details>
 
       <p class="foot">On iPad and iPhone, tap the lanes at the bottom. iPhone tip: turn off silent mode to hear the music.</p>
     </div>
@@ -258,6 +307,17 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <div class="hudl"><b id="hSong"></b><span id="hDiff"></span></div>
         <div class="hudc"><span id="hScore">0</span><span id="hMult">×1</span></div>
         <button id="pauseBtn" class="iconbtn" aria-label="Pause"></button>
+      </div>
+    </div>
+    <div id="nextOv" class="overlay" hidden>
+      <div class="card">
+        <p class="eyebrow" id="nxDone" style="text-align:center"></p>
+        <h2 id="nxGrade">A</h2>
+        <p id="nxScore" style="margin:0;text-align:center;color:var(--muted)"></p>
+        <p style="margin:8px 0 0;text-align:center">Next up: <b id="nxName"></b></p>
+        <p id="nxCount" style="margin:0 0 6px;text-align:center;color:var(--accent);font-weight:700"></p>
+        <button id="nxGo" class="btn primary">Play next now</button>
+        <button id="nxStop" class="btn">Stop playlist</button>
       </div>
     </div>
     <div id="pauseOv" class="overlay" hidden>
@@ -424,7 +484,8 @@ function generate(song){
 const DIFFS={
   easy:{label:'Easy',approach:1.7,k:2.0,gap:0.42,anyGap:0.3,hold:6},
   normal:{label:'Normal',approach:1.3,k:1.5,gap:0.26,anyGap:0.12,hold:6},
-  hard:{label:'Hard',approach:1.0,k:1.15,gap:0.16,anyGap:0,hold:4}
+  hard:{label:'Hard',approach:1.0,k:1.15,gap:0.16,anyGap:0,hold:4},
+  extreme:{label:'Extreme',approach:0.78,k:1,gap:0.11,anyGap:0,hold:4}
 };
 function tidy(list,sameGap,anyGap){
   list.sort((a,b)=>a.t-b.t||a.lane-b.lane);
@@ -450,11 +511,20 @@ function chartFromLead(g,diff,seed){
     const nx=L[i+1],grp=n.bar>>1,lastInPhrase=!nx||(nx.bar>>1)!==grp;
     list.push(note);
     if(diff==='hard'&&n.step===0&&n.bar%2===0&&!note.end&&rng()<0.5)list.push({t:n.t,lane:(lane+1+((rng()*2)|0))%3});
+    if(diff==='extreme'&&(n.step===0||n.step===8)&&!note.end&&rng()<0.75)list.push({t:n.t,lane:(lane+1+((rng()*2)|0))%3});
   });
+  if(diff==='extreme'&&L.length){   // Extreme: every 8th the melody leaves empty gets a beat note too
+    const st=g.beat/4,ts=L.map(n=>n.t);let k=0,ln=0;
+    for(let t=Math.ceil(L[0].t/(2*st))*2*st;t<L[L.length-1].t;t+=2*st){
+      while(k<ts.length&&ts[k]<t-1.5*st)k++;
+      if(k<ts.length&&Math.abs(ts[k]-t)<1.5*st)continue;
+      if(L.some(n=>n.t<t&&n.t+n.len*0.85>t-0.05&&n.steps>=D.hold))continue;   // not inside a hold
+      list.push({t,lane:ln});ln=(ln+(rng()<0.5?1:2))%3}
+  }
   return tidy(list,D.gap*0.6,D.anyGap);
 }
 /* ---------- uploaded-song analysis: spectral onsets, tempo, beats, melody, song structure ---------- */
-const ANALYSIS_VER=5;
+const ANALYSIS_VER=6;
 function makeFFT(N){
   const lev=Math.round(Math.log2(N)),rev=new Uint32Array(N),cs=new Float32Array(N/2),sn=new Float32Array(N/2);
   for(let i=0;i<N;i++){let r=0,x=i;for(let b=0;b<lev;b++){r=(r<<1)|(x&1);x>>=1}rev[i]=r}
@@ -652,7 +722,7 @@ async function analyse(buf,onProgress){
     vm:VO.vm,voiced:VO.voiced,vE:VO.vE,vodN,lm:LD.vm,lvoiced:LD.voiced,lE:LD.vE,lodN};
 }
 
-const UP={easy:{min:0.4,dens:1.1,chord:0,holdBeats:3},normal:{min:0.22,dens:2.0,chord:0.03,holdBeats:2},hard:{min:0.13,dens:3.2,chord:0.08,holdBeats:1.5}};
+const UP={easy:{min:0.4,dens:1.1,chord:0,holdBeats:3},normal:{min:0.22,dens:2.0,chord:0.03,holdBeats:2},hard:{min:0.13,dens:3.2,chord:0.08,holdBeats:1.5},extreme:{min:0.1,dens:4.6,chord:0.15,holdBeats:1.25}};
 const STYLES={voice:'Singing + lead',voicebeat:'Singing + beat',lead:'Melody only',beat:'Beat'};
 function chartFromAnalysis(an,diff,style='voice'){
   const D=DIFFS[diff],cfg=UP[diff],bp=an.beatSec,hop=an.hop,G=an.grid,PH=an.phrases;
@@ -687,7 +757,7 @@ function chartFromAnalysis(an,diff,style='voice'){
   const put=(gi,p,srcNote,k)=>{const g=G[gi],at=slot(g.t);if(at<0)return false;taken.splice(at,0,g.t);
     const nt={gi,g,t:g.t,p,src:srcNote,k:srcNote?srcNote.k:k};notes.push(nt);byP[p].push(nt);return true};
   const field={voice:g=>g.voc?g.relV:0,lead:g=>g.lv?g.relL:0};
-  const gapB=diff==='hard'?1:diff==='normal'?1.5:2;
+  const gapB=diff==='extreme'?0.5:diff==='hard'?1:diff==='normal'?1.5:2;
   PH.forEach((P,p)=>{
     if(src[p]>=0){const S0=PH[src[p]];
       for(const sn of byP[src[p]]){const gi=P.g0+(sn.gi-S0.g0),g=G[gi];if(g&&g.on)put(gi,p,sn)}
@@ -935,6 +1005,9 @@ function songCard(s){
   li.querySelector('.name').textContent=s.name;
   li.querySelector('.sub').textContent=sub;
   li.querySelector('.song').onclick=()=>playSong(s);
+  if(ready){const inPl=settings.playlist.includes(s.id),b=document.createElement('button');b.className='addpl';
+    b.setAttribute('aria-pressed',inPl);b.setAttribute('aria-label',(inPl?'Remove from playlist: ':'Add to playlist: ')+s.name);
+    b.textContent=inPl?'✓':'+';b.onclick=()=>plToggle(s.id);li.appendChild(b)}
   if(s.kind==='file'){const x=document.createElement('button');x.className='rm';x.setAttribute('aria-label','Remove '+s.name);x.textContent='×';
     x.disabled=s.status==='busy';x.onclick=()=>removeSong(s.id);li.appendChild(x);
     if(s.status==='ready'){   // this song's own note style
@@ -952,13 +1025,56 @@ function renderMine(){
   $('#mineEmpty').hidden=mine.length>0;
   $('#mineCount').textContent=mine.length?String(mine.length):'';
 }
+
+/* ---- playlist: songs played back to back, with a short break between them ---- */
+if(!Array.isArray(settings.playlist))settings.playlist=[];
+let PL=null;   // the playlist being played: {ids, idx, total, scores}
+const findSong=id=>SONGS.find(x=>x.id===id)||mine.find(x=>x.id===id);
+function plToggle(id){const i=settings.playlist.indexOf(id);if(i>=0)settings.playlist.splice(i,1);else settings.playlist.push(id);saveSettings();renderMenu()}
+function renderPlaylist(){
+  const box=$('#plBox'),ids=settings.playlist.filter(id=>findSong(id));
+  $('#plCount').textContent=ids.length?String(ids.length):'';
+  $('#plEmpty').hidden=ids.length>0;$('#plList').hidden=!ids.length;$('#plActions').hidden=!ids.length;
+  const ol=$('#plList');ol.innerHTML='';
+  ids.forEach((id,i)=>{const s=findSong(id),li=document.createElement('li');
+    li.innerHTML=`<span class="pln">${i+1}</span><span class="plt"></span><button class="plmv" aria-label="Move up"${i?'':' disabled'}>↑</button><button class="plx" aria-label="Remove">×</button>`;
+    li.querySelector('.plt').textContent=s.name;
+    li.querySelector('.plmv').onclick=()=>{const a=settings.playlist,j=a.indexOf(id);if(j>0){[a[j-1],a[j]]=[a[j],a[j-1]];saveSettings();renderPlaylist()}};
+    li.querySelector('.plx').onclick=()=>plToggle(id);
+    ol.appendChild(li)});
+  box.classList.toggle('has',ids.length>0);
+}
+function plStart(shuffle){
+  let ids=settings.playlist.filter(id=>findSong(id));if(!ids.length)return;
+  if(shuffle){ids=ids.slice();for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]]}}
+  const pending=mine.filter(x=>['queued','busy','cloud','downloading'].includes(x.status));
+  if(pending.length){notice(`Your songs are still being prepared: ${mine.length-pending.length} of ${mine.length} ready. You can start the playlist as soon as all of them are ready.`);return}
+  PL={ids,idx:0,total:0,scores:[]};playSong(findSong(ids[0]));
+}
+let nxTimer=0;
+function plBetween(s,grade){   // shown on the play screen; the next song starts by itself
+  PL.total+=s.score;PL.scores.push(s.score);
+  const next=findSong(PL.ids[PL.idx+1]);
+  $('#nxDone').textContent=`Song ${PL.idx+1} of ${PL.ids.length}: ${s.song.name}`;
+  $('#nxGrade').textContent=grade;$('#nxScore').textContent=s.score.toLocaleString()+' points · playlist total '+PL.total.toLocaleString();
+  $('#nxName').textContent=next?next.name:'';
+  let n=5;$('#nxCount').textContent=`Starting in ${n}`;$('#nextOv').hidden=false;
+  clearInterval(nxTimer);nxTimer=setInterval(()=>{n--;if(n<=0)plNext();else $('#nxCount').textContent=`Starting in ${n}`},1000);
+}
+function plNext(){clearInterval(nxTimer);$('#nextOv').hidden=true;if(!PL)return;
+  stopRun();PL.idx++;const s=findSong(PL.ids[PL.idx]);
+  if(!s){PL=null;renderMenu();show('menu');return}
+  playSong(s);
+}
+function plStop(){clearInterval(nxTimer);$('#nextOv').hidden=true;PL=null;stopRun();show('results')}
 function renderMenu(){
+  renderPlaylist();
   document.querySelectorAll('#diff button').forEach(b=>b.setAttribute('aria-checked',b.dataset.d===settings.diff));
   const ul=$('#songs');ul.innerHTML='';SONGS.forEach(s=>ul.appendChild(songCard(s)));
   renderMine();
-  const tab=settings.tab==='mine'?'mine':'built';
+  const tab=['mine','settings'].includes(settings.tab)?settings.tab:'built';
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
-  $('#panelBuilt').hidden=tab!=='built';$('#panelMine').hidden=tab!=='mine';
+  $('#panelBuilt').hidden=tab!=='built';$('#panelMine').hidden=tab!=='mine';$('#panelSettings').hidden=tab!=='settings';
 }
 const setStatus=t=>{$('#ustatus').textContent=t};
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{settings.tab=b.dataset.tab;saveSettings();renderMenu()});
@@ -1026,6 +1142,15 @@ function startRun(song){
     beats=[];for(let k=0;k*g.beat<dur;k++)beats.push(k*g.beat)}
   else{notes=song.charts[styleOf(song)][diff];dur=song.buffer.duration;beats=song.beats;dp=song.dp}
   notes=notes.map(n=>Object.assign({state:0},n,{swipe:false}));
+  if(settings.swipes&&settings.mode!=='keys'){   // single notes with a little room around them become arrows
+    // about one note in ten, the ones with the most room around them, never two arrows within a second
+    const rng=mulberry(notes.length*31+7),D4=['up','down','left','right'],cand=[];
+    notes.forEach((n,i)=>{if(n.end)return;const nx=notes[i+1],pv=notes[i-1];
+      const before=pv?n.t-pv.t:9,after=nx?nx.t-n.t:9;if(before<0.16||after<0.2)return;   // also skips two-lane chords
+      cand.push({n,room:Math.min(before,after)+rng()*0.05})});
+    cand.sort((a,b)=>b.room-a.room);const picked=[];
+    for(const c of cand){if(picked.length>=Math.round(notes.length*0.1))break;
+      if(picked.some(t=>Math.abs(t-c.n.t)<1))continue;picked.push(c.n.t);c.n.swipe=true;c.n.dir=D4[(rng()*4)|0]}}
   out=ac.createGain();out.connect(master);
   const start=ac.currentTime+D.approach+1.0;
   S={song,diff,D,notes,events,ei:0,dur,beats,dp,bi:0,start,lo:0,paused:false,over:false,
@@ -1059,11 +1184,17 @@ function judge(j,dt,lane){
   S.judg={text:j.toUpperCase(),sub:j==='perfect'?'':(dt<0?'EARLY':'LATE'),col:JCOL[j],t0:performance.now()};
   S.fx.push({lane,t0:performance.now(),col:COL[lane],big:j==='perfect'});
 }
-function miss(){S.c.miss++;S.combo=0;S.judg={text:'MISS',sub:'',col:JCOL.miss,t0:performance.now()}}
+function miss(){S.c.miss++;S.combo=0;S.judg={text:'MISS',sub:'',col:JCOL.miss,t0:performance.now()};knockout()}
+function knockout(){   // "One miss and you're out"
+  if(!settings.sudden||!S||S.over)return;
+  S.failed=true;S.failAt=Math.max(0,songTime());S.judg={text:'OUT',sub:'',col:'#ff5a6a',t0:performance.now()};
+  try{S.bus.gain.setValueAtTime(S.bus.gain.value,AC.currentTime);S.bus.gain.linearRampToValueAtTime(0,AC.currentTime+0.5)}catch(e){}
+  finish();
+}
 function finishHold(n,ok){
   n.state=2;S.holding[n.lane]=null;
   if(ok){S.holdOk++;S.score+=150*mult();S.fx.push({lane:n.lane,t0:performance.now(),col:COL[n.lane],big:true})}
-  else{S.holdDrop++;S.combo=0;S.judg={text:'DROP',sub:'',col:JCOL.drop,t0:performance.now()}}
+  else{S.holdDrop++;S.combo=0;S.judg={text:'DROP',sub:'',col:JCOL.drop,t0:performance.now()};knockout()}
 }
 function press(lane,touch){
   if(!S||S.paused||S.over)return;
@@ -1072,11 +1203,22 @@ function press(lane,touch){
   const t=songTime();
   for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];
     if(n.t>t+WIN.good)break;
-    if(n.state!==0||n.lane!==lane)continue;
+    if(n.state!==0||n.lane!==lane||n.swipe)continue;
     const dt=t-n.t,ad=Math.abs(dt);if(ad>WIN.good)continue;
     judge(ad<=WIN.perfect?'perfect':ad<=WIN.great?'great':'good',dt,lane);
     if(n.end){n.state=1;S.holding[lane]=n}else n.state=2;
     return}
+}
+const SWIN={perfect:0.075,great:0.12,good:0.17};
+function swipe(lane,dir){
+  if(!S||S.paused||S.over)return false;
+  const t=songTime();
+  for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];
+    if(n.t>t+SWIN.good)break;
+    if(n.state!==0||n.lane!==lane||!n.swipe||n.dir!==dir)continue;
+    const dt=t-n.t,ad=Math.abs(dt);if(ad>SWIN.good)continue;
+    judge(ad<=SWIN.perfect?'perfect':ad<=SWIN.great?'great':'good',dt,lane);n.state=2;return true}
+  return false;
 }
 function release(lane){
   if(!S)return;
@@ -1086,7 +1228,7 @@ function release(lane){
 }
 function update(t){
   for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t)break;
-    if(n.state===0&&t-n.t>WIN.good){n.state=2;miss();if(n.end)S.holdDrop++}
+    if(n.state===0&&t-n.t>(n.swipe?SWIN.good:WIN.good)){n.state=2;miss();if(n.end)S.holdDrop++}
     else if(n.state===1&&t>=n.end)finishHold(n,true)}
   while(S.lo<S.notes.length&&S.notes[S.lo].state===2)S.lo++;
   const lastEnd=S.notes.length?Math.max(...S.notes.slice(-6).map(n=>n.end||n.t)):0;
@@ -1112,6 +1254,11 @@ function drawTile(x,yc,w,h,col){
   rr(x+w*0.06,y+h*0.14,w*0.88,h*0.24,h*0.12);cx.fillStyle='rgba(255,255,255,0.45)';cx.fill();
 }
 /* ---- "White stage" look: pale lanes, black tiles with a glowing dash, one colour per song ---- */
+function drawArrow(x,y,size,dir,col){   // a bold arrow pointing the way to swipe
+  cx.save();cx.translate(x,y);cx.rotate({up:0,right:Math.PI/2,down:Math.PI,left:-Math.PI/2}[dir]||0);
+  const h=size/2,w=size*0.42,sw=size*0.17;
+  cx.beginPath();cx.moveTo(0,-h);cx.lineTo(w,-h+w);cx.lineTo(sw,-h+w);cx.lineTo(sw,h);cx.lineTo(-sw,h);cx.lineTo(-sw,-h+w);cx.lineTo(-w,-h+w);cx.closePath();
+  cx.fillStyle=col;cx.fill();cx.restore()}
 function drawStar(t){
   const W=cw,H=ch,A=S.D.approach,TH=S.theme;
   const hitY=H-Math.max(170,H*0.27),topY=Math.max(120,H*0.15);
@@ -1155,7 +1302,8 @@ function drawStar(t){
     const g=cx.createLinearGradient(0,yh-th/2,0,yh+th/2);g.addColorStop(0,'#33363d');g.addColorStop(1,'#0c0d10');
     rr(x,yh-th/2,tw,th,10);cx.fillStyle=g;cx.fill();cx.lineWidth=1.5;cx.strokeStyle='rgba(255,255,255,0.16)';cx.stroke();
     cx.shadowColor='#ffffff';cx.shadowBlur=12;cx.fillStyle='#ffffff';
-    const dw=tw*0.4,dh=Math.max(4,th*0.07);rr(x+(tw-dw)/2,yh-dh/2,dw,dh,dh/2);cx.fill();
+    if(n.swipe)drawArrow(x+tw/2,yh,th*0.62,n.dir,'#ffffff');
+    else{const dw=tw*0.4,dh=Math.max(4,th*0.07);rr(x+(tw-dw)/2,yh-dh/2,dw,dh,dh/2);cx.fill()}
     cx.shadowBlur=0;cx.globalAlpha=1;
   }
   // score dial
@@ -1183,7 +1331,7 @@ function funFind(x,y){
   const t=songTime(),x0=g.CX-1.5*g.LW,lane=Math.floor((x-x0)/g.LW);if(lane<0||lane>2)return null;
   let best=null,bd=1e9;
   for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t+g.A+0.2)break;
-    if(n.state!==0||n.lane!==lane)continue;
+    if(n.state!==0||n.lane!==lane||n.swipe)continue;
     const ny=g.hitY-(n.t-t)/g.A*(g.hitY-g.topY);
     if(Math.abs(y-ny)<=g.th*0.75+12){const d=Math.abs(n.t-t);if(d<bd){bd=d;best=n}}}
   return best;
@@ -1249,7 +1397,9 @@ function draw(t){
       rr(hx,yh-gH-nh/2,hw,2*gH+nh,18);cx.fillStyle=rgba(COL[l],live?0.2:0.09);cx.fill();
       cx.lineWidth=live?2:1;cx.strokeStyle=rgba(COL[l],live?0.75:0.3);cx.stroke();
       rr(hx+4,yh-pH-nh/2,hw-8,2*pH+nh,16);cx.fillStyle=rgba(COL[l],live?0.3:0.14);cx.fill()}
-    drawTile(x0+l*LW+10,yh,LW-20,nh,COL[l]);cx.globalAlpha=1;
+    if(n.swipe){rr(x0+l*LW+10,yh-nh*0.65,LW-20,nh*1.3,14);cx.fillStyle='#ffffff';cx.fill();cx.lineWidth=3;cx.strokeStyle=COL[l];cx.stroke();
+      drawArrow(x0+l*LW+LW/2,yh,nh*0.95,n.dir,COL[l])}
+    else drawTile(x0+l*LW+10,yh,LW-20,nh,COL[l]);cx.globalAlpha=1;
   }
   // hit effects
   const now=performance.now();
@@ -1269,22 +1419,26 @@ function draw(t){
 
 /* finish */
 function finish(){
+  if(S.over)return;
   const s=S;s.over=true;
   const total=s.notes.length+s.holds,acc=total?(s.acc+s.holdOk)/total:0;
   const fc=s.c.miss===0&&s.holdDrop===0;
-  const stars=acc>=0.93?3:acc>=0.8?2:acc>=0.6?1:0;
-  const grade=acc>=0.97&&fc?'S':acc>=0.9?'A':acc>=0.8?'B':acc>=0.65?'C':'D';
+  const stars=s.failed?0:acc>=0.93?3:acc>=0.8?2:acc>=0.6?1:0;
+  const grade=s.failed?'OUT':acc>=0.97&&fc?'S':acc>=0.9?'A':acc>=0.8?'B':acc>=0.65?'C':'D';
   const key=bestKey(s.song.id,s.diff),prev=store.get(key,null),isBest=!prev||s.score>prev.score;
   if(isBest)store.set(key,{score:s.score,stars:Math.max(stars,prev?prev.stars:0),acc});
   else if(stars>prev.stars)store.set(key,Object.assign(prev,{stars}));
-  $('#rSong').textContent=`${s.song.name} · ${s.D.label}${fc?' · Full combo':''}`;
+  $('#rSong').textContent=`${s.song.name} · ${s.D.label}${s.failed?` · Out at ${fmtLen(s.failAt)}`:fc?' · Full combo':''}`;
+  $('#rGrade').style.fontSize=s.failed?'72px':'';
   $('#rGrade').textContent=grade;$('#rGrade').style.color=grade==='S'?'#ffc23d':grade==='A'?'#4f8cff':'#f4effc';
   $('#rStars').innerHTML=starsHTML(stars);
   $('#rScore').textContent=s.score.toLocaleString();
   $('#rBest').hidden=!(isBest&&s.score>0);
   $('#tP').textContent=s.c.perfect;$('#tG').textContent=s.c.great;$('#tO').textContent=s.c.good;$('#tM').textContent=s.c.miss;
   $('#tA').textContent=(acc*100).toFixed(1)+'%';$('#tC').textContent=s.maxCombo;$('#tH').textContent=`${s.holdOk}/${s.holds}`;
-  setTimeout(()=>{stopRun();show('results')},700);
+  if(PL&&PL.idx<PL.ids.length-1){setTimeout(()=>plBetween(s,grade),s.failed?1100:700);return}
+  if(PL){PL.total+=s.score;$('#rSong').textContent+=` · Playlist of ${PL.ids.length}: ${PL.total.toLocaleString()} points`;PL=null}
+  setTimeout(()=>{stopRun();show('results')},s.failed?1100:700);
 }
 
 /* pause */
@@ -1294,8 +1448,11 @@ function resume(){if(!S||!S.paused)return;S.down=[0,0,0];
   AC.resume().then(()=>{if(S){S.paused=false}});$('#pauseOv').hidden=true}
 $('#pauseBtn').onclick=pause;
 $('#resumeBtn').onclick=resume;
-$('#restartBtn').onclick=()=>{const s=lastSong;stopRun();startRun(s)};
-$('#quitBtn').onclick=()=>{stopRun();renderMenu();show('menu')};
+$('#restartBtn').onclick=()=>{const s=lastSong;stopRun();startRun(s)};   // restarts this song; the playlist carries on after it
+$('#quitBtn').onclick=()=>{PL=null;clearInterval(nxTimer);$('#nextOv').hidden=true;stopRun();renderMenu();show('menu')};
+$('#nxGo').onclick=plNext;$('#nxStop').onclick=plStop;
+$('#plPlay').onclick=()=>plStart(false);$('#plShuffle').onclick=()=>plStart(true);
+$('#plClear').onclick=()=>{settings.playlist=[];saveSettings();renderMenu()};
 $('#retry').onclick=()=>startRun(lastSong);
 $('#toMenu').onclick=()=>{renderMenu();show('menu')};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
@@ -1310,6 +1467,10 @@ cv.addEventListener('pointerdown',e=>{e.preventDefault();if(!S)return;audio();
     if(n){const ln=funHit(n);if(ln>=0){ptr.set(e.pointerId,{lane:ln});try{cv.setPointerCapture(e.pointerId)}catch(_){}}return}}
   ptr.set(e.pointerId,{lane,x:e.clientX,y:e.clientY,at:0});try{cv.setPointerCapture(e.pointerId)}catch(_){}
   press(lane,true)});
+cv.addEventListener('pointermove',e=>{const p=ptr.get(e.pointerId);if(!p||p.x==null||!S)return;
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;if(dx*dx+dy*dy<26*26)return;
+  const dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
+  swipe(p.lane,dir);p.x=e.clientX;p.y=e.clientY});
 const up=e=>{if(!ptr.has(e.pointerId))return;const l=ptr.get(e.pointerId).lane;ptr.delete(e.pointerId);release(l)};
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);cv.addEventListener('lostpointercapture',up);
 cv.addEventListener('contextmenu',e=>e.preventDefault());
@@ -1327,6 +1488,10 @@ function renderKeys(){
   document.querySelectorAll('#skin button').forEach(b=>b.setAttribute('aria-checked',b.dataset.s===settings.skin));
   document.querySelectorAll('#nstyle button').forEach(b=>b.setAttribute('aria-checked',b.dataset.st===(STYLES[settings.style]?settings.style:'beat')));
   $('#keysBox').hidden=settings.mode!=='keys';$('#funHint').hidden=settings.mode!=='fun';
+  $('#suddenOpt').checked=!!settings.sudden;
+  const so=$('#swipeOpt');so.disabled=settings.mode==='keys';so.checked=!!settings.swipes&&settings.mode!=='keys';
+  $('#swipeHint').textContent=settings.mode==='keys'?'Swipe notes need a touch screen. Switch "Play with" to Touch screen or Fun to turn them on.':
+    "Some notes become arrows. Swipe your finger in the arrow's direction (up, down, left or right) as the note reaches its slot. For iPhone and iPad; not available with the keyboard.";
   document.querySelectorAll('.keybtn').forEach(b=>{const i=+b.dataset.k,w=waitKey===i;b.classList.toggle('wait',w);
     b.textContent=w?'Press a key':settings.keys[i].label;b.setAttribute('aria-label',`Key for lane ${i+1}: ${settings.keys[i].label}`)});
 }
@@ -1334,6 +1499,8 @@ document.querySelectorAll('#nstyle button').forEach(b=>b.onclick=()=>{settings.s
 document.querySelectorAll('#skin button').forEach(b=>b.onclick=()=>{settings.skin=b.dataset.s;saveSettings();renderKeys();renderMenu()});
 document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{settings.mode=b.dataset.m;waitKey=-1;saveSettings();renderKeys()});
 document.querySelectorAll('.keybtn').forEach(b=>b.onclick=()=>{waitKey=waitKey===+b.dataset.k?-1:+b.dataset.k;renderKeys()});
+$('#suddenOpt').onchange=e=>{settings.sudden=e.target.checked;saveSettings()};
+$('#swipeOpt').onchange=e=>{settings.swipes=e.target.checked;saveSettings()};
 $('#keysReset').onclick=()=>{settings.keys=DEFAULT_KEYS.map(k=>({...k}));waitKey=-1;syncKeys();saveSettings();renderKeys()};
 document.addEventListener('keydown',e=>{
   if(waitKey<0)return;e.preventDefault();e.stopImmediatePropagation();
