@@ -1,6 +1,6 @@
 // Offline support: pages come from the network when possible and from the cache when offline.
 // The shared database (/api/...) is never cached.
-const CACHE = 'ofek-games-v10';
+const CACHE = 'ofek-games-v11';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/', '/ofek.js', '/manifest.webmanifest', '/icons/home-180.png', '/icons/home-192.png', '/breakout/', '/breakout/manifest.webmanifest',
     '/icons/breakout-180.png', '/icons/breakout-192.png',

@@ -89,9 +89,11 @@ async function leaders(){
 }
 async function loadGames(){
  let cat=[];try{cat=(await (await fetch('/catalog.json',{cache:'no-store'})).json()).games||[];}catch(e){}
- let show=null;try{const c=await (await fetch('/api/config',{cache:'no-store'})).json();show=c.homeGames;}catch(e){}
- GAMES=cat.filter(g=>g.onSite&&(!show||show.includes(g.id)));
- if(show)GAMES.sort((a,b)=>show.indexOf(a.id)-show.indexOf(b.id));}
+ let show=null,known=null;try{const c=await (await fetch('/api/config',{cache:'no-store'})).json();show=c.homeGames;known=c.homeKnown;}catch(e){}
+ const isNew=g=>!!known&&!known.includes(g.id);   // added to the site after the owner last chose: show it
+ GAMES=cat.filter(g=>g.onSite&&(!show||show.includes(g.id)||isNew(g)));
+ const pos=g=>show&&show.includes(g.id)?show.indexOf(g.id):999;
+ if(show)GAMES.sort((a,b)=>pos(a)-pos(b));}
 const gamesReady=loadGames().then(()=>{readFavs();render();});
 OFEK.onPlayer(()=>{showWho();readFavs();render();syncFavs();});
 leaders();

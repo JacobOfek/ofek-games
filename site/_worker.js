@@ -22,6 +22,8 @@
 
 const ADMIN_EMAIL_SHA256 = '7edb91764548c48ff5adc3a9505bf66c9c5a040f304c768679f75f1e72804c49';
 const APPS = ['breakout', 'blocks', 'snake', 'hub'];
+// games already on the site before the dashboard started recording which games it knew about
+const KNOWN_BEFORE_LIST = ['breakout', 'blocks', 'snake', 'pulse-lanes', 'boom', 'wonders-dice', 'architects', 'puzzle'];
 
 let ready = false;
 async function setup(db) {
@@ -157,8 +159,9 @@ async function api(req, env, url) {
   const path = url.pathname;
   if (path === '/api/ping') return json({ ok: true, db: true, locked: isLocked(s), mode: s.mode });
   if (path === '/api/config' && req.method === 'GET') {
-    const h = await meta(db, 'home-games');
-    return json({ homeGames: h ? JSON.parse(h) : null });
+    const h = await meta(db, 'home-games'), k = await meta(db, 'home-known');
+    // homeKnown: the games that were on the site when the owner last chose; newer games show until he turns them off
+    return json({ homeGames: h ? JSON.parse(h) : null, homeKnown: k ? JSON.parse(k) : (h ? KNOWN_BEFORE_LIST : null) });
   }
 
   /* ---- sign-up / login (protected by the code itself, not by family access) ---- */
@@ -250,7 +253,8 @@ async function api(req, env, url) {
       return json({
         mode: s.mode, familySet: !!(s.famHash || s.envCode), familyFromSecret: !!s.envCode,
         familyPassword: (await meta(db, 'family-plain')) || null,
-        homeGames: h ? JSON.parse(h) : null, deployRequest: JSON.parse((await meta(db, 'deploy-request')) || 'null'),
+        homeGames: h ? JSON.parse(h) : null,
+        homeKnown: (k => k ? JSON.parse(k) : (h ? KNOWN_BEFORE_LIST : null))(await meta(db, 'home-known')), deployRequest: JSON.parse((await meta(db, 'deploy-request')) || 'null'),
         invites,
         players: players.map(p => ({ ...p, games: (counts.find(c => c.player === p.name) || {}).n || 0 })),
       });
@@ -258,6 +262,7 @@ async function api(req, env, url) {
     if (path === '/api/admin/config' && req.method === 'POST') {
       const b = await req.json().catch(() => ({}));
       if (Array.isArray(b.homeGames)) await setMeta(db, 'home-games', JSON.stringify(b.homeGames.filter(x => typeof x === 'string').slice(0, 100)));
+      if (Array.isArray(b.homeKnown)) await setMeta(db, 'home-known', JSON.stringify(b.homeKnown.filter(x => typeof x === 'string').slice(0, 100)));
       if (b.mode === 'email' || b.mode === 'family') await setMeta(db, 'auth-mode', b.mode);
       if (typeof b.familyPassword === 'string') {
         const p = b.familyPassword.trim();

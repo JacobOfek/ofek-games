@@ -82,10 +82,10 @@
   {
    "id": "wow",
    "name": "WOW Dungeons",
-   "sub": "מבוכים ודרקונים לכמה שחקנים",
-   "emoji": "🐉",
-   "onSite": false,
-   "note": "משחק חי לכמה שחקנים: צריך שרת משחק משלו, פרויקט נפרד"
+   "sub": "משחק יחיד: דמות, העיר Stormwind ומבוכים",
+   "onSite": true,
+   "icon": "/icons/wow-192.png",
+   "href": "/wow/"
   },
   {
    "id": "dungeon-dice",

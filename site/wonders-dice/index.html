@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-title" content="Wonders Dice">
 <meta name="theme-color" content="#EBDDBF">
 </head><body>
-<title>Wonders Dice</title>
+<title>7 Wonders Dice</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Open+Sans:wght@400;600;700;800&display=swap">
@@ -839,7 +839,7 @@ function hdrHTML(){
   const me=S&&S.players[0];
   let st="";
   if(me){const sc=scores(me);st=`<span class="hs">${coin(me.coins)}<b>${me.coins}</b></span><span class="hs">${IC.stone}<b>${resCount(me)}</b> resources</span><span class="hs">${laurel(sc.total)}<b>${sc.total}</b> VP</span><span class="hs">${IC.hourglass("").replace('viewBox','style="width:16px;height:22px" viewBox')}<b>${me.bonuses.length}/3</b></span><span class="hs">Turn <b>${S.turn}</b>${S.endTurn!==null?" · last turn":""}</span>`}
-  return `<header class="top"><div class="brand">Wonders Dice<small>${me?`${BOARDS[me.board].city} · ${BOARDS[me.board].name}`:"Shake the Forum · 2–7 cities"}</small></div><div class="hstats">${st}</div><div class="row">${S&&S.over?`<button class="btn" data-act="showscore">Final scores</button>`:""}${S?`<button class="btn ${UI.compact?"primary":""}" data-act="compact" aria-pressed="${UI.compact?"true":"false"}">${UI.compact?"Full view":"Compact view"}</button>`:""}<button class="btn" data-act="rules">Rules</button><button class="btn primary" data-act="menu">New game</button></div></header>`;
+  return `<header class="top"><div class="brand">7 Wonders Dice<small>${me?`${BOARDS[me.board].city} · ${BOARDS[me.board].name}`:"Shake the Forum · 2–7 cities"}</small></div><div class="hstats">${st}</div><div class="row">${S&&S.over?`<button class="btn" data-act="showscore">Final scores</button>`:""}${S?`<button class="btn ${UI.compact?"primary":""}" data-act="compact" aria-pressed="${UI.compact?"true":"false"}">${UI.compact?"Full view":"Compact view"}</button>`:""}<button class="btn" data-act="rules">Rules</button><button class="btn primary" data-act="menu">New game</button></div></header>`;
 }
 function computeAvail(){
   UI.avail=null;UI.hint=null;UI.coinHint=null;UI.wonderHint=null;if(!S||S.over)return;const me=S.players[0];

@@ -179,7 +179,7 @@ document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.cl
 
 async function load(){
  ov=await OFEK.api('/api/admin/overview');
- const shown=ov.homeGames||cat.filter(g=>g.onSite).map(g=>g.id);
+ const onSite=cat.filter(g=>g.onSite).map(g=>g.id),shown=ov.homeGames?[...ov.homeGames,...onSite.filter(id=>ov.homeKnown&&!ov.homeKnown.includes(id))]:onSite;
  sel=new Set([...shown,...((ov.deployRequest&&ov.deployRequest.games)||[]).filter(id=>!cat.find(g=>g.id===id&&g.onSite))]);
  renderGames();renderUsers();renderPass();}
 
@@ -192,13 +192,13 @@ function renderGames(){
 $('games').addEventListener('change',e=>{const c=e.target.closest('[data-id]');if(!c)return;c.checked?sel.add(c.dataset.id):sel.delete(c.dataset.id);});
 $('saveGames').onclick=async()=>{
  const home=cat.filter(g=>g.onSite&&sel.has(g.id)).map(g=>g.id);
- try{await OFEK.api('/api/admin/config',{method:'POST',body:{homeGames:home}});
+ try{await OFEK.api('/api/admin/config',{method:'POST',body:{homeGames:home,homeKnown:cat.filter(g=>g.onSite).map(g=>g.id)}});
   const pend=cat.filter(g=>!g.onSite&&sel.has(g.id)).length;
   say('gamesMsg',`נשמר. בדף הבית יש עכשיו ${home.length} משחקים`+(pend?` · ${pend} מסומנים להוספה (צריך הפצה)`:''));}
  catch(e){say('gamesMsg','השמירה לא הצליחה',true);}};
 $('deployBtn').onclick=async()=>{
  const games=[...sel];
- try{await OFEK.api('/api/admin/config',{method:'POST',body:{homeGames:cat.filter(g=>g.onSite&&sel.has(g.id)).map(g=>g.id),deployRequest:{games}}});
+ try{await OFEK.api('/api/admin/config',{method:'POST',body:{homeGames:cat.filter(g=>g.onSite&&sel.has(g.id)).map(g=>g.id),homeKnown:cat.filter(g=>g.onSite).map(g=>g.id),deployRequest:{games}}});
   say('deployMsg',`נשמרה בקשה ל-${games.length} משחקים. עכשיו כותבים ל-Claude בשיחה: "הפץ"`);}
  catch(e){say('deployMsg','השמירה לא הצליחה',true);}};
 
