@@ -34,3 +34,4 @@ assert n == 1, 'puzzle notice not found'; open(p, 'w', encoding='utf-8').write(s
 # WOW Dungeons: the single-player game only
 run('build/build_wow.py', src('d4fa7e79'))
 run('build/safe_area.py')
+run('build/add_theme.py')

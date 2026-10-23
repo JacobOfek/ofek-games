@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="he" dir="rtl">
-<head>
+<head><script src="/theme.js" data-native="both" data-default="dark"></script>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ניהול · AI Games Center</title>
@@ -10,6 +11,8 @@
 <script src="/ofek.js"></script>
 <style>
 :root{--bg:#101218;--panel:#191C25;--panel2:#20242F;--ink:#ECEEF3;--muted:#8D94A7;--line:rgba(236,238,243,.12);--accent:#F2C14E;--ok:#4ADE80;--bad:#FF7B72}
+:root[data-theme="light"]{--bg:#F3F0E8;--panel:#FFFFFF;--panel2:#ECE7DC;--ink:#1D2029;--muted:#5D6475;--line:rgba(29,32,41,.14);--accent:#B07D12;--ok:#1F8A4C;--bad:#C0392B;color-scheme:light}
+:root[data-theme="light"] .btn.pri{color:#fff}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;-webkit-tap-highlight-color:transparent}
 main{max-width:860px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 22px) max(16px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 40px) max(16px,env(safe-area-inset-left))}
@@ -92,7 +95,7 @@ input.f{display:block;width:100%;font:inherit;font-size:17px;padding:12px 14px;b
 <main>
   <div class="top">
     <h1>ניהול<small>AI Games Center</small></h1>
-    <a class="back" href="/">← לדף הבית</a>
+    <div style="display:flex;gap:8px;align-items:center"><span data-theme-slot></span><a class="back" href="/">← לדף הבית</a></div>
   </div>
   <div id="gate" class="gate">טוען…</div>
   <div id="app" hidden>

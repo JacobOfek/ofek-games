@@ -21,7 +21,7 @@ s = s.replace(a, '<div class="ph-sub">משחק יחיד</div>')
 SOLO = '''
 <style id="wowSolo">
 /* beats the game rule that hides everything outside the game screen */
-html body.mp-app>#siteHome#siteHome#siteHome{display:grid!important;position:absolute}  /* sits above the game and scrolls away with the page, so it never covers the turn counter */
+html body.mp-app>#siteHome#siteHome#siteHome,html body.mp-app>#ofkTheme#ofkTheme#ofkTheme{display:grid!important;position:absolute}  /* sits above the game and scrolls away with the page, so it never covers the turn counter */
 body.mp-app{min-height:100%}
 body.mp-app #mp-root{padding-top:56px}  /* room for the home button above the frame */
 @media (min-width:900px){body.mp-app #mp-root{max-width:640px}}
