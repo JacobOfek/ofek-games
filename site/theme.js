@@ -99,8 +99,9 @@
   (document.head || document.documentElement).appendChild(lay);
   const shown = e => !!(e && e.isConnected && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden');
 
+  let homeEl = null;   // kept here: a game that redraws its bar throws the docked buttons away, and we put them back
   function dock() {
-    const home = document.getElementById('siteHome');
+    const home = homeEl = document.getElementById('siteHome') || homeEl;
     if (!dockSel.length || !home || !btn) return;
     const t = dockSel.map(s => document.querySelector(s)).find(shown);
     if (t) {
