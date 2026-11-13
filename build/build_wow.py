@@ -56,6 +56,34 @@ html body.mp-app>#wowViews#wowViews#wowViews{display:flex!important}
   show();try{renderSheet();}catch(err){}b.blur();});
  show();big.addEventListener?big.addEventListener("change",()=>{show();try{renderSheet();}catch(e){}}):0;})();
 </script>
+<script src="/ofek.js"></script>
+<script>
+/* The hero is also kept on the site, under the logged-in player (like the scores of the other games),
+   so a cleared browser, a new device or the home-screen app (which on iPhone keeps its own storage)
+   all get the same character back. The most recently changed copy wins. */
+(function(){
+ const K="wow-game-v2",AT="wow-game-at",OWN="wow-owner";
+ const get=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+ const set=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v);}catch(e){}};
+ let seen=get(K),me=null,timer=0,sent=null;
+ const push=now=>{if(!me)return;clearTimeout(timer);timer=setTimeout(async()=>{const g=get(K);if(!g||g===sent||OFEK.player!==me)return;
+  try{await OFEK.api("/api/save?app=wow",{method:"PUT",body:{kv:{[K]:g,[AT]:get(AT)||String(Date.now())}},quiet:true});sent=g;}catch(e){}},now?0:2500);};
+ setInterval(()=>{const g=get(K);if(g!==seen){seen=g;set(AT,String(Date.now()));push();}},1500);   // the game saves itself; we notice it
+ addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")push(true);});
+ addEventListener("pagehide",()=>push(true));
+ (async()=>{
+  if(!window.OFEK||!(await OFEK.ready)||!OFEK.player)return;
+  me=OFEK.player;
+  let kv={};try{kv=(await OFEK.api("/api/save?app=wow",{quiet:true})).kv||{};}catch(e){me=null;return;}
+  const local=get(K),cloud=typeof kv[K]==="string"?kv[K]:null,owner=get(OWN);
+  const cloudNewer=cloud&&(!local||(+kv[AT]||0)>(+get(AT)||0));
+  if(owner&&owner!==me){set(OWN,me);set(K,cloud);set(AT,cloud?kv[AT]:null);location.reload();return;}   // the hero here was another player's
+  set(OWN,me);
+  if(cloudNewer&&cloud!==local){set(K,cloud);set(AT,kv[AT]||String(Date.now()));location.reload();return;}
+  sent=cloud;if(local&&local!==cloud)push(true);
+ })();
+})();
+</script>
 '''
 i = s.lower().rfind('</body>')
 s = s[:i] + SOLO + s[i:]

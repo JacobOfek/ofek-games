@@ -21,7 +21,7 @@
 // Tables are created / upgraded automatically on first use.
 
 const ADMIN_EMAIL_SHA256 = '7edb91764548c48ff5adc3a9505bf66c9c5a040f304c768679f75f1e72804c49';
-const APPS = ['breakout', 'blocks', 'snake', 'hub'];
+const APPS = ['breakout', 'blocks', 'snake', 'hub', 'wow'];
 // games already on the site before the dashboard started recording which games it knew about
 const KNOWN_BEFORE_LIST = ['breakout', 'blocks', 'snake', 'pulse-lanes', 'boom', 'wonders-dice', 'architects', 'puzzle'];
 
