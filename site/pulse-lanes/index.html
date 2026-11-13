@@ -202,6 +202,31 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .keybtn.wait{border-color:var(--accent);color:var(--ink);font-family:var(--body);font-size:12px;padding:0 8px}
 .linkbtn{border:0;background:none;color:var(--muted);text-decoration:underline;font-size:13px;padding:8px}
 .keys .hint{flex-basis:100%;margin:0}
+.calib{background:#07050d;touch-action:none;display:flex;flex-direction:column}
+.calib[hidden]{display:none}
+.ctop{display:flex;align-items:center;gap:12px;padding-block:max(10px,env(safe-area-inset-top,0px)) 8px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.cstage{flex:1;min-height:0;position:relative}
+#ccv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.cbar{display:flex;flex-direction:column;gap:8px;align-items:center;background:rgba(20,15,34,0.94);border-top:1px solid var(--line);
+  padding-block:10px max(12px,env(safe-area-inset-bottom,0px));padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.crow{display:grid;grid-template-columns:104px 64px 96px 64px;gap:8px;align-items:center}
+.crow .btn{min-height:42px;padding:6px 4px;white-space:nowrap;font-size:14px}
+.crow b{text-align:center;font-variant-numeric:tabular-nums}
+.cl{font-size:13px;color:var(--muted)}
+.cintro{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+.cintro b{color:var(--ink)}
+.crecrow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:nowrap}
+#calUse{min-height:40px;padding:6px 14px;min-width:116px;white-space:nowrap}
+#calUse:disabled{opacity:.45;cursor:default}
+.cstat{min-height:2.9em}
+.clast{min-height:22px}
+.crec{margin:0;white-space:nowrap;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.crec span{color:var(--muted);font-weight:500;font-size:14px}
+.cnote{font-size:11px;color:var(--amber);line-height:1.35;margin-top:2px}
+.clast{display:flex;gap:2px;flex-wrap:nowrap;width:100%;max-width:440px;justify-content:center;min-height:26px}
+.clast span{font:700 10px Rubik,system-ui,sans-serif;color:#14101c;border-radius:8px;padding:4px 1px;flex:1 1 0;min-width:0;max-width:42px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-align:center;font-variant-numeric:tabular-nums}
+.cstat{margin:0;text-align:center;color:var(--muted);font-size:14px;line-height:1.45;max-width:46ch}
+.cstat b{color:var(--ink)}
 .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 @media (max-width:420px){.tally{grid-template-columns:repeat(2,1fr)}.grade{font-size:96px}}
 @media (prefers-reduced-motion:reduce){.brand .bars i{animation:none}}
@@ -311,11 +336,27 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       </div>
 
       <div>
+        <p class="label" style="margin-bottom:8px">Accuracy</p>
+        <label class="toggle" for="accOpt"><input type="checkbox" id="accOpt"><span>Measure my timing</span></label>
+        <p class="hint" style="margin:8px 0 0">Every tap is measured against the exact Perfect moment. The results screen adds up all the timing errors. A missed note counts as the edge of the hit window: 130 ms (170 ms for a swipe).</p>
+        <div id="accShowBox" hidden>
+          <p class="label" style="margin:14px 0 8px">Show under the buttons</p>
+          <div class="diff" role="radiogroup" aria-label="Show timing under the buttons" id="accShow">
+            <button role="radio" data-v="off">Nothing</button>
+            <button role="radio" data-v="color">Colour</button>
+            <button role="radio" data-v="number">Colour + ms</button>
+          </div>
+          <p class="hint" style="margin:8px 0 0"><b style="color:#3ddc84">Green</b> Perfect · <b style="color:#ffd23d">yellow</b> Great · <b style="color:#ff9f40">orange</b> Good · <b style="color:#ff4d5e">red</b> Miss. With ms: −12 means 12 ms early, +12 means 12 ms late.</p>
+        </div>
+      </div>
+
+      <div>
         <p class="label" style="margin-bottom:8px">Sound and timing</p>
         <div class="settings">
 <div class="row"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="100" step="1"><output id="volOut"></output></div>
-        <div class="row"><label for="off">Timing offset</label><input id="off" type="range" min="-200" max="200" step="5"><output id="offOut"></output></div>
+        <div class="row"><label for="off">Timing offset</label><input id="off" type="range" min="-200" max="200" step="1"><output id="offOut"></output></div>
         <p class="hint">If your taps keep landing late (common with Bluetooth headphones), move the offset to the right until "Perfect" feels on the beat.</p>
+        <button id="calOpen" class="btn" style="width:100%;margin:0 0 12px">Check my timing</button>
               </div>
       </div>
       </div>
@@ -466,6 +507,31 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     </div>
   </section>
 
+  <!-- TIMING CHECK -->
+  <section id="calib" class="screen calib" hidden>
+    <div class="ctop">
+      <button id="calDone" class="btn">Done</button>
+      <div class="etitle"><b>Timing check</b><span>Tap by ear on every beat</span><small id="calNote" class="cnote"></small></div>
+    </div>
+    <div class="cstage"><canvas id="ccv"></canvas></div>
+    <div class="cbar">
+      <div class="crow"><span class="cl">Tempo</span><button id="calBpmM" class="btn" aria-label="Slower">−</button><b id="calBpm">100 BPM</b><button id="calBpmP" class="btn" aria-label="Faster">+</button></div>
+      <div class="crow"><span class="cl">Timing offset</span><button id="calOffM" class="btn" aria-label="Offset minus 1 pixel">−1 px</button><b id="calOff">0 px</b><button id="calOffP" class="btn" aria-label="Offset plus 1 pixel">+1 px</button></div>
+      <div id="calLast" class="clast" aria-label="Last 10 taps"></div>
+      <div class="crecrow"><p id="calRec" class="crec"></p><button id="calUse" class="btn primary"></button></div>
+      <p id="calStat" class="cstat"></p>
+    </div>
+    <div id="calIntro" class="overlay">
+      <div class="card">
+        <h2>Timing check</h2>
+        <p class="cintro">Tap <b>by ear only</b>: listen to the click and tap on every beat. Don't follow the falling notes with your eyes.</p>
+        <p class="cintro">A thin dashed line marks the target, and every note has one through its middle. After each tap a coloured dashed line shows where the note was at the moment you tapped. Its distance from the target line, in pixels, is the gap between the sound and the picture.</p>
+        <p class="cintro">Fix it with <b>−1 px / +1 px</b> or with <b>Use</b>, until the coloured line lands on the target line. The recommendation is worked out from your last 10 taps.</p>
+        <button id="calGo" class="btn primary">Start</button>
+      </div>
+    </div>
+  </section>
+
   <!-- RESULTS -->
   <section id="results" class="screen results" hidden>
     <div class="wrap">
@@ -481,6 +547,12 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <div class="wide"><dt>Accuracy</dt><dd id="tA">0%</dd></div>
         <div><dt>Max combo</dt><dd id="tC">0</dd></div>
         <div><dt>Holds</dt><dd id="tH">0/0</dd></div>
+      </dl>
+      <dl class="tally" id="rAcc" hidden>
+        <div class="wide"><dt>Timing error, total</dt><dd id="eSum">0 ms</dd></div>
+        <div class="wide"><dt>Per note</dt><dd id="eAvg">0 ms</dd></div>
+        <div class="wide"><dt>You lean</dt><dd id="eLean">on time</dd></div>
+        <div class="wide"><dt>From misses</dt><dd id="eMiss">0</dd></div>
       </dl>
       <div class="actions">
         <button id="retry" class="btn primary">Play again</button>
@@ -1259,9 +1331,14 @@ const setStatus=t=>{$('#ustatus').textContent=t};
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{settings.tab=b.dataset.tab;saveSettings();renderMenu()});
 document.querySelectorAll('#diff button').forEach(b=>b.onclick=()=>{settings.diff=b.dataset.d;saveSettings();renderMenu()});
 const vol=$('#vol'),off=$('#off');
-function syncSettingsUI(){vol.value=Math.round(settings.vol*100);$('#volOut').textContent=vol.value+'%';off.value=settings.offset;$('#offOut').textContent=(settings.offset>0?'+':'')+settings.offset+' ms'}
+// the offset is kept in ms but shown in pixels, on the same scale as the timing check on this device
+function offPps(){if(settings.calPps>0)return settings.calPps;const H=Math.max(200,innerHeight-300);return(H*0.6-Math.max(20,H*0.06))/0.9}
+const msToPx=ms=>Math.round(ms/1000*offPps());
+function syncSettingsUI(){vol.value=Math.round(settings.vol*100);$('#volOut').textContent=vol.value+'%';
+  const lim=msToPx(200);off.min=-lim;off.max=lim;off.step=1;off.value=msToPx(settings.offset);const v=msToPx(settings.offset);
+  $('#offOut').textContent=(v>0?'+':v<0?'−':'')+Math.abs(v)+' px'}
 vol.oninput=()=>{settings.vol=vol.value/100;if(master)master.gain.value=settings.vol;saveSettings();syncSettingsUI()};
-off.oninput=()=>{settings.offset=+off.value;saveSettings();syncSettingsUI()};
+off.oninput=()=>{settings.offset=Math.max(-200,Math.min(200,Math.round(+off.value*1000/offPps())));saveSettings();syncSettingsUI()};
 syncSettingsUI();
 for(const id of ['#files','#folder'])$(id).onchange=e=>{const f=e.target.files;if(f&&f.length)addFiles(f);e.target.value=''};
 if(!('webkitdirectory' in document.createElement('input'))||/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))$('#folderBtn').hidden=true;
@@ -1657,7 +1734,7 @@ function resize(){const r=cv.getBoundingClientRect();dpr=Math.min(2,window.devic
   cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);cx.setTransform(dpr,0,0,dpr,0,0)}
 window.addEventListener('resize',()=>{if(!$('#play').hidden)resize()});
 
-function show(id){for(const s of ['menu','play','results','editor'])$('#'+s).hidden=s!==id}
+function show(id){for(const s of ['menu','play','results','editor','calib'])$('#'+s).hidden=s!==id}
 
 function startRun(song,ov){
   stopRun();
@@ -1694,7 +1771,8 @@ function startRun(song,ov){
   const start=ac.currentTime+D.approach+1.0;
   S={song,diff,D,notes,events,ei:0,dur,beats,dp,bi:0,start,lo:0,paused:false,over:false,
      score:0,combo:0,maxCombo:0,acc:0,c:{perfect:0,great:0,good:0,miss:0},holdOk:0,holdDrop:0,
-     holds:notes.filter(n=>n.end).length,down:[0,0,0],holding:[null,null,null],fx:[],judg:null,bus:out,src:null,timer:0,raf:0};
+     holds:notes.filter(n=>n.end).length,down:[0,0,0],holding:[null,null,null],fx:[],judg:null,bus:out,
+     accOn:!!settings.accuracy,err:{sum:0,signed:0,hits:0,miss:0,missMs:0},accFx:[],src:null,timer:0,raf:0};
   laneGaps(notes);
   S.trial=!!(ov&&edReturn);S.from=from;S.lead=lead;$('#tryStop').hidden=!S.trial;
   if(song.kind==='file'){const s=ac.createBufferSource();s.buffer=song.buffer;s.connect(out);s.start(start+lead,from,dur-lead+0.5);S.src=s}
@@ -1720,12 +1798,21 @@ function stopRun(){
 const songTime=()=>AC.currentTime-S.start-(AC.outputLatency||0)-settings.offset/1000;
 const mult=()=>S.combo<10?1:S.combo<30?2:S.combo<60?3:4;
 
-function judge(j,dt,lane){
+const ACOL={perfect:'#3ddc84',great:'#ffd23d',good:'#ff9f40',miss:'#ff4d5e'};
+// timing error of one note, in ms against the exact Perfect moment (negative = early)
+function track(lane,dt,j,cap){
+  if(!S||!S.accOn)return;const e=S.err;
+  if(dt==null){e.miss++;e.missMs+=cap*1000;e.sum+=cap*1000}
+  else{const ms=dt*1000;e.sum+=Math.min(Math.abs(ms),cap*1000);e.signed+=ms;e.hits++}
+  S.accFx=S.accFx.filter(f=>f.lane!==lane);S.accFx.push({lane,ms:dt==null?null:Math.round(dt*1000),col:ACOL[j],t0:performance.now()});
+}
+function judge(j,dt,lane,cap){
+  track(lane,dt,j,cap||WIN.good);
   S.c[j]++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.acc+=ACCW[j];S.score+=BASE[j]*mult();
   S.judg={text:j.toUpperCase(),sub:j==='perfect'?'':(dt<0?'EARLY':'LATE'),col:JCOL[j],t0:performance.now()};
   S.fx.push({lane,t0:performance.now(),col:COL[lane],big:j==='perfect'});
 }
-function miss(){S.c.miss++;S.combo=0;S.judg={text:'MISS',sub:'',col:JCOL.miss,t0:performance.now()};knockout()}
+function miss(n){if(n)track(n.lane,null,'miss',n.swipe?SWIN.good:WIN.good);S.c.miss++;S.combo=0;S.judg={text:'MISS',sub:'',col:JCOL.miss,t0:performance.now()};knockout()}
 function knockout(){   // "One miss and you're out"
   if(!settings.sudden||!S||S.over)return;
   S.failed=true;S.failAt=Math.max(0,songTime());S.judg={text:'OUT',sub:'',col:'#ff5a6a',t0:performance.now()};
@@ -1758,7 +1845,7 @@ function swipe(lane,dir){
     if(n.t>t+SWIN.good)break;
     if(n.state!==0||n.lane!==lane||!n.swipe||n.dir!==dir)continue;
     const dt=t-n.t,ad=Math.abs(dt);if(ad>SWIN.good)continue;
-    judge(ad<=SWIN.perfect?'perfect':ad<=SWIN.great?'great':'good',dt,lane);n.state=2;return true}
+    judge(ad<=SWIN.perfect?'perfect':ad<=SWIN.great?'great':'good',dt,lane,SWIN.good);n.state=2;return true}
   return false;
 }
 function release(lane){
@@ -1769,7 +1856,7 @@ function release(lane){
 }
 function update(t){
   for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t)break;
-    if(n.state===0&&t-n.t>(n.swipe?SWIN.good:WIN.good)){n.state=2;miss();if(n.end)S.holdDrop++}
+    if(n.state===0&&t-n.t>(n.swipe?SWIN.good:WIN.good)){n.state=2;miss(n);if(n.end)S.holdDrop++}
     else if(n.state===1&&t>=n.end)finishHold(n,true)}
   while(S.lo<S.notes.length&&S.notes[S.lo].state===2)S.lo++;
   const lastEnd=S.notes.length?Math.max(...S.notes.slice(-6).map(n=>n.end||n.t)):0;
@@ -1780,12 +1867,24 @@ function frame(){
   const t=S.paused?S.pt:songTime();
   if(!S.paused)update(t);
   if(!S)return;
-  draw(t);
+  draw(t);drawAcc();
   $('#hScore').textContent=S.score.toLocaleString();$('#hMult').textContent='×'+mult();
   $('#progBar').style.width=Math.max(0,Math.min(100,t/S.dur*100))+'%';
 }
 
 /* drawing */
+function drawAcc(){   // a small coloured pill under each button for the latest tap in that lane
+  const mode=settings.accShow||'color';if(!S||!S.accOn||mode==='off'||!S.geo)return;
+  const g=S.geo,now=performance.now(),x0=g.CX-1.5*g.LW,y=g.hitY+g.th/2+(settings.skin==='star'?65:77);
+  S.accFx=S.accFx.filter(f=>now-f.t0<750);
+  cx.save();cx.textAlign='center';cx.textBaseline='middle';
+  for(const f of S.accFx){const a=Math.min(1,(750-(now-f.t0))/250),xc=x0+(f.lane+0.5)*g.LW;cx.globalAlpha=a;
+    if(mode==='number'){const txt=f.ms==null?'MISS':(f.ms>0?'+':f.ms<0?'−':'')+Math.abs(f.ms);
+      cx.font='700 15px Rubik, system-ui, sans-serif';const w=Math.max(56,cx.measureText(txt).width+22);
+      rr(xc-w/2,y-13,w,26,13);cx.fillStyle=f.col;cx.fill();cx.fillStyle='#14101c';cx.fillText(txt,xc,y+1)}
+    else{const w=Math.min(90,g.LW*0.42);rr(xc-w/2,y-5,w,10,5);cx.fillStyle=f.col;cx.fill()}}
+  cx.restore();
+}
 function rr(x,y,w,h,r){r=Math.min(r,h/2,w/2);cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
 function rgba(hex,a){const n=parseInt(hex.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`}
 function drawTile(x,yc,w,h,col){
@@ -1888,7 +1987,7 @@ function funHit(n){
   const pts=Math.max(5,Math.round(40*(1-Math.min(1,(ad-WIN.good)/S.D.approach))));
   S.score+=pts*mult();S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.c.good++;S.acc+=0.15;
   if(n.end)S.holdOk++;
-  n.state=2;
+  n.state=2;track(n.lane,null,'miss',WIN.good);
   S.judg={text:'+'+pts*mult(),sub:dt<0?'EARLY':'LATE',col:'#c9bfe6',t0:performance.now()};
   S.fx.push({lane:n.lane,t0:performance.now(),col:COL[n.lane],big:false});
   return -1;   // nothing to hold
@@ -1968,7 +2067,7 @@ function finish(){
   const fc=s.c.miss===0&&s.holdDrop===0;
   const stars=s.failed?0:acc>=0.93?3:acc>=0.8?2:acc>=0.6?1:0;
   const grade=s.failed?'OUT':acc>=0.97&&fc?'S':acc>=0.9?'A':acc>=0.8?'B':acc>=0.65?'C':'D';
-  if(edReturn){setTimeout(()=>{stopRun();edBack();notice(`Try-out: ${s.score.toLocaleString()} points, ${s.c.miss} missed.`,4000)},700);return}
+  if(edReturn){setTimeout(()=>{stopRun();edBack();notice(`Try-out: ${s.score.toLocaleString()} points, ${s.c.miss} missed.`+(s.accOn&&s.err.hits+s.err.miss?` Timing error ${Math.round(s.err.sum).toLocaleString()} ms (${Math.round(s.err.sum/(s.err.hits+s.err.miss))} ms a note).`:''),5000)},700);return}
   const key=bestKey(s.song.id,s.diff),prev=store.get(key,null),isBest=!prev||s.score>prev.score;
   if(isBest)store.set(key,{score:s.score,stars:Math.max(stars,prev?prev.stars:0),acc});
   else if(stars>prev.stars)store.set(key,Object.assign(prev,{stars}));
@@ -1979,11 +2078,125 @@ function finish(){
   $('#rScore').textContent=s.score.toLocaleString();
   $('#rBest').hidden=!(isBest&&s.score>0);
   $('#tP').textContent=s.c.perfect;$('#tG').textContent=s.c.great;$('#tO').textContent=s.c.good;$('#tM').textContent=s.c.miss;
-  $('#tA').textContent=(acc*100).toFixed(1)+'%';$('#tC').textContent=s.maxCombo;$('#tH').textContent=`${s.holdOk}/${s.holds}`;
+  $('#tA').textContent=(acc*100).toFixed(1)+'%';
+  const e=s.err,done=e.hits+e.miss;$('#rAcc').hidden=!s.accOn;
+  if(s.accOn){const ms=v=>Math.round(v).toLocaleString()+' ms',lean=e.hits?e.signed/e.hits:0;
+    $('#eSum').textContent=e.sum>=10000?(e.sum/1000).toFixed(1)+' s':ms(e.sum);
+    $('#eAvg').textContent=done?ms(e.sum/done):'–';
+    $('#eLean').textContent=!e.hits?'–':Math.abs(lean)<3?'on time':`${Math.round(Math.abs(lean))} ms ${lean<0?'early':'late'}`;
+    $('#eMiss').textContent=e.miss?`${e.miss} × ≈${Math.round(e.missMs/e.miss)} = ${ms(e.missMs)}`:'none'}$('#tC').textContent=s.maxCombo;$('#tH').textContent=`${s.holdOk}/${s.holds}`;
   if(PL&&PL.idx<PL.ids.length-1){setTimeout(()=>plBetween(s,grade),s.failed?1100:700);return}
   if(PL){PL.total+=s.score;$('#rSong').textContent+=` · Playlist of ${PL.ids.length}: ${PL.total.toLocaleString()} points`;PL=null}
   setTimeout(()=>{stopRun();show('results')},s.failed?1100:700);
 }
+
+/* ---- timing check: one lane, one click on every beat ----
+   Tap by ear. A tap's error uses the same clock as the game (with the current offset); it is shown as the
+   distance, in pixels on this screen, between where the note was when you tapped and the target line. */
+let CAL=null,calBpmKeep=100;const ccv=$('#ccv'),ccx=ccv.getContext('2d');
+const CAL_A=0.9;   // seconds a note takes to fall (fast, so a few ms show as several pixels)
+function calOpen(){
+  audio();
+  CAL={bpm:calBpmKeep,bus:null,raw:[],fx:null,timer:0,raf:0,next:0,on:false,pps:offPps()};
+  show('calib');$('#calIntro').hidden=false;calResize();calUI();
+  CAL.raf=requestAnimationFrame(calFrame);
+}
+function calGo(){   // from the Start button, so iPhone allows the sound
+  const ac=audio();if(!CAL||CAL.on)return;
+  CAL.bus=ac.createGain();CAL.bus.connect(master);CAL.on=true;$('#calIntro').hidden=true;
+  calRestart();CAL.timer=setInterval(calSchedule,25);
+}
+function calRestart(){if(!CAL.on)return;CAL.period=60/CAL.bpm;CAL.start=AC.currentTime+0.6;CAL.next=0;calSchedule()}
+function calSchedule(){if(!CAL||!CAL.on)return;const h=AC.currentTime+0.2,prev=out;out=CAL.bus;
+  while(CAL.start+CAL.next*CAL.period<h){const w=CAL.start+CAL.next*CAL.period,acc=CAL.next%4===0;
+    if(w>=AC.currentTime-0.01){tone(w,acc?1760:1320,0.05,'square',acc?0.22:0.15,5000)}CAL.next++}
+  out=prev}
+const calTime=()=>AC.currentTime-CAL.start-(AC.outputLatency||0);   // the music clock without the offset
+const calPx=ms=>Math.round(ms/1000*CAL.pps);                        // ms -> pixels on this screen
+const sgnPx=v=>(v>0?'+':v<0?'−':'')+Math.abs(v)+' px';
+function calTap(){
+  if(!CAL||!CAL.on)return;const t=calTime();if(t<-CAL.period/2)return;
+  const k=Math.round(t/CAL.period),raw=(t-k*CAL.period)*1000;   // ms from the nearest beat, before the offset
+  CAL.raw.push(raw);if(CAL.raw.length>10)CAL.raw.shift();
+  const ms=raw-settings.offset,ad=Math.abs(ms)/1000;
+  const j=ad<=WIN.perfect?'perfect':ad<=WIN.great?'great':ad<=WIN.good?'good':'miss';
+  CAL.fx={ms,col:ACOL[j],t0:performance.now()};calUI();
+}
+// taps near half a beat can read as early or late; line them up around their circular mean first
+function calUnwrap(arr){const P=CAL.period*1000;if(!arr.length)return[];let x=0,y=0;
+  for(const r of arr){const a=r/P*2*Math.PI;x+=Math.cos(a);y+=Math.sin(a)}
+  const c=Math.atan2(y,x)/(2*Math.PI)*P;return arr.map(r=>{let d=r-c;d-=Math.round(d/P)*P;return c+d})}
+function calSuggest(){const r=calUnwrap(CAL.raw);if(r.length<10)return null;
+  const s=[...r].sort((a,b)=>a-b).slice(1,-1);   // drop the best and the worst tap
+  const m=s.reduce((a,b)=>a+b,0)/s.length;return Math.max(-200,Math.min(200,Math.round(m)))}
+function calUI(){if(!CAL)return;
+  const off=calPx(settings.offset);
+  $('#calBpm').textContent=CAL.bpm+' BPM';$('#calOff').textContent=sgnPx(off);
+  $('#calNote').textContent=`All results include your timing offset (${sgnPx(off)}), just like in the game.`;
+  $('#calLast').innerHTML=CAL.raw.map(r=>{const ms=r-settings.offset,ad=Math.abs(ms)/1000,
+    j=ad<=WIN.perfect?'perfect':ad<=WIN.great?'great':ad<=WIN.good?'good':'miss',v=calPx(ms);
+    return `<span style="background:${ACOL[j]}">${v>0?'+':v<0?'−':''}${Math.abs(v)}</span>`}).join('');
+  const n=CAL.raw.length,sug=calSuggest(),st=$('#calStat'),use=$('#calUse'),rec=$('#calRec');
+  const setUse=(ms,on)=>{use.textContent=`Use ${sgnPx(calPx(ms))}`;use.dataset.v=ms;use.disabled=!on};
+  if(n<10){rec.innerHTML=`<span>Recommended change:</span> NA`;setUse(settings.offset,false);
+    st.innerHTML=`Tap by ear on every click. <b>${n}/10</b> taps so far.`;return}
+  const dpx=calPx(sug)-off,delta=Math.abs(dpx)<2?0:dpx;
+  rec.innerHTML=`<span>Recommended change:</span> ${sgnPx(delta)}`;
+  const now=calUnwrap(CAL.raw).map(r=>r-settings.offset),avg=calPx(now.reduce((a,b)=>a+b,0)/n);
+  const lean=Math.abs(avg)<2?'on the target line':`${Math.abs(avg)} px ${avg<0?'above':'below'} the target line on average`;
+  if(!delta){st.innerHTML=`Last 10 taps: <b>${lean}</b>. Your offset looks right.`;setUse(settings.offset,false)}
+  else{st.innerHTML=`Last 10 taps: <b>${lean}</b>.`;setUse(sug,true)}
+}
+function calSetOffset(v){settings.offset=Math.max(-200,Math.min(200,Math.round(v)));saveSettings();syncSettingsUI();CAL.fx=null;calUI()}
+function calClose(){if(!CAL)return;clearInterval(CAL.timer);cancelAnimationFrame(CAL.raf);
+  const bus=CAL.bus;if(bus){try{bus.gain.setValueAtTime(bus.gain.value,AC.currentTime);bus.gain.linearRampToValueAtTime(0,AC.currentTime+0.05)}catch(e){}
+  setTimeout(()=>{try{bus.disconnect()}catch(e){}},120)}
+  calBpmKeep=CAL.bpm;CAL=null;syncSettingsUI();renderMenu();show('menu')}
+function calResize(){const r=ccv.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);
+  ccv.width=Math.round(r.width*d);ccv.height=Math.round(r.height*d);ccx.setTransform(d,0,0,d,0,0)}
+function dashLine(c,x1,x2,y,col,w){c.save();c.setLineDash([7,6]);c.lineWidth=w||1.5;c.strokeStyle=col;c.beginPath();c.moveTo(x1,Math.round(y)+0.5);c.lineTo(x2,Math.round(y)+0.5);c.stroke();c.restore()}
+function calFrame(){if(!CAL)return;CAL.raf=requestAnimationFrame(calFrame);
+  const c=ccx,W=ccv.clientWidth,H=ccv.clientHeight;if(!W||!H)return;
+  {const d=Math.min(2,window.devicePixelRatio||1);if(ccv.width!==Math.round(W*d)||ccv.height!==Math.round(H*d))calResize()}   // the panel below may change size
+  const A=CAL_A,LW=Math.min(240,W*0.6),x=(W-LW)/2,hitY=H*0.6,topY=Math.max(20,H*0.06),th=Math.min(64,LW*0.32,H*0.12);
+  const pps=(hitY-topY)/A;if(Math.abs(pps-CAL.pps)>0.5){CAL.pps=pps;if(Math.abs((settings.calPps||0)-pps)>0.5){settings.calPps=pps;saveSettings()}calUI()}
+  c.fillStyle='#07050d';c.fillRect(0,0,W,H);
+  c.fillStyle='#120d20';c.fillRect(x,0,LW,H);
+  // target slot, with its dashed centre line
+  rr2(c,x+8,hitY-th/2-6,LW-16,th+12,16);c.fillStyle='rgba(255,194,61,0.06)';c.fill();c.lineWidth=3;c.strokeStyle='rgba(255,194,61,0.6)';c.stroke();
+  dashLine(c,x-14,x+LW+14,hitY,'rgba(255,255,255,0.85)',1.5);
+  if(!CAL.on)return;
+  const t=calTime()-settings.offset/1000,P=CAL.period,yOf=tt=>hitY-(tt-t)/A*(hitY-topY);
+  // falling notes, one per beat, each with a dashed line through its middle
+  for(let k=Math.max(0,Math.floor((t-0.15)/P));k*P<t+A+0.2;k++){const y=yOf(k*P),past=t-k*P;if(past>0.12)continue;
+    c.globalAlpha=Math.max(0,Math.min(1,(y-topY+th)/(th*1.5)))*(past>0?1-past/0.12:1);
+    rr2(c,x+14,y-th/2,LW-28,th,14);c.fillStyle=k%4===0?'rgba(255,194,61,0.8)':'rgba(255,159,64,0.8)';c.fill();
+    dashLine(c,x+4,x+LW-4,y,'#14101c',1.5);c.globalAlpha=1}
+  // the last tap: where the note's line was, and how far that is from the target line
+  const f=CAL.fx;if(f){const age=performance.now()-f.t0;if(age<2200){c.globalAlpha=Math.min(1,(2200-age)/500);
+    const px=calPx(f.ms),y=hitY+f.ms/1000*pps;
+    dashLine(c,x-24,x+LW+24,y,f.col,2.5);
+    if(Math.abs(y-hitY)>3){c.strokeStyle=f.col;c.lineWidth=2;c.beginPath();c.moveTo(x+LW+18,hitY);c.lineTo(x+LW+18,y);c.stroke()}
+    const txt=sgnPx(px);c.font='700 20px Rubik, system-ui, sans-serif';
+    const w=Math.max(90,c.measureText(txt).width+28),ty=Math.max(hitY,y)+th/2+34;rr2(c,W/2-w/2,ty-17,w,34,17);c.fillStyle=f.col;c.fill();
+    c.fillStyle='#14101c';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,W/2,ty+1);
+    c.font='700 12px Rubik, system-ui, sans-serif';c.fillStyle='rgba(244,239,252,0.7)';c.fillText(px<-1?'ABOVE THE LINE (EARLY)':px>1?'BELOW THE LINE (LATE)':'ON THE LINE',W/2,ty+28);c.globalAlpha=1}}
+}
+function rr2(c,x,y,w,h,r){r=Math.min(r,h/2,w/2);c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+$('#calOpen').onclick=calOpen;
+$('#calGo').onclick=calGo;
+$('#calDone').onclick=calClose;
+ccv.addEventListener('pointerdown',e=>{e.preventDefault();calTap()});
+$('#calBpmM').onclick=()=>{CAL.bpm=Math.max(60,CAL.bpm-10);calRestart();calUI()};
+$('#calBpmP').onclick=()=>{CAL.bpm=Math.min(180,CAL.bpm+10);calRestart();calUI()};
+$('#calOffM').onclick=()=>calSetOffset(settings.offset-1000/CAL.pps);
+$('#calOffP').onclick=()=>calSetOffset(settings.offset+1000/CAL.pps);
+$('#calUse').onclick=e=>calSetOffset(+e.currentTarget.dataset.v);
+window.addEventListener('resize',()=>{if(CAL)calResize()});
+document.addEventListener('keydown',e=>{if(!CAL||$('#calib').hidden)return;
+  if(e.code==='Escape'){calClose();return}
+  if(!CAL.on&&(e.code==='Enter'||e.code==='Space')){e.preventDefault();calGo();return}
+  if(e.code in KEYS||e.code==='Space'){e.preventDefault();if(!e.repeat)calTap()}});
 
 /* pause */
 function pause(){if(!S||S.paused||S.over)return;S.pt=songTime();S.paused=true;AC.suspend();$('#pauseOv').hidden=false}
@@ -2037,6 +2250,8 @@ function renderKeys(){
   $('#editBanner').hidden=settings.app!=='edit';
   $('#keysBox').hidden=settings.mode!=='keys';$('#funHint').hidden=settings.mode!=='fun';
   $('#suddenOpt').checked=!!settings.sudden;
+  $('#accOpt').checked=!!settings.accuracy;$('#accShowBox').hidden=!settings.accuracy;
+  document.querySelectorAll('#accShow button').forEach(b=>b.setAttribute('aria-checked',b.dataset.v===(settings.accShow||'color')));
   const so=$('#swipeOpt');so.disabled=settings.mode==='keys';so.checked=!!settings.swipes&&settings.mode!=='keys';
   $('#swipeHint').textContent=settings.mode==='keys'?'Swipe notes need a touch screen. Switch "Play with" to Touch screen or Fun to turn them on.':
     "Some notes become arrows. Swipe your finger in the arrow's direction (up, down, left or right) as the note reaches its slot. For iPhone and iPad; not available with the keyboard.";
@@ -2049,6 +2264,8 @@ document.querySelectorAll('#skin button').forEach(b=>b.onclick=()=>{settings.ski
 document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{settings.mode=b.dataset.m;waitKey=-1;saveSettings();renderKeys()});
 document.querySelectorAll('.keybtn').forEach(b=>b.onclick=()=>{waitKey=waitKey===+b.dataset.k?-1:+b.dataset.k;renderKeys()});
 $('#suddenOpt').onchange=e=>{settings.sudden=e.target.checked;saveSettings()};
+$('#accOpt').onchange=e=>{settings.accuracy=e.target.checked;saveSettings();renderKeys()};
+document.querySelectorAll('#accShow button').forEach(b=>b.onclick=()=>{settings.accShow=b.dataset.v;saveSettings();renderKeys()});
 $('#swipeOpt').onchange=e=>{settings.swipes=e.target.checked;saveSettings()};
 $('#keysReset').onclick=()=>{settings.keys=DEFAULT_KEYS.map(k=>({...k}));waitKey=-1;syncKeys();saveSettings();renderKeys()};
 document.addEventListener('keydown',e=>{

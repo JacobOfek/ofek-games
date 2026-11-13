@@ -61,6 +61,11 @@
   sysQ && (sysQ.addEventListener ? sysQ.addEventListener('change', apply) : sysQ.addListener(apply));
   addEventListener('storage', ev => { if (ev.key === K) apply(); });   // another tab switched
 
+  function floatNextToHome(fl) {   // the switch floats next to the floating home button, same corner
+    const cs = getComputedStyle(fl), r = fl.getBoundingClientRect(), right = r.left > innerWidth / 2;
+    btn.style.cssText = `position:${cs.position};z-index:${cs.zIndex};top:${cs.top};bottom:${cs.bottom};` +
+      (right ? `right:${innerWidth - r.left + 8}px` : `left:${r.right + 8}px`);
+  }
   function place() {
     btn = document.createElement('button'); btn.id = 'ofkTheme'; btn.type = 'button';
     ['pointerdown', 'touchstart', 'mousedown'].forEach(t => btn.addEventListener(t, e => e.stopPropagation(), { passive: true }));
@@ -68,14 +73,87 @@
     const slot = document.querySelector('[data-theme-slot]'), bar = document.getElementById('homeBtn'), fl = document.getElementById('siteHome');
     if (slot) { btn.classList.add('slot'); slot.appendChild(btn); }
     else if (bar) { btn.className = bar.className; btn.classList.add('inbar'); bar.after(btn); }
-    else if (fl) {   // next to the floating home button, same corner
-      const cs = getComputedStyle(fl), r = fl.getBoundingClientRect(), right = r.left > innerWidth / 2;
-      btn.style.cssText = `position:${cs.position};z-index:${cs.zIndex};top:${cs.top};bottom:${cs.bottom};` +
-        (right ? `right:${innerWidth - r.left + 8}px` : `left:${r.right + 8}px`);
-      fl.after(btn);
-    } else { btn.style.cssText = 'position:fixed;z-index:2147482000;top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px)'; document.body.appendChild(btn); }
+    else if (fl) { fl.after(btn); floatNextToHome(fl); }
+    else { btn.style.cssText = 'position:fixed;z-index:2147482000;top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px)'; document.body.appendChild(btn); }
     apply();
+    layout();
+  }
+
+  /* ---------- top bars: a fixed place for every button and indicator ----------
+     data-dock="selector|selector": the home and light/dark buttons sit inside the first of these that is on screen
+       (a game's own top bar), instead of floating over it; when none is on screen they float in their corner.
+     data-bars='[{"bar":"header","shrink":".stat","within":"header"}]': in each bar the indicators (shrink) are kept together; when the
+       bar runs out of room their font gets smaller step by step (down to 70%), and if that is still not enough they move
+       to a second row of the bar, so buttons are never pushed off the screen or covered. Runs again on every change. */
+  const dockSel = cfg.dock ? cfg.dock.split('|') : [];
+  let bars = []; try { bars = cfg.bars ? JSON.parse(cfg.bars) : []; } catch (e) {}
+  const lay = document.createElement('style');
+  lay.textContent =
+    '.ofk-docked{position:static!important;z-index:auto!important;flex:none!important;width:36px!important;height:36px!important;margin:0!important;' +
+    'opacity:1!important;background:transparent!important;color:inherit!important;border:1px solid currentColor!important;' +
+    'border-color:color-mix(in srgb,currentColor 35%,transparent)!important;border-radius:10px!important;' +
+    '-webkit-backdrop-filter:none!important;backdrop-filter:none!important;display:grid!important;place-items:center;padding:0!important}' +
+    '.ofk-grp{display:flex;align-items:center;gap:inherit;min-width:0;flex:0 1 auto}' +
+    '.ofk-wrap{flex-wrap:wrap!important;row-gap:2px!important}' +
+    '.ofk-wrap>.ofk-grp{order:9;flex:1 0 100%;justify-content:space-around}';
+  (document.head || document.documentElement).appendChild(lay);
+  const shown = e => !!(e && e.isConnected && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden');
+
+  function dock() {
+    const home = document.getElementById('siteHome');
+    if (!dockSel.length || !home || !btn) return;
+    const t = dockSel.map(s => document.querySelector(s)).find(shown);
+    if (t) {
+      if (home.parentNode !== t || btn.parentNode !== t) { t.append(home, btn); }
+      home.classList.add('ofk-docked'); btn.classList.add('ofk-docked'); btn.style.cssText = '';
+    } else if (home.classList.contains('ofk-docked') || !home.isConnected) {
+      home.classList.remove('ofk-docked'); btn.classList.remove('ofk-docked');
+      document.body.append(home, btn); floatNextToHome(home);
+    }
+  }
+  function overflows(bar, grp, wrap) {
+    if (bar.scrollWidth > bar.clientWidth + 1) return true;
+    // a bar that grows with its content (a row of buttons) is measured against the box it must fit in (within)
+    const B = (wrap || bar).getBoundingClientRect(), out = e => { const r = e.getBoundingClientRect(); return r.width && (r.left < B.left - 1 || r.right > B.right + 1); };
+    if ([...bar.querySelectorAll('button')].some(out)) return true;
+    if (!grp) return false;
+    // indicators must stay inside their own group (and so never run under the buttons)
+    const G = grp.getBoundingClientRect();
+    return [...grp.children].some(e => { const r = e.getBoundingClientRect(); return r.width && (out(e) || r.left < G.left - 1 || r.right > G.right + 1); });
+  }
+  function fitBar(c) {
+    const bar = document.querySelector(c.bar);
+    if (!shown(bar)) return;
+    let grp = bar.querySelector(':scope>.ofk-grp');
+    if (!grp && c.shrink) {
+      const items = [...bar.children].filter(e => e.matches(c.shrink));
+      if (items.length) { grp = document.createElement('div'); grp.className = 'ofk-grp'; items[0].before(grp); items.forEach(i => grp.appendChild(i)); }
+    }
+    if (!grp) return;
+    const W = c.within ? bar.closest(c.within) : null, over = () => overflows(bar, grp, W);
+    const z = k => { grp.style.zoom = k === 1 ? '' : String(k); };
+    bar.classList.remove('ofk-wrap'); z(1);
+    if (!over()) return;
+    for (let k = 0.95; k >= 0.699; k -= 0.05) { z(k); if (!over()) return; }
+    bar.classList.add('ofk-wrap'); z(1);   // still too wide: indicators get a row of their own
+    for (let k = 0.95; k >= 0.599 && over(); k -= 0.05) z(k);
+  }
+  let last = 0, timer = 0;
+  function layout() {
+    try { dock(); bars.forEach(fitBar); } catch (e) {}
+    last = Date.now();
+  }
+  function soon() {   // at most a few times a second, so a score that changes every frame costs nothing
+    if (timer) return;   // (our own changes settle after one extra pass, so nothing loops)
+    timer = setTimeout(() => { timer = 0; layout(); }, Math.max(0, 200 - (Date.now() - last)));
+  }
+  if (dockSel.length || bars.length) {
+    addEventListener('resize', () => { clearTimeout(timer); timer = 0; layout(); });
+    addEventListener('orientationchange', () => setTimeout(layout, 300));
+    const startObs = () => new MutationObserver(soon).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    document.body ? startObs() : addEventListener('DOMContentLoaded', startObs);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);   // web fonts change text widths
   }
   document.readyState === 'loading' ? addEventListener('DOMContentLoaded', place) : place();
-  window.OFEK_THEME = { mode, toggle };
+  window.OFEK_THEME = { mode, toggle, layout };
 })();
