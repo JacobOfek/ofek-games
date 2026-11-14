@@ -91,6 +91,8 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,64px);li
 .erow>*{flex:none}
 .erow .btn{min-height:40px;padding:8px 12px;font-size:14px}
 .erow .btn:disabled,.etop .btn:disabled{opacity:.45}
+.spdmove{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.spdmove .btn{padding:10px 4px;font-size:14px}
 .spdgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .spdgrid .btn{padding:10px 4px}
 .spdgrid .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -512,6 +514,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <h2>Speed edit</h2>
         <p id="eSpdWhat" class="hint" style="margin:0;text-align:center"></p>
         <div class="spdgrid" id="eSpdList"></div>
+        <div id="eSpdMove" class="spdmove" hidden><button id="eSpdBack" class="btn">Move 1 s earlier</button><button id="eSpdFwd" class="btn">Move 1 s later</button></div>
         <button id="eSpdDel" class="btn" hidden>Remove this speed point</button>
         <button id="eSpdClose" class="linkbtn">Cancel</button>
       </div>
@@ -1731,7 +1734,11 @@ function openSpd(at){spdAt=at;
   const cur=near?near.k:([...E.sp].sort((a,b)=>a.t-b.t).filter(p=>p.t<spdAt).pop()||{k:1}).k;
   $('#eSpdWhat').textContent=near?`Speed point at ${fmtTime(spdAt)}. Change it or remove it. To move it, drag its blue line.`:`From ${fmtTime(spdAt)} on, the background moves at:`;
   $('#eSpdList').innerHTML=SPEEDS.map(k=>`<button class="btn" data-k="${k}" aria-pressed="${k===cur}">×${k}</button>`).join('');
-  $('#eSpdDel').hidden=!near;$('#eSpdOv').hidden=false}
+  $('#eSpdDel').hidden=!near;$('#eSpdMove').hidden=!near;$('#eSpdOv').hidden=false}
+function moveSpd(d){const pt=E.sp.find(p=>Math.abs(p.t-spdAt)<0.3);if(!pt)return;
+  pt.t=+Math.max(-E.lead,Math.min(E.dur,pt.t+d)).toFixed(3);
+  E.sp=E.sp.filter(p=>p===pt||Math.abs(p.t-pt.t)>=0.05).sort((a,b)=>a.t-b.t);E.dirty=true;openSpd(pt.t);edUI()}
+on('eSpdBack',()=>moveSpd(-1));on('eSpdFwd',()=>moveSpd(1));
 $('#eSpdList').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;
   E.sp=E.sp.filter(p=>Math.abs(p.t-spdAt)>=0.3);E.sp.push({t:spdAt,k:+b.dataset.k});E.sp.sort((a,b)=>a.t-b.t);
   E.dirty=true;$('#eSpdOv').hidden=true;edUI()});
