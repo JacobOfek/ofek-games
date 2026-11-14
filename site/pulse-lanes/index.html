@@ -1451,7 +1451,7 @@ function nextName(s){let k=1;for(const c of myCharts(s)){const m=/^Chart (\d+)$/
 function edBegin(kind,cid){
   const saved=cid?chartById(E.song,cid):null;
   if(saved){E.notes=saved.notes.map(cp);E.a=saved.a??null;E.b=saved.b??null;E.lead=saved.lead||0;E.off=saved.off||0;E.sp=(saved.sp||[]).map(p=>({t:p.t,k:p.k}));E.cid=saved.id;E.name=saved.name;E.dirty=false}
-  else{E.notes=kind==='song'?E.orig.map(cp):[];E.off=settings.offset;E.cid=null;E.name=nextName(E.song);E.dirty=true}
+  else{E.notes=kind==='song'?E.orig.map(cp):[];E.off=0;E.cid=null;E.name=nextName(E.song);E.dirty=true}
   $('#eName').value=E.name;
   E.pos=E.a!=null?E.a:-E.lead;$('#eStart').hidden=true;edUI();
 }
@@ -1569,7 +1569,7 @@ function edUI(){if(!E)return;
   $('#eSnap').textContent='Snap '+({4:'1/16',2:'1/8',1:'1/4',0:'off'}[E.snap]);
   document.querySelectorAll('.ediff button').forEach(b=>b.setAttribute('aria-pressed',Math.abs(DIFFS[b.dataset.ed].approach-E.view)<1e-6));
   $('#eClick').setAttribute('aria-pressed',E.click);$('#eSelMode').setAttribute('aria-pressed',E.selMode);
-  $('#eInfo').textContent=`${E.name||'New chart'} · ${E.notes.length} notes${E.a!=null||E.b!=null?` · section ${fmtLen(E.a||0)}–${fmtLen(E.b??E.dur)}`:''}${E.lead?` · ${E.lead} s silence first`:''}${E.sp.length?` · ${E.sp.length} speed point${E.sp.length>1?'s':''}`:''}${E.off?` · built at offset ${E.off>0?'+':'−'}${Math.abs(msToPx(E.off))} px`:''}${E.dirty?' · not saved':''}`;
+  $('#eInfo').textContent=`${E.name||'New chart'} · ${E.notes.length} notes${E.a!=null||E.b!=null?` · section ${fmtLen(E.a||0)}–${fmtLen(E.b??E.dur)}`:''}${E.lead?` · ${E.lead} s silence first`:''}${E.sp.length?` · ${E.sp.length} speed point${E.sp.length>1?'s':''}`:''}${E.off?` · older chart, built at offset ${E.off>0?'+':'−'}${Math.abs(msToPx(E.off))} px`:''}${E.dirty?' · not saved':''}`;
   $('#eSave').disabled=!E.dirty;$('#eUndo').disabled=!E.undo.length;$('#ePaste').hidden=!E.clip;
   const n=E.sels.size;$('#eSelTools').hidden=!n&&!E.range;
   $('#eSelCount').textContent=E.range?`${fmtTime(E.range.a)}–${fmtTime(E.range.b)}: ${n} notes`:`${n} selected`;
@@ -1582,7 +1582,7 @@ function edUI(){if(!E)return;
 /* drawing */
 function edLoop(){if(!E||$('#editor').hidden)return;edDraw();requestAnimationFrame(edLoop)}
 function edDraw(){
-  const W=ecw,H=ech,t=edNow(),c=ex,star=settings.skin==='star',TH=songColor(E.song);
+  const W=ecw,H=ech,t=edNow()-(E.playing?(settings.offset-(E.off||0))/1000:0),c=ex,star=settings.skin==='star',TH=songColor(E.song);
   const top=$('.etop').offsetHeight+8,bottom=$('#ebar').offsetHeight;
   const hitY=Math.min(star?H-Math.max(170,H*0.27):H-Math.max(160,H*0.26),H-bottom-34),edD=edDiffOn(),pps=edD?gamePps(H,star,DIFFS[edD].approach):Math.max(30,(hitY-top)/E.view);
   const LW=Math.min((W-80)/3,star?260:280),x0=W/2-1.5*LW+18,gap=star?8:0;
@@ -1659,9 +1659,10 @@ function edHit(x,y){const g=E.geo,t=E.pos;let best=null,bd=1e9;
     const ny=g.hitY-(n.t-t)*g.pps,ye=n.end?g.hitY-(n.end-t)*g.pps:ny;
     const d=y>=ye-4&&y<=ny?0:Math.abs(y-ny);if(d<=g.th/2+10&&d<bd){bd=d;best=n}}
   return best}
-function edRecDown(lane,key){const t=snapT(edNow()),n=edAdd(t,lane);if(n)E.rec[key]={n,start:edNow()}}
+const edTapT=()=>edNow()-(settings.offset-(E.off||0))/1000;   // where a tap belongs in the chart
+function edRecDown(lane,key){const t=snapT(edTapT()),n=edAdd(t,lane);if(n)E.rec[key]={n,start:edNow()}}
 function edRecUp(key){const r=E.rec[key];if(!r)return;delete E.rec[key];
-  const now=edNow();if(now-r.start>=0.3){const end=snapT(now);if(end-r.n.t>=0.2){r.n.end=end;E.dirty=true;edUI()}}}
+  const now=edNow();if(now-r.start>=0.3){const end=snapT(edTapT());if(end-r.n.t>=0.2){r.n.end=end;E.dirty=true;edUI()}}}
 ecv.addEventListener('pointerdown',e=>{e.preventDefault();if(!E||!$('#eStart').hidden)return;audio();
   const r=ecv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,g=E.geo;if(!g)return;
   const inL=x>=g.x0&&x<=g.x0+3*g.LW,lane=Math.max(0,Math.min(2,Math.floor((x-g.x0)/g.LW)));
