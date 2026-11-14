@@ -195,8 +195,13 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .tally dd{margin:6px 0 0;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
 .tally .wide{grid-column:span 2}
 #mode{grid-template-columns:1fr 1fr 1fr}
-#diff{grid-template-columns:repeat(4,1fr)}
-#diff button[data-d=extreme][aria-checked=true]{background:var(--coral);color:#1a0705}
+.songs{gap:18px}
+.songrow{row-gap:4px}
+.sdiff{flex-basis:100%;order:5;display:grid;grid-template-columns:repeat(4,1fr);gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px}
+.sdiff button{border:0;background:transparent;border-radius:9px;padding:7px 2px;font-weight:700;font-size:13px;color:var(--muted)}
+.sdiff button[aria-checked="true"]{background:var(--ink);color:var(--bg)}
+.sdiff button[data-sd=extreme][aria-checked=true]{background:var(--coral);color:#1a0705}
+.songrow .stylerow{order:6}
 .skins{grid-template-columns:1fr 1fr}
 .notice{position:sticky;top:max(8px,env(safe-area-inset-top,0px));z-index:5;margin:0;background:var(--amber);color:#1a1205;font-weight:500;border-radius:14px;padding:12px 16px;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .styles{grid-template-columns:1fr 1fr}
@@ -256,16 +261,6 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <h1>Pulse<br>Lanes</h1>
         <p>Notes fall down three lanes. Tap each one as it crosses the line. Tap right when the note sits in its slot for the most points, and keep your finger down on the long ones. Play the built-in tracks, or add your own songs under My songs.</p>
       </header>
-
-      <div>
-        <p class="label" style="margin-bottom:8px">Difficulty</p>
-        <div class="diff" role="radiogroup" aria-label="Difficulty" id="diff">
-          <button role="radio" data-d="easy">Easy</button>
-          <button role="radio" data-d="normal">Normal</button>
-          <button role="radio" data-d="hard">Hard</button>
-          <button role="radio" data-d="extreme">Extreme</button>
-        </div>
-      </div>
 
       <section id="plBox" class="plbox" aria-label="Playlist">
         <div class="plhead"><p class="label" style="margin:0">Playlist</p><span id="plCount" class="count"></span></div>
@@ -1085,6 +1080,7 @@ function chartFromAnalysis(an,diff,style='voice'){
 
 /* ================= MENU ================= */
 const bestKey=(id,d)=>`pl:best:${id}:${d}`;
+const songDiff=s=>{const d=settings.songDiff&&settings.songDiff[s.id];return DIFFS[d]?d:'normal'};
 const starsHTML=n=>'<b>'+'★'.repeat(n)+'</b>'+'★'.repeat(3-n);
 const fmtLen=s=>`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1272,11 +1268,11 @@ async function removeSong(id){
 /* ---- rendering ---- */
 function songCard(s){
   const li=document.createElement('li');li.className='songrow';
-  const best=s.status==='ready'||s.kind==='synth'?store.get(bestKey(s.id,settings.diff),null):null;
+  const best=s.status==='ready'||s.kind==='synth'?store.get(bestKey(s.id,songDiff(s)),null):null;
   const len=s.kind==='synth'?generate(s).dur:s.dur;
   let sub;
   if(s.kind==='synth')sub=`${s.feel} · ${fmtLen(len)}`+(useMine(s)?` · ${pickedChart(s).name} (${pickedChart(s).notes.length} notes)`:'');
-  else if(s.status==='ready')sub=`${fmtLen(len)} · `+(useMine(s)?`${pickedChart(s).name} (${pickedChart(s).notes.length} notes)`:`${s.charts[styleOf(s)][settings.diff].length} notes`)+
+  else if(s.status==='ready')sub=`${fmtLen(len)} · `+(useMine(s)?`${pickedChart(s).name} (${pickedChart(s).notes.length} notes)`:`${s.charts[styleOf(s)][songDiff(s)].length} notes`)+
     (s.cloud?' · In your account':s.syncing?' · Saving to your account…':s.cloudErr?' · '+s.cloudErr:cloud.on&&cloud.assets?' · Waiting to save to your account':'');
   else if(s.status==='busy')sub=`Finding the beat and the singing… ${Math.round((s.progress||0)*100)}%`;
   else if(s.status==='queued')sub='Waiting to be analysed';
@@ -1293,6 +1289,11 @@ function songCard(s){
   if(ready){const inPl=settings.playlist.includes(s.id),b=document.createElement('button');b.className='addpl';
     b.setAttribute('aria-pressed',inPl);b.setAttribute('aria-label',(inPl?'Remove from playlist: ':'Add to playlist: ')+s.name);
     b.textContent=inPl?'✓':'+';b.onclick=()=>plToggle(s.id);li.appendChild(b)}
+  if(ready){const dr=document.createElement('div');dr.className='sdiff';dr.setAttribute('role','radiogroup');dr.setAttribute('aria-label','Difficulty for '+s.name);
+    const cur=songDiff(s);
+    dr.innerHTML=Object.entries(DIFFS).map(([k,v])=>`<button role="radio" data-sd="${k}" aria-checked="${k===cur}">${v.label}</button>`).join('');
+    dr.onclick=e=>{const b=e.target.closest('[data-sd]');if(!b)return;settings.songDiff=Object.assign({},settings.songDiff,{[s.id]:b.dataset.sd});saveSettings();renderMenu()};
+    li.appendChild(dr)}
   if(s.kind==='file'){const x=document.createElement('button');x.className='rm';x.setAttribute('aria-label','Remove '+s.name);x.textContent='×';
     x.disabled=s.status==='busy';x.onclick=()=>removeSong(s.id);li.appendChild(x);
     if(s.status==='ready'){   // this song's own note style
@@ -1361,7 +1362,6 @@ function plNext(){clearInterval(nxTimer);$('#nextOv').hidden=true;if(!PL)return;
 function plStop(){clearInterval(nxTimer);$('#nextOv').hidden=true;PL=null;stopRun();show('results')}
 function renderMenu(){
   renderPlaylist();
-  document.querySelectorAll('#diff button').forEach(b=>b.setAttribute('aria-checked',b.dataset.d===settings.diff));
   const ul=$('#songs');ul.innerHTML='';SONGS.forEach(s=>ul.appendChild(songCard(s)));
   renderMine();
   const tab=['mine','settings'].includes(settings.tab)?settings.tab:'built';
@@ -1370,7 +1370,6 @@ function renderMenu(){
 }
 const setStatus=t=>{$('#ustatus').textContent=t};
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{settings.tab=b.dataset.tab;saveSettings();renderMenu()});
-document.querySelectorAll('#diff button').forEach(b=>b.onclick=()=>{settings.diff=b.dataset.d;saveSettings();renderMenu()});
 const vol=$('#vol'),off=$('#off');
 // the offset is kept in ms but shown in pixels, on the same scale as the timing check on this device
 function offPps(){if(settings.calPps>0)return settings.calPps;const H=Math.max(200,innerHeight-300);return(H*0.6-Math.max(20,H*0.06))/0.9}
@@ -1453,8 +1452,8 @@ async function openEditor(song){
     $('#notice').hidden=true;
   }catch(e){notice('This song could not be opened for editing.');return}
   let beats,dp=0,orig,g=null;
-  if(song.kind==='synth'){g=generate(song);beats=[];for(let k=0;k*g.beat<g.dur;k++)beats.push(k*g.beat);orig=chartFromLead(g,settings.diff,song.seed*7+settings.diff.length)}
-  else{beats=song.beats;dp=song.dp;orig=song.charts[styleOf(song)][settings.diff]}
+  if(song.kind==='synth'){g=generate(song);beats=[];for(let k=0;k*g.beat<g.dur;k++)beats.push(k*g.beat);orig=chartFromLead(g,songDiff(song),song.seed*7+songDiff(song).length)}
+  else{beats=song.beats;dp=song.dp;orig=song.charts[styleOf(song)][songDiff(song)]}
   E={song,buf,g,dur:buf?buf.duration:g.dur,beats,dp,orig:orig.map(cp),peaks:buf?peaksOf(buf):eventPeaks(g),
      notes:[],sels:new Set(),range:null,clip:E&&E.clip||null,undo:[],playing:false,pos:0,speed:1,snap:4,view:settings.edDiff&&DIFFS[settings.edDiff]?DIFFS[settings.edDiff].approach:3,click:false,selMode:false,
      dirty:false,src:null,rec:{},a:null,b:null,cid:null,name:'',lead:0,off:0,sp:[]};
@@ -1545,7 +1544,7 @@ function edTrim(which){edSnapshot();const t=snapT(E.playing?edNow():E.pos);
 function fillSources(){const s=E.song;if(s.kind==='synth')return [['composed','Composed notes']];
   return Object.entries(STYLES).map(([k,v])=>[k,v])}
 function edFill(src){const sp=selSpan()||{a:0,b:E.dur};
-  const from=src==='composed'?E.orig:E.song.charts[src][settings.diff];
+  const from=src==='composed'?E.orig:E.song.charts[src][songDiff(E.song)];
   edSnapshot();E.notes=E.notes.filter(n=>n.t<sp.a-0.001||n.t>sp.b+0.001);E.sels.clear();
   for(const n of from){if(n.t<sp.a-0.001||n.t>sp.b+0.001)continue;const c=cp(n);if(c.end)c.end=Math.min(c.end,sp.b);E.notes.push(c);E.sels.add(c)}
   edDone();notice(`Filled ${fmtLen(sp.a)}–${fmtLen(sp.b)} with ${E.sels.size} notes.`,3000)}
@@ -1859,7 +1858,7 @@ function show(id){for(const s of ['menu','play','results','editor','calib'])$('#
 function startRun(song,ov){
   stopRun();
   const ac=audio();lastSong=song;
-  const diff=ov&&ov.diff&&DIFFS[ov.diff]?ov.diff:settings.diff,D=DIFFS[diff];
+  const diff=ov&&ov.diff&&DIFFS[ov.diff]?ov.diff:songDiff(song),D=DIFFS[diff];
   let notes,events=[],dur,beats,dp=0,from=0,lead=0;
   if(song.kind==='synth'){const g=generate(song);notes=chartFromLead(g,diff,song.seed*7+diff.length);events=g.events;dur=g.dur;
     beats=[];for(let k=0;k*g.beat<dur;k++)beats.push(k*g.beat)}

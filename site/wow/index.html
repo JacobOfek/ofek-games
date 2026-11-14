@@ -1904,6 +1904,8 @@ const rollDice=expr=>rollD(expr).t;
 function dRange(expr,extra){let lo=0,hi=0;String(expr).replace(/(\d+)d(\d+)/g,(m,n,d)=>{lo+=+n;hi+=+n*+d;return "";});const p=String(expr).replace(/\d+d\d+/g,"").match(/[+-]\s*\d+/g);let f=extra||0;if(p)p.forEach(x=>f+=parseInt(x.replace(/\s/g,"")));return `<span dir="ltr">${lo+f}–${hi+f}</span>`;}
 const diceOnly=expr=>(String(expr).match(/\d+d\d+/)||["1d4"])[0];
 const dieHtml=(rs,keep)=>`<span class="dice">${rs.map((r,i)=>`<i class="d20 ${r===20?"crit":r===1?"fumble":""} ${keep!=null&&rs.length>1&&i!==keep?"drop":""}">${r}</i>`).join("")}</span>`;
+/* joins dice rolls and keeps the number of sides of every die (the dice tray draws the shape and the d# label from it) */
+const catParts=(...a)=>{const p=[].concat(...a.map(x=>Array.from(x)));p.s=[].concat(...a.map(x=>x.s||Array(x.length).fill(6)));return p;};
 const dmgHtml=parts=>`<span class="dice dmg">${parts.map((r,i)=>`<i${parts.s&&parts.s[i]?` data-s="${parts.s[i]}"`:""}>${r}</i>`).join("")}</span>`;
 function pct(need,mode){const n=Math.min(20,Math.max(2,need));let p=(21-n)/20;if(mode==="adv")p=1-(1-p)**2;else if(mode==="dis")p=p*p;return Math.round(p*100);}
 function d20(mode){const a=rd(20);if(!mode)return {r:a,rs:[a],keep:0};const b=rd(20),r=mode==="adv"?Math.max(a,b):Math.min(a,b);return {r,rs:[a,b],keep:[a,b].indexOf(r)};}
@@ -2395,8 +2397,8 @@ function attackEnemy(idx,ab){
     phInfo(N,lines.join("")+`<p>${esc(e.name)} הפך לכבשה. נקודות החיים נשמרות (${e.hp}). ככבשה הוא לא זז ולא תוקף, ואין לו שריון (שריון 10). המכה הראשונה מחזירה אותו לצורתו אם הוא נשאר בחיים.</p>`,()=>afterPlayerAction(),"המשך: תור האויבים",icon("sheep","#f2ead8","#ffd100"));return;}
   if(N==="Frostbolt"){const rk=Math.min(3,Math.max(1,rkOf(I,N))),FR=frostRule(e),turns=FR.t[rk-1],M=atkMods(I,e),wm=mod(I.st.wis);
     const R=rollVs(wm+(M.bonus-myAtk(I)),enAC(e),M.mode,[`חוכמה +${wm}`].concat(M.reasons.slice(1)),"שריון");lines.push(`<p>❄ חץ קרח אל ${esc(e.name)}:</p>`+R.html);
-    if(R.hit){const X=rollD(`${rk}d6`);let v=X.t+wm;if(R.crit)v+=rollD(`${rk}d6`).t;if(FR.x2)v*=2;
-      lines.push(`<div class="rollbox">${dmgHtml(X.parts)}<div>${rk}d6 + ${wm}${R.crit?" + קוביות כפולות":""}${FR.x2?" × 2 (קור נגד אש)":""} = <b>${v}</b> נזק קור</div></div>`);
+    if(R.hit){const X=rollD(`${rk}d6`);let v=X.t+wm,XP=X.parts;if(R.crit){const X2=rollD(`${rk}d6`);v+=X2.t;XP=catParts(X.parts,X2.parts);}if(FR.x2)v*=2;
+      lines.push(`<div class="rollbox">${dmgHtml(XP)}<div>${rk}d6 + ${wm}${R.crit?" + קוביות כפולות":""}${FR.x2?" × 2 (קור נגד אש)":""} = <b>${v}</b> נזק קור</div></div>`);
       dealDamage(e,v,lines);
       if(e.hp>0){if(turns){e.frozen=turns;e.frzSlow=rk>=3?1:0;lines.push(`<p class="ph-ok">❄ ${esc(e.name)} קפוא בקרח ל-${turns} ${turns>1?"תורות":"תור"}: לא זז ולא תוקף. נזק ממשהו אחר שובר את הקרח.</p>`);}
         else lines.push(`<p class="ph-warn">${esc(FR.note.replace("❄ ",""))}: ${esc(e.name)} לא נקפא.</p>`);}}
@@ -2414,14 +2416,14 @@ function attackEnemy(idx,ab){
     if(targets.length>1||attacks>1) lines.push(`<p><b>${esc(t.name)}${attacks>1?` · התקפה ${a+1}`:""}</b></p>`);
     const half=ranged&&lineBlocked(me,t)&&N!=="Aimed Shot";
     if(N==="Arcane Missiles"){const nM=rkOf(I,N)>=2?4:3,ms=Array.from({length:nM},()=>rollD("1d4+1")),wm=mod(I.st.wis),sum=ms.reduce((s,m)=>s+m.t,0)+wm;
-      lines.push(`<div class="rollbox">${dmgHtml(ms.map(m=>m.parts[0]))}<div>${nM} טילים × (1d4 + 1) = ${ms.map(m=>m.t).join(" + ")}, ועוד מתאם חוכמה ${wm} = <b>${sum}</b> נזק<div class="ph-mini">אין גלגול פגיעה: טילי קסם תמיד פוגעים. טווח נזק <span dir="ltr">${2*nM+wm}–${5*nM+wm}</span>, ממוצע ${(3.5*nM+wm).toFixed(1)}.${nM>3?" דרגה 2: 4 טילים.":""}</div></div></div>`);dealDamage(t,sum,lines);continue;}
+      lines.push(`<div class="rollbox">${dmgHtml(Object.assign(ms.map(m=>m.parts[0]),{s:ms.map(()=>4)}))}<div>${nM} טילים × (1d4 + 1) = ${ms.map(m=>m.t).join(" + ")}, ועוד מתאם חוכמה ${wm} = <b>${sum}</b> נזק<div class="ph-mini">אין גלגול פגיעה: טילי קסם תמיד פוגעים. טווח נזק <span dir="ltr">${2*nM+wm}–${5*nM+wm}</span>, ממוצע ${(3.5*nM+wm).toFixed(1)}.${nM>3?" דרגה 2: 4 טילים.":""}</div></div></div>`);dealDamage(t,sum,lines);continue;}
     if(N==="Drain Life"){const R=rollD("2d6"),v=R.t+mod(I.st.wis);lines.push(`<div class="rollbox">${dmgHtml(R.parts)}<div>2d6 + ${mod(I.st.wis)} = <b>${v}</b> נזק צל. מרפא ${Math.floor(v/2)}.<div class="ph-mini">אין גלגול פגיעה.</div></div></div>`);me.hp=Math.min(me.max,me.hp+Math.floor((MAGIC_IMM(t)?Math.floor(v/2):v)/2));dealDamage(t,v,lines);continue;}
     if(N==="Fireball"){const fd=rkOf(I,N)>=2?"5d6":"4d6",R=rollD(fd),v=R.t+mod(I.st.wis),sv=d20(),ok=sv.r+t.lvl>=10+lvl,dd=ok?Math.floor(v/2):v;
       lines.push(`<div class="rollbox">${dmgHtml(R.parts)}<div>${fd} + ${mod(I.st.wis)} = ${v}. הצלה של ${esc(t.name)}: d20 ${sv.r} + ${t.lvl} מול ${10+lvl}: ${ok?"הצליח, חצי נזק":"נכשל"} → <b>${dd}</b><div class="ph-mini">אין גלגול פגיעה: כל מי שבאזור 3×3.</div></div></div>`);dealDamage(t,dd,lines);continue;}
     const M=atkMods(I,t,ab); const R=rollVs(M.bonus,enAC(t),M.mode,M.reasons.concat(enACnote(t)?[`שריון ${esc(t.name)}${enACnote(t)}`]:[]),"שריון");
     if(rkOf(I,"Trueshot")&&!(me.once&&me.once.trueshot)){me.once=me.once||{};me.once.trueshot=1;me.inF=true;R.hit=true;R.crit=true;lines.push(`<p class="ph-ok">🎯 <b>Trueshot</b>: ההתקפה הראשונה בקרב היא פגיעה קריטית.</p>`);}
     lines.push(R.html);
-    if(R.hit){let base=N==="Aimed Shot"?wd.replace(/^1d/,"2d"):wd;const D1=rollD(base);let dice=D1.t,parts=D1.parts.slice();if(R.crit){const D2=rollD(base);dice+=D2.t;parts=parts.concat(D2.parts);}
+    if(R.hit){let base=N==="Aimed Shot"?wd.replace(/^1d/,"2d"):wd;const D1=rollD(base);let dice=D1.t,parts=catParts(D1.parts);if(R.crit){const D2=rollD(base);dice+=D2.t;parts=catParts(D1.parts,D2.parts);}
       let dmg=dice+dmgB; if(half) dmg=Math.floor(dmg/2);
       lines.push(`<div class="rollbox">${dmgHtml(parts)}<div>נזק ${base}${R.crit?" × 2 (קריטית)":""} = ${dice} + ${dmgB} = <b>${dice+dmgB}</b>${half?` → חצי בגלל חפץ בדרך = <b>${dmg}</b>`:""}<div class="ph-mini">טווח הנזק: ${dRange(base,dmgB)}</div></div></div>`);
       if(["Charge","Shield Bash"].includes(N)){t.stun=1;lines.push(`<p>${esc(t.name)} ${N==="Shield Bash"?"נהדף ונופל":"מושתק"}: מפסיד את התור הבא.</p>`);}
@@ -2455,7 +2457,7 @@ function petPhase(next){DMG_SRC=null;
   const tgt=D.enemies.slice().sort((a,b)=>cheb(a,p)-cheb(b,p))[0];
   if(cheb(tgt,p)>1){const b=stepToward(p,tgt,2,1);if(b&&(b.x!==p.x||b.y!==p.y)){L.push(`<p>הזאב רץ מ-${cellName(p.x,p.y)} ל-${cellName(b.x,b.y)}.</p>`);p.x=b.x;p.y=b.y;}}
   if(cheb(tgt,p)<=1){const bonus=p.atk+fxSum(p,"atk"),reasons=[`התקפת זאב +${p.atk}`].concat(fxSum(p,"atk")?[`+${fxSum(p,"atk")} Mend Pet`]:[]),R=rollVs(bonus,tgt.ac,null,reasons,"שריון");L.push(`<p>נושך את ${esc(tgt.name)}:</p>`+R.html);
-    if(R.hit){const X=rollD(p.dmg);let v=X.t+fxSum(p,"dmg");if(R.crit)v+=rollD(diceOnly(p.dmg)).t;L.push(`<div class="rollbox">${dmgHtml(X.parts)}<div>${p.dmg}${fxSum(p,"dmg")?` + ${fxSum(p,"dmg")}`:""} = <b>${v}</b> נזק</div></div>`);dealDamage(tgt,v,L);}
+    if(R.hit){const X=rollD(p.dmg);let v=X.t+fxSum(p,"dmg"),XP=X.parts;if(R.crit){const X2=rollD(diceOnly(p.dmg));v+=X2.t;XP=catParts(X.parts,X2.parts);}L.push(`<div class="rollbox">${dmgHtml(XP)}<div>${p.dmg}${R.crit?" + קוביות כפולות":""}${fxSum(p,"dmg")?` + ${fxSum(p,"dmg")}`:""} = <b>${v}</b> נזק</div></div>`);dealDamage(tgt,v,L);}
   } else L.push(`<p class="ph-mini">אין אויב בהישג נשיכה.</p>`);
   const bossKilled=D.enemies.some(x=>x.boss&&x.hp<=0); D.enemies=D.enemies.filter(x=>x.hp>0); renderDungeon();
   phInfo("תור החיה · זאב",L.join(""),()=>{if(bossKilled)return bossDown();if(!D.enemies.length)return roomCleared();next();},"המשך",icPet());
@@ -2576,7 +2578,7 @@ function enemyAct(e){
     if(isMe){if(fxSum(me,"ac"))reasons.push(`השריון שלך ${I.ac} ${fxSum(me,"ac")>0?"+":""}${fxSum(me,"ac")} מהשפעות`);else reasons.push(`השריון שלך ${ac}`);}else reasons.push(isPet?`שריון הזאב ${ac}`:`השריון של ${esc(tgt.name)} ${ac}`);
     for(let a=0;a<e.n;a++){
       const R=rollVs(e.atk,ac,null,reasons,"שריון");out.push(`<p>${e.n>1?`התקפה ${a+1} `:""}${isMe?"עליך":isPet?"על הזאב":"על "+esc(tgt.name)}:</p>`+R.html);
-      if(R.hit){const X=rollD(e.dmg);let d=X.t;if(R.crit)d+=rollD(diceOnly(e.dmg)).t;if(half)d=Math.floor(d/2);if(!isPet&&fxHas(tgt,"invuln")){out.push(`<p class="ph-ok">Limited Invulnerability: הנשק לא פוגע. 0 נזק.</p>`);continue;}tgt.hp-=d;out.push(`<div class="rollbox">${dmgHtml(X.parts)}<div>נזק ${esc(e.dmg)}${R.crit?" + קוביות כפולות":""} = <b class="ph-warn">${d}</b>${half?" (חצי, חפץ בדרך)":""}<div class="ph-mini">טווח הנזק: ${dRange(e.dmg)}</div></div></div>`);if(!isPet)enemyOnHit(e,tgt,out);}
+      if(R.hit){const X=rollD(e.dmg);let d=X.t,XP=X.parts;if(R.crit){const X2=rollD(diceOnly(e.dmg));d+=X2.t;XP=catParts(X.parts,X2.parts);}if(half)d=Math.floor(d/2);if(!isPet&&fxHas(tgt,"invuln")){out.push(`<p class="ph-ok">Limited Invulnerability: הנשק לא פוגע. 0 נזק.</p>`);continue;}tgt.hp-=d;out.push(`<div class="rollbox">${dmgHtml(XP)}<div>נזק ${esc(e.dmg)}${R.crit?" + קוביות כפולות":""} = <b class="ph-warn">${d}</b>${half?" (חצי, חפץ בדרך)":""}<div class="ph-mini">טווח הנזק: ${dRange(e.dmg)}</div></div></div>`);if(!isPet)enemyOnHit(e,tgt,out);}
     }
     if(e.cleave){heroesNow().filter(u=>u!==tgt&&cheb(u,e)<=1).forEach(u=>{const R=rollVs(e.atk,acOf(u),null,[`Cleave +${e.atk}`],"שריון");out.push(`<p>🪓 Cleave על ${whoU(u)}:</p>`+R.html);if(R.hit&&!fxHas(u,"invuln"))hurt(u,rollD(e.dmg).t,false,out,"Cleave");});}
     out.push(`<p class="ph-mini">${isMe?`נשארו לך ${Math.max(0,me.hp)} מתוך ${me.max} נקודות חיים.`:!isPet?(tgt.hp<=0?`<b class="ph-warn">${esc(tgt.name)} נופל ל-0 נקודות חיים!</b>`:`ל-${esc(tgt.name)} נשארו ${tgt.hp} מתוך ${tgt.max} נקודות חיים.`):tgt.hp<=0?"הזאב נפל ויוצא מהקרב. הוא יחזור בחדר הבא.":`לזאב נשארו ${tgt.hp} נקודות חיים.`}</p>`);
