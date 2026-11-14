@@ -91,6 +91,12 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,64px);li
 .erow>*{flex:none}
 .erow .btn{min-height:40px;padding:8px 12px;font-size:14px}
 .erow .btn:disabled,.etop .btn:disabled{opacity:.45}
+.spdgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.spdgrid .btn{padding:10px 4px}
+.spdgrid .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ediff{display:inline-flex;gap:0}
+.ediff .btn{border-radius:0;padding:8px 10px}
+.ediff .btn:first-child{border-radius:12px 0 0 12px}.ediff .btn:last-child{border-radius:0 12px 12px 0}
 .tog[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 #eSelTools .kl{font-size:13px;color:var(--amber);font-weight:700;margin-right:2px}
 .ename{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;-webkit-user-select:text;user-select:text}
@@ -424,11 +430,15 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <div class="eseekrow"><input type="range" id="eSeek" min="0" max="1" step="0.01" value="0" aria-label="Position in the song"><span id="eTime"></span></div>
       <div class="erow">
         <button id="eBack2" class="btn">−2s</button>
-        <button id="ePlay" class="btn primary">Play</button>
+        <button id="ePlay" class="btn primary">Start Edit</button>
         <button id="ePlayHere" class="btn">Play from here</button>
         <button id="eFwd2" class="btn">+2s</button>
         <button id="eSpeed" class="btn">1×</button>
         <button id="eSnap" class="btn">Snap 1/16</button>
+        <span class="ediff" role="group" aria-label="Speed like the game">
+          <button class="btn tog" data-ed="easy">Easy</button><button class="btn tog" data-ed="normal">Normal</button><button class="btn tog" data-ed="hard">Hard</button><button class="btn tog" data-ed="extreme">Extreme</button>
+        </span>
+        <button id="eSpd" class="btn">Speed edit</button>
         <button id="eZoomOut" class="btn" aria-label="Zoom out">−</button>
         <button id="eZoomIn" class="btn" aria-label="Zoom in">+</button>
         <button id="eClick" class="btn tog" aria-pressed="false">Click</button>
@@ -495,6 +505,15 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <p id="eFillWhat" class="hint" style="margin:0;text-align:center"></p>
         <div id="eFillList" style="display:flex;flex-direction:column;gap:8px"></div>
         <button id="eFillClose" class="linkbtn">Cancel</button>
+      </div>
+    </div>
+    <div id="eSpdOv" class="overlay" hidden>
+      <div class="card">
+        <h2>Speed edit</h2>
+        <p id="eSpdWhat" class="hint" style="margin:0;text-align:center"></p>
+        <div class="spdgrid" id="eSpdList"></div>
+        <button id="eSpdDel" class="btn" hidden>Remove this speed point</button>
+        <button id="eSpdClose" class="linkbtn">Cancel</button>
       </div>
     </div>
     <div id="eAsk" class="overlay" hidden>
@@ -1415,8 +1434,8 @@ async function openEditor(song){
   if(song.kind==='synth'){g=generate(song);beats=[];for(let k=0;k*g.beat<g.dur;k++)beats.push(k*g.beat);orig=chartFromLead(g,settings.diff,song.seed*7+settings.diff.length)}
   else{beats=song.beats;dp=song.dp;orig=song.charts[styleOf(song)][settings.diff]}
   E={song,buf,g,dur:buf?buf.duration:g.dur,beats,dp,orig:orig.map(cp),peaks:buf?peaksOf(buf):eventPeaks(g),
-     notes:[],sels:new Set(),range:null,clip:E&&E.clip||null,undo:[],playing:false,pos:0,speed:1,snap:4,view:3,click:false,selMode:false,
-     dirty:false,src:null,rec:{},a:null,b:null,cid:null,name:'',lead:0};
+     notes:[],sels:new Set(),range:null,clip:E&&E.clip||null,undo:[],playing:false,pos:0,speed:1,snap:4,view:settings.edDiff&&DIFFS[settings.edDiff]?DIFFS[settings.edDiff].approach:3,click:false,selMode:false,
+     dirty:false,src:null,rec:{},a:null,b:null,cid:null,name:'',lead:0,off:0,sp:[]};
   $('#eSong').textContent=song.name;
   const box=$('#eCharts');box.innerHTML='';   // one button per saved chart
   for(const c of myCharts(song)){const b=document.createElement('button');b.className='btn primary';b.textContent=`Continue "${c.name}"`;b.onclick=()=>edBegin('continue',c.id);box.appendChild(b)}
@@ -1428,8 +1447,8 @@ const cp=n=>{const o={t:n.t,lane:n.lane};if(n.end)o.end=n.end;if(n.swipe){o.swip
 function nextName(s){let k=1;for(const c of myCharts(s)){const m=/^Chart (\d+)$/.exec(c.name);if(m)k=Math.max(k,+m[1]+1);else k=Math.max(k,myCharts(s).length+1)}return 'Chart '+k}
 function edBegin(kind,cid){
   const saved=cid?chartById(E.song,cid):null;
-  if(saved){E.notes=saved.notes.map(cp);E.a=saved.a??null;E.b=saved.b??null;E.lead=saved.lead||0;E.cid=saved.id;E.name=saved.name;E.dirty=false}
-  else{E.notes=kind==='song'?E.orig.map(cp):[];E.cid=null;E.name=nextName(E.song);E.dirty=true}
+  if(saved){E.notes=saved.notes.map(cp);E.a=saved.a??null;E.b=saved.b??null;E.lead=saved.lead||0;E.off=saved.off||0;E.sp=(saved.sp||[]).map(p=>({t:p.t,k:p.k}));E.cid=saved.id;E.name=saved.name;E.dirty=false}
+  else{E.notes=kind==='song'?E.orig.map(cp):[];E.off=settings.offset;E.cid=null;E.name=nextName(E.song);E.dirty=true}
   $('#eName').value=E.name;
   E.pos=E.a!=null?E.a:-E.lead;$('#eStart').hidden=true;edUI();
 }
@@ -1530,20 +1549,24 @@ function edSave(asNew){
   if(!c){c={id:'c'+Date.now().toString(36),name:asNew||!E.name?nextName(E.song):E.name};L.push(c);E.cid=c.id}
   E.name=c.name=(E.name&&!asNew?E.name:c.name);c.notes=notes;delete c.a;delete c.b;
   if(E.a!=null)c.a=+E.a.toFixed(3);if(E.b!=null)c.b=+E.b.toFixed(3);delete c.lead;if(E.lead)c.lead=E.lead;
+  delete c.off;if(E.off)c.off=E.off;
+  delete c.sp;if(E.sp.length)c.sp=E.sp.map(p=>({t:+p.t.toFixed(3),k:p.k})).sort((a,b)=>a.t-b.t);   // the timing offset the notes were built with
   saveMyCharts(E.song,L);E.dirty=false;$('#eName').value=E.name;edUI();
   notice(`Saved as "${c.name}". To play it, choose it under Notes follow in the song's row.`,6000);
 }
 function edLeave(){edPause();E=null;$('#eAsk').hidden=true;renderMenu();show('menu')}
 function edTry(here){edPause();const notes=E.notes.map(cp);if(!notes.length)return;edReturn=true;E.backTo=E.pos;
-  if(here&&E.pos<0){startRun(E.song,{notes,a:E.a,b:E.b,lead:-E.pos});return}   // starting inside the silence
-  const a=here?Math.max(E.a||0,snapT(E.pos,1)-0.02):E.a;startRun(E.song,{notes,a:a>0?a:null,b:E.b,lead:here?0:E.lead})}
+  if(here&&E.pos<0){startRun(E.song,{notes,a:E.a,b:E.b,lead:-E.pos,off:E.off,diff:edDiffOn(),sp:E.sp});return}   // starting inside the silence
+  const a=here?Math.max(E.a||0,snapT(E.pos,1)-0.02):E.a;startRun(E.song,{notes,a:a>0?a:null,b:E.b,lead:here?0:E.lead,off:E.off,diff:edDiffOn(),sp:E.sp})}
 function edBack(){edReturn=false;$('#tryStop').hidden=true;if(E&&E.backTo!=null)E.pos=E.backTo;show('editor');resizeE();edUI();requestAnimationFrame(edLoop)}
+const edDiffOn=()=>settings.edDiff&&DIFFS[settings.edDiff]&&E&&Math.abs(DIFFS[settings.edDiff].approach-E.view)<1e-6?settings.edDiff:null;
 function edUI(){if(!E)return;
   $('#eLead').textContent=E.lead+' s';
-  $('#ePlay').textContent=E.playing?'Pause':'Play';$('#eSpeed').textContent=E.speed+'×';
+  $('#ePlay').textContent=E.playing?'Pause':'Start Edit';$('#eSpeed').textContent=E.speed+'×';
   $('#eSnap').textContent='Snap '+({4:'1/16',2:'1/8',1:'1/4',0:'off'}[E.snap]);
+  document.querySelectorAll('.ediff button').forEach(b=>b.setAttribute('aria-pressed',Math.abs(DIFFS[b.dataset.ed].approach-E.view)<1e-6));
   $('#eClick').setAttribute('aria-pressed',E.click);$('#eSelMode').setAttribute('aria-pressed',E.selMode);
-  $('#eInfo').textContent=`${E.name||'New chart'} · ${E.notes.length} notes${E.a!=null||E.b!=null?` · section ${fmtLen(E.a||0)}–${fmtLen(E.b??E.dur)}`:''}${E.lead?` · ${E.lead} s silence first`:''}${E.dirty?' · not saved':''}`;
+  $('#eInfo').textContent=`${E.name||'New chart'} · ${E.notes.length} notes${E.a!=null||E.b!=null?` · section ${fmtLen(E.a||0)}–${fmtLen(E.b??E.dur)}`:''}${E.lead?` · ${E.lead} s silence first`:''}${E.sp.length?` · ${E.sp.length} speed point${E.sp.length>1?'s':''}`:''}${E.off?` · built at offset ${E.off>0?'+':'−'}${Math.abs(msToPx(E.off))} px`:''}${E.dirty?' · not saved':''}`;
   $('#eSave').disabled=!E.dirty;$('#eUndo').disabled=!E.undo.length;$('#ePaste').hidden=!E.clip;
   const n=E.sels.size;$('#eSelTools').hidden=!n&&!E.range;
   $('#eSelCount').textContent=E.range?`${fmtTime(E.range.a)}–${fmtTime(E.range.b)}: ${n} notes`:`${n} selected`;
@@ -1558,7 +1581,7 @@ function edLoop(){if(!E||$('#editor').hidden)return;edDraw();requestAnimationFra
 function edDraw(){
   const W=ecw,H=ech,t=edNow(),c=ex,star=settings.skin==='star',TH=songColor(E.song);
   const top=$('.etop').offsetHeight+8,bottom=$('#ebar').offsetHeight;
-  const hitY=Math.min(star?H-Math.max(170,H*0.27):H-Math.max(160,H*0.26),H-bottom-34),pps=Math.max(30,(hitY-top)/E.view);
+  const hitY=Math.min(star?H-Math.max(170,H*0.27):H-Math.max(160,H*0.26),H-bottom-34),edD=edDiffOn(),pps=edD?gamePps(H,star,DIFFS[edD].approach):Math.max(30,(hitY-top)/E.view);
   const LW=Math.min((W-80)/3,star?260:280),x0=W/2-1.5*LW+18,gap=star?8:0;
   const th=star?Math.max(22,Math.min(LW*0.62,pps*0.22,(LW-gap-10)*0.9)):Math.max(18,Math.min(58,LW*0.3,pps*0.14));
   E.geo={x0,LW,hitY,pps,th};
@@ -1584,6 +1607,11 @@ function edDraw(){
     c.fillText('MUSIC STARTS',x0-30,y0-6);c.fillStyle=star?'rgba(255,255,255,0.7)':'rgba(220,210,255,0.6)';
     c.font='700 15px Rubik, system-ui';c.textAlign='center';c.fillText(`${E.lead} s of silence`,x0+1.5*LW,(Math.max(0,y0)+Math.min(H,y1,hitY))/2);c.textAlign='left';
     if(B.length>1){const st0=B[1]-B[0];for(let k=1;B[0]-k*st0>=-E.lead-0.001;k++){const y=yOf(B[0]-k*st0);if(y>H+5)break;c.fillStyle=`rgba(${ink},0.12)`;c.fillRect(x0,Math.round(y),3*LW,1)}}}
+  for(const sp of E.sp){if(sp.t<t0-0.5||sp.t>t1+0.5)continue;const y=Math.round(yOf(sp.t));
+    const grab=E.drag&&E.drag.sp===sp;c.fillStyle='#29b8ff';c.fillRect(x0-40,y-(grab?2:1),3*LW+40,grab?4:3);
+    rr2(c,x0-44,y-9,30,18,9);c.fill();c.fillStyle='#07131f';c.font='700 10px Rubik, system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('⇕',x0-29,y+1);
+    c.font='700 11px Rubik, system-ui';const lab=`SPEED ×${sp.k} · ${fmtTime(sp.t)}`,lw=c.measureText(lab).width+14;
+    rr2(c,x0+4,y-22,lw,18,9);c.fillStyle='rgba(7,19,31,0.9)';c.fill();c.fillStyle='#29b8ff';c.textAlign='left';c.fillText(lab,x0+11,y-12);c.textBaseline='alphabetic'}
   for(let j=0;j<B.length;j++){const bt=B[j];if(bt<t0-1)continue;if(bt>t1+1)break;
     const y=yOf(bt),bar=((j-E.dp)%4+4)%4===0;
     c.fillStyle=`rgba(${ink},${bar?0.3:0.12})`;c.fillRect(x0,Math.round(y),3*LW,bar?2:1);
@@ -1637,6 +1665,8 @@ ecv.addEventListener('pointerdown',e=>{e.preventDefault();if(!E||!$('#eStart').h
   try{ecv.setPointerCapture(e.pointerId)}catch(_){}
   if(E.playing){if(inL)edRecDown(lane,'p'+e.pointerId);return}
   const hit=inL?edHit(x,y):null,multi=E.selMode||e.shiftKey||e.metaKey||e.ctrlKey,tAt=E.pos+(g.hitY-y)/g.pps;
+  const sp=(!hit||x<g.x0)&&x>=g.x0-44&&x<=g.x0+3*g.LW+10?E.sp.find(p=>Math.abs(g.hitY-(p.t-E.pos)*g.pps-y)<=12):null;
+  if(sp){E.drag={id:e.pointerId,x0:x,y0:y,moved:false,sp,spT:sp.t};edUI();return}
   if(hit&&multi){if(E.sels.has(hit))E.sels.delete(hit);else E.sels.add(hit);E.range=null;edUI();return}
   if(hit&&!E.sels.has(hit))selectOnly(hit);
   const group=hit?selList().map(n=>({n,t:n.t,lane:n.lane,end:n.end})):null;
@@ -1646,12 +1676,14 @@ ecv.addEventListener('pointermove',e=>{const d=E&&E.drag;if(!d||d.id!==e.pointer
   const r=ecv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,g=E.geo;
   if(!d.moved&&Math.hypot(x-d.x0,y-d.y0)<7)return;
   if(!d.moved){d.moved=true;if(d.note)edSnapshot()}
+  if(d.sp){d.sp.t=Math.max(-E.lead,Math.min(E.dur,+snapT(d.spT+(d.y0-y)/g.pps).toFixed(3)));E.sp.sort((a,b)=>a.t-b.t);E.dirty=true;edUI();return}
   if(d.note){const p=d.group.find(q=>q.n===d.note),dt=snapT(p.t+(d.y0-y)/g.pps)-p.t,dl=Math.floor((x-g.x0)/g.LW)-Math.floor((d.x0-g.x0)/g.LW);
     for(const q of d.group){q.n.t=Math.max(0,q.t+dt);q.n.lane=Math.max(0,Math.min(2,q.lane+dl));if(q.end)q.n.end=q.end+dt}}
   else if(d.box)d.rb=E.pos+(g.hitY-y)/g.pps;
   else E.pos=Math.max(0,Math.min(E.dur,d.startPos+(y-d.y0)/g.pps))});
 const edUp=e=>{if(!E)return;if(E.rec['p'+e.pointerId]){edRecUp('p'+e.pointerId);return}
   const d=E.drag;if(!d||d.id!==e.pointerId)return;E.drag=null;
+  if(d.sp){if(!d.moved)openSpd(d.sp.t);else{E.sp=E.sp.filter(p=>p===d.sp||Math.abs(p.t-d.sp.t)>=0.05);edUI()}return}
   if(d.moved){if(d.note)edDone();
     else if(d.box){const a=snapT(Math.min(d.ra,d.rb)),b=snapT(Math.max(d.ra,d.rb));
       E.range=b-a>0.05?{a,b}:null;E.sels=new Set(E.range?E.notes.filter(n=>n.t>=a-0.001&&n.t<=b+0.001):[]);edUI()}
@@ -1687,8 +1719,24 @@ $('#eName').onchange=e=>{const v=e.target.value.trim().slice(0,40);if(!v){e.targ
   const L=myCharts(E.song),c=L.find(x=>x.id===E.cid);if(c){c.name=v;saveMyCharts(E.song,L)}else E.dirty=true;edUI()};on('ePlay',edPlay);on('eBack2',()=>edSeek(edNow()-2));on('eFwd2',()=>edSeek(edNow()+2));
 on('eSpeed',()=>{const L=[1,0.75,0.5,0.25];E.speed=L[(L.indexOf(E.speed)+1)%L.length];if(E.playing){edPause();edPlay()}edUI()});
 on('eSnap',()=>{const L=[4,2,1,0];E.snap=L[(L.indexOf(E.snap)+1)%L.length];edUI()});
-on('eZoomIn',()=>{E.view=Math.max(1,E.view/1.5);edUI()});on('eZoomOut',()=>{E.view=Math.min(10,E.view*1.5);edUI()});
-on('eClick',()=>{E.click=!E.click;edUI()});on('eSelMode',()=>{E.selMode=!E.selMode;edUI()});
+on('eZoomIn',()=>{E.view=Math.max(0.5,E.view/1.5);settings.edDiff=null;saveSettings();edUI()});on('eZoomOut',()=>{E.view=Math.min(10,E.view*1.5);settings.edDiff=null;saveSettings();edUI()});
+// the notes move as fast as in the game at that difficulty
+document.querySelectorAll('.ediff button').forEach(b=>b.onclick=()=>{if(!E)return;E.view=DIFFS[b.dataset.ed].approach;settings.edDiff=b.dataset.ed;saveSettings();edUI()});
+on('eClick',()=>{E.click=!E.click;edUI()});
+// Speed edit: a point at the current position; from there on the background moves at the chosen speed
+let spdAt=0;
+on('eSpd',()=>{if(E.playing)edPause();openSpd(Math.max(-E.lead,+edNow().toFixed(2)))});
+function openSpd(at){spdAt=at;
+  const near=E.sp.find(p=>Math.abs(p.t-spdAt)<0.3);if(near)spdAt=near.t;
+  const cur=near?near.k:([...E.sp].sort((a,b)=>a.t-b.t).filter(p=>p.t<spdAt).pop()||{k:1}).k;
+  $('#eSpdWhat').textContent=near?`Speed point at ${fmtTime(spdAt)}. Change it or remove it. To move it, drag its blue line.`:`From ${fmtTime(spdAt)} on, the background moves at:`;
+  $('#eSpdList').innerHTML=SPEEDS.map(k=>`<button class="btn" data-k="${k}" aria-pressed="${k===cur}">×${k}</button>`).join('');
+  $('#eSpdDel').hidden=!near;$('#eSpdOv').hidden=false}
+$('#eSpdList').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;
+  E.sp=E.sp.filter(p=>Math.abs(p.t-spdAt)>=0.3);E.sp.push({t:spdAt,k:+b.dataset.k});E.sp.sort((a,b)=>a.t-b.t);
+  E.dirty=true;$('#eSpdOv').hidden=true;edUI()});
+on('eSpdDel',()=>{E.sp=E.sp.filter(p=>Math.abs(p.t-spdAt)>=0.3);E.dirty=true;$('#eSpdOv').hidden=true;edUI()});
+on('eSpdClose',()=>{$('#eSpdOv').hidden=true});on('eSelMode',()=>{E.selMode=!E.selMode;edUI()});
 on('eUndo',edUndo);on('eDel',edDelete);on('eHoldM',()=>edHold(-1));on('eHoldP',()=>edHold(1));
 on('eMirror',()=>edLanes(l=>2-l));on('eRotate',()=>edLanes(l=>(l+1)%3));
 on('eCopy',edCopy);on('ePaste',edPaste);on('eTidy',edTidy);on('eSelNone',()=>selectOnly(null));
@@ -1714,9 +1762,30 @@ on('eDelMine',()=>{$('#eMenu').hidden=true;if(!E.cid){notice('This chart has not
 on('eFromSongStart',()=>edBegin('song'));on('eEmpty',()=>edBegin('empty'));
 on('eStartCancel',()=>{E=null;show('menu')});
 
-function laneGaps(list){const last=[null,null,null];
-  for(const n of list)n.gap=9;
-  for(const n of list){const p=last[n.lane];if(p){const g=n.t-(p.end||p.t);if(g<p.gap)p.gap=g;if(g<n.gap)n.gap=g}last[n.lane]=n}}
+/* Speed points: from a point on, the background moves k times as fast. X(t) is how far the
+   background has moved by time t (in "normal seconds"); notes sit at X(note) - X(now). */
+const SPEEDS=[0.5,0.75,1,1.25,1.5,2];
+const SP_RAMP=1;   // a speed change eases in over one second
+function makeSpeedMap(pts){
+  pts=(pts||[]).filter(p=>p&&typeof p.t==='number'&&p.k>0).sort((a,b)=>a.t-b.t);
+  if(!pts.length)return null;
+  const seg=[{t:-1e9,k0:1,k1:1,X:0,base:true}];   // before the first point: normal speed, X(t)=t
+  for(const p of pts){const q=seg[seg.length-1];seg.push({t:p.t,k0:spKof(q,p.t),k1:p.k,X:spXof(q,p.t)})}
+  return{seg,kmin:Math.min(1,...pts.map(p=>p.k))};
+}
+function spXof(g,tt){if(g.base)return tt;const d=tt-g.t,R=SP_RAMP;
+  return d<=R?g.X+g.k0*d+(g.k1-g.k0)*d*d/(2*R):g.X+(g.k0+g.k1)/2*R+g.k1*(d-R)}
+function spKof(g,tt){if(g.base)return 1;const d=tt-g.t;return d<=SP_RAMP?g.k0+(g.k1-g.k0)*Math.max(0,d)/SP_RAMP:g.k1}
+function spSeg(m,tt){const g=m.seg;let i=g.length-1;while(i>0&&g[i].t>tt)i--;return g[i]}
+const spX=tt=>{const m=S&&S.spd;return m?spXof(spSeg(m,tt),tt):tt};
+const spK=tt=>{const m=S&&S.spd;return m?spKof(spSeg(m,tt),tt):1};
+function gamePps(H,star,approach){const hitY=star?H-Math.max(170,H*0.27):H-Math.max(160,H*0.26),topY=star?Math.max(120,H*0.15):Math.max(70,H*0.07);return(hitY-topY)/approach}
+function laneGaps(list){const last=[null,null,null],L=[...list].sort((a,b)=>a.t-b.t);
+  for(const n of L)n.gap=9;
+  for(const n of L){const p=last[n.lane];if(p){const g=n.t-(p.end||p.t);if(g<p.gap)p.gap=g;if(g<n.gap)n.gap=g}last[n.lane]=n}
+  // notes to press together get the same height: the smaller one
+  for(let i=0;i<L.length;){let j=i,m=L[i].gap;while(j+1<L.length&&L[j+1].t-L[i].t<0.002){j++;m=Math.min(m,L[j].gap)}
+    for(let k=i;k<=j;k++)L[k].gap=m;i=j+1}}
 // a stone never taller than the room it has, so close notes don't cover each other
 const fitH=(n,h,pps)=>Math.max(8,Math.min(h,(n.gap??9)*pps-4));
 /* ================= GAME ================= */
@@ -1739,23 +1808,25 @@ function show(id){for(const s of ['menu','play','results','editor','calib'])$('#
 function startRun(song,ov){
   stopRun();
   const ac=audio();lastSong=song;
-  const diff=settings.diff,D=DIFFS[diff];
+  const diff=ov&&ov.diff&&DIFFS[ov.diff]?ov.diff:settings.diff,D=DIFFS[diff];
   let notes,events=[],dur,beats,dp=0,from=0,lead=0;
   if(song.kind==='synth'){const g=generate(song);notes=chartFromLead(g,diff,song.seed*7+diff.length);events=g.events;dur=g.dur;
     beats=[];for(let k=0;k*g.beat<dur;k++)beats.push(k*g.beat)}
   else{notes=song.charts[styleOf(song)][diff];dur=song.buffer.duration;beats=song.beats;dp=song.dp}
-  if(!ov&&useMine(song)){const c=pickedChart(song);ov={notes:c.notes,a:c.a,b:c.b,lead:c.lead}}
+  if(!ov&&useMine(song)){const c=pickedChart(song);ov={notes:c.notes,a:c.a,b:c.b,lead:c.lead,off:c.off||0,sp:c.sp}}
+  let sp=ov&&Array.isArray(ov.sp)?ov.sp.map(p=>({t:p.t,k:p.k})):[];
   if(ov){notes=ov.notes;
     const a=Math.max(0,ov.a||0),b=Math.min(dur,ov.b??dur);
     if(a>0||b<dur){   // play only the chosen section of the song
       notes=notes.filter(n=>n.t>=a-0.01&&n.t<=b).map(n=>{const o={...n,t:n.t-a};if(n.end)o.end=Math.min(n.end,b)-a;return o});
       events=events.filter(e=>e.t>=a-0.005&&e.t<b).map(e=>({t:Math.max(0,e.t-a),p:e.p}));
       const i0=beats.findIndex(x=>x>=a);beats=beats.filter(x=>x>=a&&x<=b).map(x=>x-a);dp=i0>=0?((dp-i0)%4+4)%4:0;
+      {const before=sp.filter(p=>p.t<=a).pop();sp=sp.filter(p=>p.t>a&&p.t<=b).map(p=>({t:p.t-a,k:p.k}));if(before)sp.unshift({t:-60,k:before.k})}
       from=a;dur=b-a}
     const L=Math.max(0,Math.min(10,ov.lead||0));
     if(L){   // seconds of silence before the music starts
       notes=notes.map(n=>{const o={...n,t:n.t+L};if(n.end)o.end=n.end+L;return o});
-      events=events.map(e=>({t:e.t+L,p:e.p}));beats=beats.map(x=>x+L);lead=L;dur+=L}
+      events=events.map(e=>({t:e.t+L,p:e.p}));beats=beats.map(x=>x+L);lead=L;dur+=L;sp=sp.map(p=>({t:p.t+L,k:p.k}))}
     notes=notes.filter(n=>n.t>=0)}
   notes=notes.map(n=>Object.assign({state:0},n,ov&&settings.mode!=='keys'?{}:{swipe:false}));   // a chart's own arrows need a touch screen
   if(!ov&&settings.swipes&&settings.mode!=='keys'){   // single notes with a little room around them become arrows
@@ -1774,7 +1845,9 @@ function startRun(song,ov){
      holds:notes.filter(n=>n.end).length,down:[0,0,0],holding:[null,null,null],fx:[],judg:null,bus:out,
      accOn:!!settings.accuracy,err:{sum:0,signed:0,hits:0,miss:0,missMs:0},accFx:[],src:null,timer:0,raf:0};
   laneGaps(notes);
-  S.trial=!!(ov&&edReturn);S.from=from;S.lead=lead;$('#tryStop').hidden=!S.trial;
+  S.trial=!!(ov&&edReturn);S.from=from;S.lead=lead;
+  S.spd=makeSpeedMap(sp);S.kInv=S.spd?1/S.spd.kmin:1;
+  S.offset=settings.offset-(ov&&ov.notes?(ov.off||0):0);$('#tryStop').hidden=!S.trial;
   if(song.kind==='file'){const s=ac.createBufferSource();s.buffer=song.buffer;s.connect(out);s.start(start+lead,from,dur-lead+0.5);S.src=s}
   else{schedule();S.timer=setInterval(schedule,30)}
   $('#hSong').textContent=song.name;$('#hDiff').textContent=D.label;$('#hScore').textContent='0';$('#hMult').textContent='×1';
@@ -1795,7 +1868,7 @@ function stopRun(){
   if(AC&&AC.state==='suspended')AC.resume();
   S=null;
 }
-const songTime=()=>AC.currentTime-S.start-(AC.outputLatency||0)-settings.offset/1000;
+const songTime=()=>AC.currentTime-S.start-(AC.outputLatency||0)-(S.offset??settings.offset)/1000;
 const mult=()=>S.combo<10?1:S.combo<30?2:S.combo<60?3:4;
 
 const ACOL={perfect:'#3ddc84',great:'#ffd23d',good:'#ff9f40',miss:'#ff4d5e'};
@@ -1904,7 +1977,7 @@ function drawStar(t){
   const hitY=H-Math.max(170,H*0.27),topY=Math.max(120,H*0.15);
   const LW=Math.min((W-24)/3,260),CX=W/2,x0=CX-1.5*LW;
   const gap=8,tw=LW-gap-10,th=Math.max(48,Math.min(tw*0.9,LW*0.62));S.geo={CX,LW,hitY,topY,A,th};
-  const yOf=tt=>hitY-(tt-t)/A*(hitY-topY);
+  const xNow=spX(t),yOf=tt=>hitY-(spX(tt)-xNow)/A*(hitY-topY);
   const B=S.beats;let pulse=0;
   while(S.bi<B.length-1&&B[S.bi+1]<=t)S.bi++;
   if(t>0&&B[S.bi]<=t){const len=(B[S.bi+1]||B[S.bi]+0.5)-B[S.bi];pulse=Math.max(0,1-(t-B[S.bi])/len*3)}
@@ -1922,7 +1995,7 @@ function drawStar(t){
     if(glow>0){g=cx.createLinearGradient(0,H,0,hitY-H*0.45);g.addColorStop(0,rgba(TH,0.95*glow));g.addColorStop(1,rgba(TH,0));cx.fillStyle=g;cx.fillRect(x,hitY-H*0.45,w,H-hitY+H*0.45)}}
   // bar lines
   cx.fillStyle='rgba(0,0,0,0.07)';
-  for(let j=S.bi;j<B.length&&B[j]<t+A;j++){if(B[j]<=t||((j-S.dp)%4+4)%4)continue;cx.fillRect(x0+gap/2,Math.round(yOf(B[j]))-1,LW*3-gap,2)}
+  for(let j=S.bi;j<B.length&&B[j]<t+A*S.kInv;j++){if(B[j]<=t||((j-S.dp)%4+4)%4)continue;cx.fillRect(x0+gap/2,Math.round(yOf(B[j]))-1,LW*3-gap,2)}
   // the hit row: white slots, lit in the song colour when pressed
   for(let l=0;l<3;l++){const x=x0+l*LW+gap/2+5,w=LW-gap-10;
     rr(x,hitY-th/2,w,th,10);cx.fillStyle=S.down[l]?rgba(TH,0.85):'#ffffff';cx.fill();
@@ -1930,13 +2003,13 @@ function drawStar(t){
     if(settings.mode==='keys'){cx.fillStyle=S.down[l]?'#ffffff':'rgba(20,20,30,0.35)';cx.font=`400 ${Math.round(Math.min(28,th*0.4))}px Bungee, Impact, sans-serif`;
       cx.textAlign='center';cx.textBaseline='middle';cx.fillText(settings.keys[l].label,x+w/2,hitY+2)}}
   // tiles
-  for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t+A+0.3)break;if(n.state===2)continue;
+  for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t+A*S.kInv+0.3)break;if(n.state===2)continue;
     const l=n.lane,x=x0+l*LW+gap/2+5,yh=n.state===1?hitY:yOf(n.t);
     if(n.end){const ye=Math.max(topY-th,yOf(n.end)),bw=tw*0.46,bx=x+(tw-bw)/2;
       rr(bx,ye-th*0.3,bw,Math.max(0,yh-ye+th*0.3),10);cx.fillStyle='rgba(16,17,22,0.88)';cx.fill();
       cx.fillStyle=n.state===1?TH:rgba(TH,0.8);cx.fillRect(bx+bw/2-3,ye,6,Math.max(0,yh-ye))}
     if(yh<topY-th*1.6||yh>H+th)continue;
-    const pps=(hitY-topY)/A,h=fitH(n,th,pps);
+    const pps=(hitY-topY)/A*spK(n.t),h=fitH(n,th,pps);
     cx.globalAlpha=Math.max(0,Math.min(1,(yh-(topY-th))/(th*1.2)));
     if(n.state===0){const gH=WIN.good*pps,live=Math.abs(n.t-t)<=WIN.good;
       rr(x-3,yh-h/2-gH,tw+6,h+2*gH,12);cx.fillStyle=rgba(TH,live?0.26:0.1);cx.fill()}
@@ -1971,9 +2044,9 @@ function funFind(x,y){
   const g=S.geo;if(!g||g.hitY==null)return null;
   const t=songTime(),x0=g.CX-1.5*g.LW,lane=Math.floor((x-x0)/g.LW);if(lane<0||lane>2)return null;
   let best=null,bd=1e9;
-  for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t+g.A+0.2)break;
+  for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t+g.A*S.kInv+0.2)break;
     if(n.state!==0||n.lane!==lane||n.swipe)continue;
-    const ny=g.hitY-(n.t-t)/g.A*(g.hitY-g.topY);
+    const ny=g.hitY-(spX(n.t)-spX(t))/g.A*(g.hitY-g.topY);
     if(Math.abs(y-ny)<=g.th*0.75+12){const d=Math.abs(n.t-t);if(d<bd){bd=d;best=n}}}
   return best;
 }
@@ -1999,7 +2072,7 @@ function draw(t){
   const hitY=H-Math.max(160,H*0.26),topY=Math.max(70,H*0.07);
   const LW=Math.min((W-20)/3,280),CX=W/2,x0=CX-1.5*LW;
   const nh=Math.max(30,Math.min(58,LW*0.3));S.geo={CX,LW,hitY,topY,A,th:nh};
-  const yOf=tt=>hitY-(tt-t)/A*(hitY-topY);
+  const xNow=spX(t),yOf=tt=>hitY-(spX(tt)-xNow)/A*(hitY-topY);
   const B=S.beats;let pulse=0;
   while(S.bi<B.length-1&&B[S.bi+1]<=t)S.bi++;
   if(t>0&&B[S.bi]<=t){const len=(B[S.bi+1]||B[S.bi]+0.5)-B[S.bi];pulse=Math.max(0,1-(t-B[S.bi])/len*3)}
@@ -2011,7 +2084,7 @@ function draw(t){
   for(let j=0;j<=3;j++){const x=Math.round(x0+j*LW)+0.5;cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke()}
   // bar lines
   cx.strokeStyle='rgba(200,185,255,0.13)';cx.lineWidth=2;
-  for(let j=S.bi;j<B.length&&B[j]<t+A;j++){if(B[j]<=t||((j-S.dp)%4+4)%4)continue;
+  for(let j=S.bi;j<B.length&&B[j]<t+A*S.kInv;j++){if(B[j]<=t||((j-S.dp)%4+4)%4)continue;
     const y=Math.round(yOf(B[j]));cx.beginPath();cx.moveTo(x0,y);cx.lineTo(x0+LW*3,y);cx.stroke()}
   cx.textAlign='center';cx.textBaseline='middle';
   if(S.combo>=5){cx.fillStyle='rgba(244,239,252,0.08)';cx.font=`400 ${Math.round(Math.min(120,LW*0.6))}px Bungee, Impact, sans-serif`;cx.fillText(S.combo,CX,H*0.38);
@@ -2025,7 +2098,7 @@ function draw(t){
     if(settings.mode==='keys'){cx.fillStyle=rgba(COL[l],S.down[l]?1:0.85);cx.font=`400 ${Math.round(Math.min(30,sh*0.5))}px Bungee, Impact, sans-serif`;
       cx.fillText(settings.keys[l].label,x+w/2,hitY+2)}}
   // notes
-  for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t+A+0.2)break;if(n.state===2)continue;
+  for(let i=S.lo;i<S.notes.length;i++){const n=S.notes[i];if(n.t>t+A*S.kInv+0.2)break;if(n.state===2)continue;
     const l=n.lane,yh=n.state===1?hitY:yOf(n.t);
     if(n.end){const ye=Math.max(topY-nh,yOf(n.end)),tw=LW*0.36,tx=x0+l*LW+(LW-tw)/2;
       const g=cx.createLinearGradient(0,ye,0,yh);g.addColorStop(0,rgba(COL[l],0.15));g.addColorStop(1,rgba(COL[l],n.state===1?0.85:0.55));
@@ -2033,13 +2106,13 @@ function draw(t){
     if(yh<topY-nh*1.5||yh>H+nh)continue;
     cx.globalAlpha=Math.max(0,Math.min(1,(yh-(topY-nh))/(nh*1.5)));   // fade in at the top
     // timing halo: the band above and below the stone is the hit window; tap while it covers the slot
-    if(n.state===0){const pps=(hitY-topY)/A,gH=WIN.good*pps,pH=WIN.perfect*pps,hx=x0+l*LW+5,hw=LW-10;
+    if(n.state===0){const pps=(hitY-topY)/A*spK(n.t),gH=WIN.good*pps,pH=WIN.perfect*pps,hx=x0+l*LW+5,hw=LW-10;
       const live=Math.abs(n.t-t)<=WIN.good;
       rr(hx,yh-gH-nh/2,hw,2*gH+nh,18);cx.fillStyle=rgba(COL[l],live?0.2:0.09);cx.fill();
       cx.lineWidth=live?2:1;cx.strokeStyle=rgba(COL[l],live?0.75:0.3);cx.stroke();
       rr(hx+4,yh-pH-nh/2,hw-8,2*pH+nh,16);cx.fillStyle=rgba(COL[l],live?0.3:0.14);cx.fill()}
-    {const h=fitH(n,nh,(hitY-topY)/A);
-    if(n.swipe){const sh2=Math.min(nh*1.3,fitH(n,nh*1.3,(hitY-topY)/A));rr(x0+l*LW+10,yh-sh2/2,LW-20,sh2,Math.min(14,sh2/2));cx.fillStyle='#ffffff';cx.fill();cx.lineWidth=3;cx.strokeStyle=COL[l];cx.stroke();
+    {const npps=(hitY-topY)/A*spK(n.t),h=fitH(n,nh,npps);
+    if(n.swipe){const sh2=Math.min(nh*1.3,fitH(n,nh*1.3,npps));rr(x0+l*LW+10,yh-sh2/2,LW-20,sh2,Math.min(14,sh2/2));cx.fillStyle='#ffffff';cx.fill();cx.lineWidth=3;cx.strokeStyle=COL[l];cx.stroke();
       drawArrow(x0+l*LW+LW/2,yh,Math.min(nh*0.95,sh2*0.8),n.dir,COL[l])}
     else drawTile(x0+l*LW+10,yh,LW-20,h,COL[l]);}cx.globalAlpha=1;
   }
@@ -2290,6 +2363,7 @@ window.addEventListener('blur',()=>{held.clear()});
 renderMenu();loadMine().then(initCloud);renderCloudLine();
 })();
 </script>
+
 
 
 <style>
