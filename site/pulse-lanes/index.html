@@ -91,6 +91,11 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,64px);li
 .erow>*{flex:none}
 .erow .btn{min-height:40px;padding:8px 12px;font-size:14px}
 .erow .btn:disabled,.etop .btn:disabled{opacity:.45}
+.fixrow{display:grid;grid-template-columns:44px 44px 1fr 44px 44px;gap:6px;align-items:center}
+.fixrow .btn{min-height:40px;padding:6px 2px}
+.fixrow b{text-align:center;font-variant-numeric:tabular-nums;font-size:18px}
+#eFixSug .btn{flex-direction:column;align-items:flex-start;text-align:left;gap:2px;padding:10px 12px}
+#eFixSug .btn small{font-weight:400;font-size:12px;opacity:.8}
 .spdmove{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .spdmove .btn{padding:10px 4px;font-size:14px}
 .spdgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -102,7 +107,8 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,64px);li
 .tog[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 #eSelTools .kl{font-size:13px;color:var(--amber);font-weight:700;margin-right:2px}
 .ename{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;-webkit-user-select:text;user-select:text}
-#eMenu .card,#eStart .card{max-height:90%;overflow-y:auto}
+#eMenu .card,#eStart .card,#eFixOv .card,#eSpdOv .card{max-height:90%;overflow-y:auto}
+.editor .overlay{z-index:3}
 .leadrow{display:flex;align-items:center;justify-content:center;gap:16px}
 .leadrow b{min-width:60px;text-align:center;font-variant-numeric:tabular-nums}
 .trystop{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 8px);z-index:3;
@@ -495,6 +501,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <p class="label" style="margin:6px 0 0">Notes</p>
         <button id="eFromSong" class="btn">Replace with the song's notes</button>
         <button id="eTidyAll" class="btn">Tidy up all notes</button>
+        <button id="eFixBtn" class="btn">Fix timing…</button>
         <button id="eClear" class="btn">Remove all notes</button>
         <button id="eExport" class="btn">Export charts to a file</button>
         <button id="eDelMine" class="btn">Delete this saved chart</button>
@@ -517,6 +524,18 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <div id="eSpdMove" class="spdmove" hidden><button id="eSpdBack" class="btn">Move 1 s earlier</button><button id="eSpdFwd" class="btn">Move 1 s later</button></div>
         <button id="eSpdDel" class="btn" hidden>Remove this speed point</button>
         <button id="eSpdClose" class="linkbtn">Cancel</button>
+      </div>
+    </div>
+    <div id="eFixOv" class="overlay" hidden>
+      <div class="card">
+        <h2>Fix timing</h2>
+        <p class="hint" style="margin:0">Moves every note earlier or later, for notes typed in time with the music before the timing was right. Pick a suggestion, or set the amount yourself.</p>
+        <div id="eFixSug" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div class="fixrow"><button class="btn" data-fd="-5">−5</button><button class="btn" data-fd="-1">−1</button><b id="eFixAmt">0 px</b><button class="btn" data-fd="1">+1</button><button class="btn" data-fd="5">+5</button></div>
+        <p id="eFixDir" class="hint" style="margin:0;text-align:center"></p>
+        <label class="toggle" for="eFixSnap"><input type="checkbox" id="eFixSnap" checked><span>Snap the notes to the beat afterwards</span></label>
+        <button id="eFixGo" class="btn primary">Move the notes</button>
+        <button id="eFixClose" class="linkbtn">Cancel</button>
       </div>
     </div>
     <div id="eAsk" class="overlay" hidden>
@@ -1487,7 +1506,7 @@ function snapT(t,div){
   else{let lo=0,hi=B.length-1;while(lo<hi-1){const m=(lo+hi)>>1;if(B[m]<=t)lo=m;else hi=m}a=B[lo];b=B[lo+1]}
   const st=(b-a)/d;return Math.max(0,a+Math.round((t-a)/st)*st)}
 /* editing */
-function edSnapshot(){E.undo.push(JSON.stringify({n:E.notes,a:E.a,b:E.b}));if(E.undo.length>100)E.undo.shift()}
+function edSnapshot(){E.undo.push(JSON.stringify({n:E.notes,a:E.a,b:E.b,off:E.off||0}));if(E.undo.length>100)E.undo.shift()}
 function edDone(){E.notes.sort((a,b)=>a.t-b.t||a.lane-b.lane);E.dirty=true;edUI()}
 function edAdd(t,lane){if(E.notes.some(n=>n.lane===lane&&Math.abs(n.t-t)<0.04))return null;edSnapshot();const n={t,lane};E.notes.push(n);edDone();return n}
 const selList=()=>E.notes.filter(n=>E.sels.has(n));
@@ -1504,7 +1523,7 @@ function edType(kind,dir){const L=selList();if(!L.length)return;edSnapshot();   
     else{delete n.end;n.swipe=true;n.dir=dir}}
   edDone()}
 function edLanes(fn){const L=selList();if(!L.length)return;edSnapshot();for(const n of L)n.lane=fn(n.lane);edDone()}
-function edUndo(){if(!E.undo.length)return;const u=JSON.parse(E.undo.pop());E.notes=u.n;E.a=u.a;E.b=u.b;E.sels.clear();E.range=null;E.dirty=true;edUI()}
+function edUndo(){if(!E.undo.length)return;const u=JSON.parse(E.undo.pop());E.notes=u.n;E.a=u.a;E.b=u.b;if(u.off!=null)E.off=u.off;E.sels.clear();E.range=null;E.dirty=true;edUI()}
 function selSpan(){const L=selList();if(E.range)return {a:E.range.a,b:E.range.b};if(!L.length)return null;
   return {a:L[0].t,b:Math.max(...L.map(n=>n.end||n.t))}}
 function edCopy(){const L=selList(),sp=selSpan();if(!L.length||!sp)return;
@@ -1761,6 +1780,30 @@ on('eLeadP',()=>{const atStart=E.pos<=-E.lead+0.01;E.lead=Math.min(10,E.lead+1);
 on('eTrimMin',()=>{edTrim('minute');$('#eMenu').hidden=true});on('eTrimClear',()=>{edTrim('clear');$('#eMenu').hidden=true});
 on('eFromSong',()=>{edSnapshot();E.notes=E.orig.map(cp);E.sels.clear();E.range=null;edDone();$('#eMenu').hidden=true});
 on('eClear',()=>{edSnapshot();E.notes=[];E.sels.clear();E.range=null;edDone();$('#eMenu').hidden=true});
+// ---- Fix timing: shift all notes by an amount (ms, shown in pixels) ----
+let fixMs=0;
+const pxTxt=ms=>{const v=msToPx(ms);return (v>0?'+':v<0?'−':'')+Math.abs(v)+' px'};
+function fixUI(){$('#eFixAmt').textContent=pxTxt(fixMs);
+  $('#eFixDir').textContent=Math.abs(msToPx(fixMs))<1?'No change.':`All ${E.notes.length} notes move ${fixMs<0?'earlier':'later'} by ${Math.abs(Math.round(fixMs))} ms (${pxTxt(Math.abs(fixMs)).replace('+','')} on this screen).`;
+  document.querySelectorAll('#eFixSug [data-ms]').forEach(b=>b.setAttribute('aria-pressed',Math.abs(+b.dataset.ms-fixMs)<0.5))}
+function openFix(){$('#eMenu').hidden=true;if(E.playing)edPause();
+  const sug=[],cur=settings.offset-(E.off||0);
+  if(E.off)sug.push({ms:-E.off,t:'Update this older chart',d:`It was saved with an offset of ${pxTxt(E.off)}. This moves the notes to their true time, so the chart plays right on every device.`});
+  else if(Math.abs(msToPx(settings.offset))>=1)sug.push({ms:-settings.offset,t:'Typed before calibrating',d:`Your timing offset now is ${pxTxt(settings.offset)}. Use this if you typed the notes before you set it.`});
+  if(trialLean&&trialLean.song===E.song.id&&trialLean.n>=5){const m=trialLean.sum/trialLean.n;
+    if(Math.abs(msToPx(m))>=1)sug.push({ms:m,t:'From your last try-out',d:`Your taps came ${pxTxt(Math.abs(m)).replace('+','')} ${m>0?'after':'before'} the notes on average (${trialLean.n} taps). This moves the notes to meet your taps.`})}
+  if(!sug.length)sug.push({ms:0,t:'Nothing to suggest yet',d:'Calibrate with Check my timing in Settings, or play the chart with Try it, then come back here.'});
+  $('#eFixSug').innerHTML=sug.map(x=>`<button class="btn tog" data-ms="${x.ms}"><b>${x.t}: ${pxTxt(x.ms)}</b><small>${x.d}</small></button>`).join('');
+  fixMs=sug[0].ms;$('#eFixSnap').checked=!!E.snap;$('#eFixSnap').disabled=!E.snap;fixUI();$('#eFixOv').hidden=false}
+$('#eFixSug').addEventListener('click',e=>{const b=e.target.closest('[data-ms]');if(!b)return;fixMs=+b.dataset.ms;fixUI()});
+document.querySelectorAll('#eFixOv [data-fd]').forEach(b=>b.onclick=()=>{fixMs+= +b.dataset.fd*1000/offPps();fixUI()});
+on('eFixBtn',openFix);on('eFixClose',()=>{$('#eFixOv').hidden=true});
+on('eFixGo',()=>{const d=fixMs/1000,snap=$('#eFixSnap').checked&&E.snap;if(!d&&!snap){$('#eFixOv').hidden=true;return}
+  edSnapshot();
+  for(const n of E.notes){const len=n.end?n.end-n.t:0;n.t=n.t+d;if(snap)n.t=snapT(n.t);n.t=Math.max(-E.lead,n.t);if(n.end)n.end=snap?Math.max(n.t+0.1,snapT(n.t+len)):n.t+len}
+  if(E.off&&Math.abs(fixMs+E.off)<0.5)E.off=0;   // an older chart converted to true times
+  if(trialLean)trialLean=null;
+  $('#eFixOv').hidden=true;edDone();notice(`Moved ${E.notes.length} notes ${d<0?'earlier':'later'} by ${pxTxt(Math.abs(fixMs)).replace('+','')}. Undo puts them back. Save to keep it.`,5000)});
 on('eTidyAll',()=>{E.sels.clear();E.range=null;$('#eMenu').hidden=true;edTidy()});
 on('eExport',()=>{$('#eMenu').hidden=true;if(E.dirty)notice('Save first: the file holds your saved charts.');else exportCharts(E.song)});
 on('eTry',()=>{$('#eMenu').hidden=true;edTry()});
@@ -1854,6 +1897,7 @@ function startRun(song,ov){
      accOn:!!settings.accuracy,err:{sum:0,signed:0,hits:0,miss:0,missMs:0},accFx:[],src:null,timer:0,raf:0};
   laneGaps(notes);
   S.trial=!!(ov&&edReturn);S.from=from;S.lead=lead;
+  if(S.trial)trialLean={sum:0,n:0,song:song.id};
   S.spd=makeSpeedMap(sp);S.kInv=S.spd?1/S.spd.kmin:1;
   S.offset=settings.offset-(ov&&ov.notes?(ov.off||0):0);$('#tryStop').hidden=!S.trial;
   if(song.kind==='file'){const s=ac.createBufferSource();s.buffer=song.buffer;s.connect(out);s.start(start+lead,from,dur-lead+0.5);S.src=s}
@@ -1887,8 +1931,10 @@ function track(lane,dt,j,cap){
   else{const ms=dt*1000;e.sum+=Math.min(Math.abs(ms),cap*1000);e.signed+=ms;e.hits++}
   S.accFx=S.accFx.filter(f=>f.lane!==lane);S.accFx.push({lane,ms:dt==null?null:Math.round(dt*1000),col:ACOL[j],t0:performance.now()});
 }
+let trialLean=null;
 function judge(j,dt,lane,cap){
   track(lane,dt,j,cap||WIN.good);
+  if(S.trial&&trialLean){trialLean.sum+=dt*1000;trialLean.n++}
   S.c[j]++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.acc+=ACCW[j];S.score+=BASE[j]*mult();
   S.judg={text:j.toUpperCase(),sub:j==='perfect'?'':(dt<0?'EARLY':'LATE'),col:JCOL[j],t0:performance.now()};
   S.fx.push({lane,t0:performance.now(),col:COL[lane],big:j==='perfect'});
